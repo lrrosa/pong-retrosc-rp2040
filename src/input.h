@@ -1,0 +1,24 @@
+#ifndef PONG_INPUT_H
+#define PONG_INPUT_H
+
+#include <stdint.h>
+#include <stdbool.h>
+
+void input_init(void);
+
+// Le os dois potenciometros uma vez. Resultado em 0..4095, com low-pass simples.
+void input_poll(void);
+
+// Posicao do paddle 0..(FB_HEIGHT - PADDLE_H), filtrada.
+int input_paddle_y(int player);
+
+// Botao START pressionado neste frame (rising edge).
+bool input_start_pressed(void);
+
+// True se algum dos dois pots se mexeu nos ultimos N samples (para sair do attract).
+bool input_movement_detected(void);
+
+// Reseta o detector de movimento (chamar ao entrar em attract).
+void input_reset_movement(void);
+
+#endif // PONG_INPUT_H

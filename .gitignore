@@ -1,0 +1,19 @@
+build/
+*.o
+*.obj
+*.elf
+*.elf.map
+*.uf2
+*.bin
+*.hex
+*.dis
+.vscode/
+.idea/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+_deps/
+
+# Inc files intermediarios da conversao de imagens (ja replicados em src/assets.c)
+tools/_*.inc

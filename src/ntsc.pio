@@ -1,0 +1,84 @@
+;
+; ntsc.pio  --  composite NTSC video, 1-bit, ~256x192 active
+;
+; Implementacao clean-room inspirada no projeto brucland/RP2040/PIO/NTSC_1_bit
+; (https://github.com/brucland/RP2040). Credito no README do projeto.
+;
+; Duas state machines no mesmo PIO:
+;   ntsc_sync : produz o pino SYNC do DAC. Le um descritor de linha por scanline
+;               via DMA (descriptor.bit0 = vsync, descriptor.bit1 = active).
+;               Levanta IRQ 4 no inicio do active region das linhas ativas.
+;   ntsc_data : aguarda IRQ 4 e clica 256 bits de pixel data por linha.
+;
+; Combinacao por DAC resistivo (R_sync = 470 ohm, R_video = 220 ohm, term. 75 ohm):
+;   sync=0, data=0  ->  ~0.00 V   (sync tip)
+;   sync=1, data=0  ->  ~0.35 V   (preto / blanking)
+;   sync=1, data=1  ->  ~1.10 V   (branco)
+;
+; Sync SM clock: sysclk / 294.236 ~ 424845 Hz (periodo ~2.354 us)
+;   linha = 27 ciclos = 63.55 us  (NTSC: 63.555 us)
+;   frame = 262 linhas = 16.65 ms (~60 Hz field)
+;
+; Data SM clock: sysclk / 4 = 31.25 MHz (periodo 32 ns)
+;   bit period = 5 ciclos = 160 ns -> pixel rate = 6.25 MHz
+;   256 bits = 40.96 us -> cabe folgado no active region (~50 us)
+
+.program ntsc_sync
+.side_set 1
+
+; -------------------------------------------------------------------------
+; Descritor (32 bits, low bits usados):
+;   bit 0:  1 = linha de VSYNC (pulso longo invertido)
+;   bit 1:  1 = linha ATIVA (gera IRQ 4 para o data SM)
+;
+; Cada iteracao = 27 ciclos = 1 scanline.
+; -------------------------------------------------------------------------
+
+.wrap_target
+    pull block          side 0          ; (1) busca descritor; H-sync LOW
+    out x, 1            side 0          ; (2) x = vsync flag
+    out y, 1            side 0          ; (3) y = active flag
+    jmp !x normal       side 0          ; (4) branch em vsync flag
+
+; ---- VSYNC line: 27 ciclos = 26 LOW + 1 HIGH (inverted sync) ----
+    nop                 side 0 [15]     ; (5..20)  low
+    jmp finish          side 0 [5]      ; (21..26) low; depois cai em finish (HIGH)
+
+normal:
+; ---- Normal line: 4 prelude LOW + 23 HIGH ----
+    jmp !y blank        side 1          ; (5)  HIGH
+    irq nowait 4        side 1          ; (6)  HIGH; aciona data SM
+    nop                 side 1 [15]     ; (7..22)
+    jmp finish          side 1 [3]      ; (23..26)
+
+blank:
+    nop                 side 1 [15]     ; (6..21)
+    jmp finish          side 1 [4]      ; (22..26)
+
+finish:
+    nop                 side 1          ; (27) ultimo ciclo HIGH
+.wrap
+
+
+; -------------------------------------------------------------------------
+; Data SM: shifteia bits do framebuffer durante o active region.
+; -------------------------------------------------------------------------
+
+.program ntsc_data
+
+; OUT base = pino DATA. Sem side-set.
+; Auto-pull configurado, threshold 32.
+; SM clock = sysclk / 4 = 31.25 MHz.
+
+.wrap_target
+    set pins, 0                         ; ponta de pino LOW (preto) enquanto idle
+    wait 1 irq 4                        ; aguarda IRQ do sync SM
+
+    set x, 7                            ; 8 palavras de 32 bits = 256 pixels
+word_loop:
+    set y, 31                           ; 32 bits por palavra
+bit_loop:
+    out pins, 1 [3]                     ; 5 ciclos/bit (out + 3 delay + jmp)
+    jmp y-- bit_loop
+    jmp x-- word_loop
+.wrap
