@@ -1,4 +1,7 @@
 #include "game.h"
+
+#include <stdio.h>
+
 #include "config.h"
 #include "gfx.h"
 #include "font.h"
