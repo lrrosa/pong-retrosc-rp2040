@@ -107,6 +107,38 @@ Resultado: `build/pong-rp2040.uf2`.
 3. Arraste `pong-rp2040.uf2` para dentro do pendrive.
 4. O Pico reinicia automaticamente rodando o jogo.
 
+## Simulador (Python, sem hardware)
+
+Para iterar em layouts e gameplay sem flashear o Pico, há um simulador que
+roda a mesma lógica em Python e carrega os MESMOS bitmaps/fonte do código C:
+
+```bash
+pip install pygame
+python tools/sim.py
+```
+
+Janela 768×576 (framebuffer 256×192 × 3). Controles:
+
+- **Mouse Y na metade esquerda** → raquete P1
+- **Mouse Y na metade direita** → raquete P2
+- **Espaço** → botão START
+- **R** → zera high scores (só em RAM, não toca a flash do Pico)
+- **Q** ou **ESC** → sair
+
+Pré-visualizações geradas pelo simulador:
+
+| Attract | Countdown | Play |
+| :---: | :---: | :---: |
+| ![](docs/images/sim_attract.png) | ![](docs/images/sim_countdown.png) | ![](docs/images/sim_play.png) |
+
+| Game Over | High Scores |
+| :---: | :---: |
+| ![](docs/images/sim_game_over.png) | ![](docs/images/sim_highscores.png) |
+
+> **Limitação:** o simulador não reproduz a fidelidade do sinal NTSC nem
+> o timing exato do PIO/DMA. Use para validar UX e visual; o teste final
+> do vídeo só com a TV real.
+
 ## Como jogar
 
 - **Liga**: conecte alimentação (USB ou fonte 5 V).
