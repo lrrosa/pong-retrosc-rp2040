@@ -125,19 +125,39 @@ Janela 768×576 (framebuffer 256×192 × 3). Controles:
 - **R** → zera high scores (só em RAM, não toca a flash do Pico)
 - **Q** ou **ESC** → sair
 
-Pré-visualizações geradas pelo simulador:
+Pré-visualizações com efeito CRT (como deve ficar numa TV de tubo —
+scanlines, glow de fósforo, vignette e curvatura):
 
 | Attract | Countdown | Play |
 | :---: | :---: | :---: |
-| ![](docs/images/sim_attract.png) | ![](docs/images/sim_countdown.png) | ![](docs/images/sim_play.png) |
+| ![](docs/images/crt_attract.png) | ![](docs/images/crt_countdown.png) | ![](docs/images/crt_play.png) |
 
 | Game Over | High Scores |
 | :---: | :---: |
-| ![](docs/images/sim_game_over.png) | ![](docs/images/sim_highscores.png) |
+| ![](docs/images/crt_game_over.png) | ![](docs/images/crt_highscores.png) |
+
+Renderizações "raw" (sem CRT, só o framebuffer escalado) ficam em
+`docs/images/sim_*.png`.
 
 > **Limitação:** o simulador não reproduz a fidelidade do sinal NTSC nem
 > o timing exato do PIO/DMA. Use para validar UX e visual; o teste final
 > do vídeo só com a TV real.
+
+### CRT preview
+
+Para aplicar o efeito CRT (scanlines + bloom + fósforo + vignette +
+curvatura) em qualquer PNG do framebuffer:
+
+```bash
+pip install pillow numpy
+python tools/crt_preview.py docs/images/sim_attract.png        # gera crt_sim_attract.png
+python tools/crt_preview.py --all                              # regenera todos os crt_*.png
+```
+
+Os parâmetros (intensidade do bloom, dos scanlines, cor do fósforo) estão
+no topo de `crt_effect()` em [tools/crt_preview.py](tools/crt_preview.py)
+e são bons pontos de partida; mexa neles pra ajustar pra TV verde, âmbar,
+ou ajustar o "estado" do tubo.
 
 ## Como jogar
 
