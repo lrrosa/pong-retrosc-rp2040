@@ -65,21 +65,32 @@ void __not_in_flash_func(hi_save)(void) {
     restore_interrupts(ints);
 }
 
-bool hi_consider(uint16_t score, uint8_t player) {
-    // Acha posicao onde score se encaixa.
+bool hi_qualifies(uint16_t score) {
+    for (int i = 0; i < HISCORE_COUNT; i++) {
+        if (score > table_ram.entries[i].score) return true;
+    }
+    return false;
+}
+
+bool hi_consider(uint16_t score, uint8_t player, const char initials[INITIALS_LEN]) {
     int pos = -1;
     for (int i = 0; i < HISCORE_COUNT; i++) {
         if (score > table_ram.entries[i].score) { pos = i; break; }
     }
     if (pos < 0) return false;
 
-    // Empurra os demais.
     for (int i = HISCORE_COUNT - 1; i > pos; i--) {
         table_ram.entries[i] = table_ram.entries[i - 1];
     }
     table_ram.entries[pos].score  = score;
     table_ram.entries[pos].player = player;
     table_ram.entries[pos].pad    = 0;
+    for (int k = 0; k < INITIALS_LEN; k++) {
+        char c = initials[k];
+        if (c < 'A' || c > 'Z') c = ' ';
+        table_ram.entries[pos].initials[k] = c;
+    }
+    table_ram.entries[pos].initials[INITIALS_LEN] = 0;
     return true;
 }
 

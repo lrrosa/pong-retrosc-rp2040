@@ -58,6 +58,7 @@
 // ===== Highscores =====
 #define HISCORE_COUNT     5
 #define HISCORE_MAGIC     0x50524F4Bu        // 'PROK'
-#define HISCORE_VERSION   1
+#define HISCORE_VERSION   2                  // v2: adicionou iniciais de 3 chars
+#define INITIALS_LEN      3                  // letras por entrada
 
 #endif // PONG_CONFIG_H

@@ -12,6 +12,9 @@ void input_poll(void);
 // Posicao do paddle 0..(FB_HEIGHT - PADDLE_H), filtrada.
 int input_paddle_y(int player);
 
+// Valor cru filtrado do pot 0..4095 (para entrada de iniciais).
+int input_pot_raw(int player);
+
 // Botao START pressionado neste frame (rising edge).
 bool input_start_pressed(void);
 

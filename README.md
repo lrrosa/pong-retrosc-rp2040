@@ -13,7 +13,9 @@ máquina arcade do evento [**RetroSC**](https://retrosc.org/).
 - 2 raquetes controladas por **potenciômetros 10 kΩ** (ADC do Pico).
 - **Attract screen** com logo da RetroSC + demo automático (AI vs AI).
 - Pontuação para vencer configurável (`WIN_SCORE` em `src/config.h`, padrão 7).
-- **High scores persistentes** na flash do RP2040 (sobrevive a reset).
+- **High scores persistentes** na flash do RP2040 com **iniciais de 3 letras**
+  estilo arcade — o vencedor usa o potenciômetro para escolher cada letra
+  e o botão START para confirmar.
 - Áudio com os 3 sons clássicos do Pong (raquete, parede, ponto) em PWM
   filtrado.
 - Botão **START** opcional (também sai do attract jiggling qualquer
@@ -132,9 +134,9 @@ scanlines, glow de fósforo, vignette e curvatura):
 | :---: | :---: | :---: |
 | ![](docs/images/crt_attract.png) | ![](docs/images/crt_countdown.png) | ![](docs/images/crt_play.png) |
 
-| Game Over | High Scores |
-| :---: | :---: |
-| ![](docs/images/crt_game_over.png) | ![](docs/images/crt_highscores.png) |
+| Game Over | Enter Initials | High Scores |
+| :---: | :---: | :---: |
+| ![](docs/images/crt_game_over.png) | ![](docs/images/crt_enter_initials.png) | ![](docs/images/crt_highscores.png) |
 
 Renderizações "raw" (sem CRT, só o framebuffer escalado) ficam em
 `docs/images/sim_*.png`.
@@ -165,8 +167,11 @@ ou ajustar o "estado" do tubo.
 - **Sair do attract**: mexa qualquer potenciômetro **ou** aperte START.
 - **Jogar**: rode os potenciômetros para mover as raquetes (esquerda = P1,
   direita = P2). Primeiro a marcar 7 pontos vence.
-- **Game over**: depois do vencedor, a tabela de high scores aparece por
-  10 s antes de voltar ao attract.
+- **Iniciais**: se o vencedor entrar no top 5, ele insere 3 letras estilo
+  arcade — girar o pot rola pelo alfabeto A–Z, apertar START confirma a
+  letra atual e passa para a próxima.
+- **High scores**: depois das iniciais (ou direto, se não entrou no top),
+  a tabela aparece por 10 s antes de voltar ao attract.
 
 ## Customização
 

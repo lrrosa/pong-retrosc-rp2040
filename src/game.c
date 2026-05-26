@@ -23,6 +23,11 @@ static int score[2];              // pontos P1, P2
 static int paddle_y[2];           // y atual de cada raquete
 static int last_winner;           // 0 = ninguem, 1 ou 2 ao terminar partida
 
+// Estado da entrada de iniciais
+static char initials_buf[INITIALS_LEN + 1];
+static int  initials_slot;
+static bool initials_armed;       // se ja iniciou o processo
+
 // Bola em ponto fixo Q8 (1 unidade = 1/256 pixel)
 static int32_t ball_x, ball_y;
 static int32_t ball_vx, ball_vy;
@@ -81,16 +86,21 @@ static void update_paddles_human(void) {
     paddle_y[1] = p1;
 }
 
+// Limite superior da zona de demo (abaixo do texto "RETRO PONG")
+#define DEMO_PADDLE_Y_MIN 116
+
 static void update_paddles_demo(void) {
-    // AI simples: cada raquete persegue a bola lentamente
+    // AI simples: cada raquete persegue a bola lentamente.
+    // Raquetes ficam restritas a metade inferior pra nao colidir com texto.
     for (int i = 0; i < 2; i++) {
         int target = (ball_y >> 8) - PADDLE_H / 2;
         int diff = target - paddle_y[i];
         int speed = 2;
         if (abs_i(diff) > speed) diff = (diff > 0) ? speed : -speed;
         paddle_y[i] += diff;
-        if (paddle_y[i] < 0) paddle_y[i] = 0;
-        if (paddle_y[i] > FB_HEIGHT - PADDLE_H) paddle_y[i] = FB_HEIGHT - PADDLE_H;
+        if (paddle_y[i] < DEMO_PADDLE_Y_MIN) paddle_y[i] = DEMO_PADDLE_Y_MIN;
+        if (paddle_y[i] > FB_HEIGHT - PADDLE_H)
+            paddle_y[i] = FB_HEIGHT - PADDLE_H;
     }
 }
 
@@ -201,26 +211,23 @@ static void center_text(int y, const char *s, int scale) {
 static void draw_attract(void) {
     gfx_clear(0);
 
-    // Logo RetroSC centralizado horizontalmente, perto do topo
+    // Logo RetroSC (alto-res mono, 220x68) centralizado no topo
     int lx = (FB_WIDTH - RETROSC_LOGO_W) / 2;
-    gfx_blit(retrosc_logo_data, RETROSC_LOGO_W, RETROSC_LOGO_H, lx, 8, 1);
+    gfx_blit(retrosc_logo_data, RETROSC_LOGO_W, RETROSC_LOGO_H, lx, 4, 1);
 
-    // Titulo
-    center_text(8 + RETROSC_LOGO_H + 10, "PONG", 3);
+    // Titulo "RETRO PONG" abaixo do logo
+    center_text(4 + RETROSC_LOGO_H + 8, "RETRO PONG", 3);
 
-    // Demo do jogo no fundo (campo + bola e raquetes pequenas no centro inferior)
-    // Tracejado central
-    gfx_dotted_vline(FB_WIDTH / 2, FB_HEIGHT - 70, FB_HEIGHT - 6, 4, 4);
-    // raquetes demo
+    // Demo do jogo no fundo
+    gfx_dotted_vline(FB_WIDTH / 2, FB_HEIGHT - 60, FB_HEIGHT - 12, 4, 4);
     gfx_fill_rect(PADDLE_MARGIN, paddle_y[0], PADDLE_W, PADDLE_H, 1);
     gfx_fill_rect(FB_WIDTH - PADDLE_MARGIN - PADDLE_W, paddle_y[1], PADDLE_W, PADDLE_H, 1);
     draw_ball();
 
-    // Texto de chamada (pisca a cada ~32 frames)
+    // Chamada piscante a cada ~32 frames
     if (((state_timer >> 5) & 1) == 0) {
-        center_text(FB_HEIGHT - 18, "MOVA UM POTENCIOMETRO", 1);
+        center_text(FB_HEIGHT - 9, "MOVA UM POTENCIOMETRO", 1);
     }
-    center_text(FB_HEIGHT - 8, "RETROSC.ORG", 1);
 }
 
 static void draw_countdown(void) {
@@ -273,15 +280,73 @@ static void draw_highscores(void) {
     for (int i = 0; i < HISCORE_COUNT; i++) {
         char buf[24];
         if (t->entries[i].score > 0) {
-            snprintf(buf, sizeof(buf), "%d.  %2d  P%d",
-                     i + 1, t->entries[i].score, t->entries[i].player);
+            snprintf(buf, sizeof(buf), "%d. %c%c%c  %2d  P%d",
+                     i + 1,
+                     t->entries[i].initials[0] ? t->entries[i].initials[0] : ' ',
+                     t->entries[i].initials[1] ? t->entries[i].initials[1] : ' ',
+                     t->entries[i].initials[2] ? t->entries[i].initials[2] : ' ',
+                     t->entries[i].score,
+                     t->entries[i].player);
         } else {
-            snprintf(buf, sizeof(buf), "%d.   -      ", i + 1);
+            snprintf(buf, sizeof(buf), "%d. ---   -    ", i + 1);
         }
-        gfx_text(80, y, buf, 1, 1);
+        gfx_text(60, y, buf, 1, 1);
         y += 14;
     }
-    center_text(FB_HEIGHT - 12, "RETROSC PONG", 1);
+    center_text(FB_HEIGHT - 12, "RETRO PONG", 1);
+}
+
+// =============================================================
+// Tela de entrada de iniciais (3 letras, controlado pelo vencedor)
+// =============================================================
+static char letter_for_pot(int pot_val) {
+    // 0..4095 -> 0..25 (A..Z)
+    int idx = (pot_val * 26) / 4096;
+    if (idx < 0) idx = 0;
+    if (idx > 25) idx = 25;
+    return (char)('A' + idx);
+}
+
+static void draw_enter_initials(void) {
+    gfx_clear(0);
+    center_text(8, "NEW HIGH SCORE!", 2);
+
+    // info do vencedor
+    char info[24];
+    int win_score = (score[0] > score[1]) ? score[0] : score[1];
+    snprintf(info, sizeof(info), "JOGADOR %d - %d", last_winner, win_score);
+    center_text(32, info, 1);
+
+    // 3 slots de iniciais centralizados, escala 4
+    int slot_w = FONT_CELL_W * 4;
+    int gap    = 8;
+    int total_w = 3 * slot_w + 2 * gap;
+    int x0 = (FB_WIDTH - total_w) / 2;
+    int y0 = 64;
+
+    for (int i = 0; i < INITIALS_LEN; i++) {
+        int sx = x0 + i * (slot_w + gap);
+        char c = initials_buf[i];
+        char s[2] = { c ? c : ' ', 0 };
+        // se ainda nao confirmou e nao e a vez, mostra '_'
+        if (c == 0 && i != initials_slot) { s[0] = '_'; }
+        // slot atual pisca enquanto o jogador rola pelo pot
+        bool show = true;
+        if (i == initials_slot && ((state_timer >> 3) & 1)) show = false;
+        if (show) gfx_text(sx, y0, s, 4, 1);
+        // underline embaixo do slot atual
+        if (i == initials_slot) {
+            gfx_fill_rect(sx, y0 + 8 * 4 + 2, slot_w - 4, 2, 1);
+        }
+    }
+
+    center_text(FB_HEIGHT - 30, "POT = LETRA", 1);
+    if (((state_timer >> 5) & 1) == 0) {
+        center_text(FB_HEIGHT - 18, "START PARA CONFIRMAR", 1);
+    }
+    char hint[16];
+    snprintf(hint, sizeof(hint), "P%d", last_winner);
+    center_text(FB_HEIGHT - 8, hint, 1);
 }
 
 // =============================================================
@@ -333,9 +398,6 @@ static void frame_round_end(void) {
     if (state_timer >= 60) {
         if (score[0] >= WIN_SCORE || score[1] >= WIN_SCORE) {
             last_winner = (score[0] > score[1]) ? 1 : 2;
-            hi_consider((uint16_t)(score[0] > score[1] ? score[0] : score[1]),
-                        (uint8_t)last_winner);
-            hi_save();
             set_state(GS_GAME_OVER);
         } else {
             reset_round(score[0] > score[1] ? 1 : 2);
@@ -346,9 +408,45 @@ static void frame_round_end(void) {
 
 static void frame_game_over(void) {
     draw_game_over();
-    if (state_timer >= 4 * 60) {
-        set_state(GS_HIGH_SCORES);
+    if (state_timer >= 3 * 60) {
+        uint16_t win = (uint16_t)((score[0] > score[1]) ? score[0] : score[1]);
+        if (hi_qualifies(win)) {
+            initials_armed = false;
+            set_state(GS_ENTER_INITIALS);
+        } else {
+            set_state(GS_HIGH_SCORES);
+        }
     }
+}
+
+static void frame_enter_initials(void) {
+    if (!initials_armed) {
+        initials_buf[0] = 0;
+        initials_buf[1] = 0;
+        initials_buf[2] = 0;
+        initials_buf[3] = 0;
+        initials_slot = 0;
+        initials_armed = true;
+    }
+
+    if (initials_slot < INITIALS_LEN) {
+        int pot = input_pot_raw(last_winner - 1);
+        char c = letter_for_pot(pot);
+        initials_buf[initials_slot] = c;
+
+        if (input_start_pressed()) {
+            audio_attract_tick();
+            initials_slot++;
+        }
+    } else {
+        // todas confirmadas
+        uint16_t win = (uint16_t)((score[0] > score[1]) ? score[0] : score[1]);
+        hi_consider(win, (uint8_t)last_winner, initials_buf);
+        hi_save();
+        set_state(GS_HIGH_SCORES);
+        return;
+    }
+    draw_enter_initials();
 }
 
 static void frame_high_scores(void) {
@@ -370,7 +468,7 @@ static void frame_high_scores(void) {
 void game_init(void) {
     score[0] = score[1] = 0;
     last_winner = 0;
-    paddle_y[0] = paddle_y[1] = (FB_HEIGHT - PADDLE_H) / 2;
+    paddle_y[0] = paddle_y[1] = DEMO_PADDLE_Y_MIN + 16;
     ball_x = (FB_WIDTH / 2) << 8;
     ball_y = ((FB_HEIGHT - 40)) << 8;
     ball_vx = BALL_SPEED_INIT_Q;
@@ -380,12 +478,13 @@ void game_init(void) {
 
 void game_frame(void) {
     switch (state) {
-        case GS_ATTRACT:     frame_attract();     break;
-        case GS_COUNTDOWN:   frame_countdown();   break;
-        case GS_PLAY:        frame_play();        break;
-        case GS_ROUND_END:   frame_round_end();   break;
-        case GS_GAME_OVER:   frame_game_over();   break;
-        case GS_HIGH_SCORES: frame_high_scores(); break;
+        case GS_ATTRACT:        frame_attract();        break;
+        case GS_COUNTDOWN:      frame_countdown();      break;
+        case GS_PLAY:           frame_play();           break;
+        case GS_ROUND_END:      frame_round_end();      break;
+        case GS_GAME_OVER:      frame_game_over();      break;
+        case GS_ENTER_INITIALS: frame_enter_initials(); break;
+        case GS_HIGH_SCORES:    frame_high_scores();    break;
     }
     state_timer++;
 }

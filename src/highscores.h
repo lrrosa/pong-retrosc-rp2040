@@ -8,8 +8,9 @@
 
 typedef struct {
     uint16_t score;
-    uint8_t  player;   // 1 ou 2 (lado da raquete)
+    uint8_t  player;                       // 1 ou 2 (lado da raquete)
     uint8_t  pad;
+    char     initials[INITIALS_LEN + 1];   // 3 letras + terminador NUL
 } hi_entry_t;
 
 typedef struct {
@@ -28,8 +29,12 @@ void hi_load(void);
 void hi_save(void);
 
 // Considera um novo placar e insere se entrar no top.
+//   initials: 3 chars (sem precisar de NUL).
 //   Retorna true se entrou no top, false caso contrario.
-bool hi_consider(uint16_t score, uint8_t player);
+bool hi_consider(uint16_t score, uint8_t player, const char initials[INITIALS_LEN]);
+
+// True se este score entraria no top (chamado antes da entrada de iniciais).
+bool hi_qualifies(uint16_t score);
 
 // Acesso a tabela em RAM.
 const hi_table_t *hi_get(void);

@@ -10,6 +10,7 @@ typedef enum {
     GS_PLAY,
     GS_ROUND_END,
     GS_GAME_OVER,
+    GS_ENTER_INITIALS,
     GS_HIGH_SCORES,
 } game_state_t;
 

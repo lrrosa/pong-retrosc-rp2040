@@ -50,6 +50,10 @@ void input_poll(void) {
     last_button = now;
 }
 
+int input_pot_raw(int player) {
+    return filtered[player & 1];
+}
+
 int input_paddle_y(int player) {
     uint16_t v = filtered[player & 1];
     int range = FB_HEIGHT - PADDLE_H;

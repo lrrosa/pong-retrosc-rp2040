@@ -45,11 +45,14 @@ BALL_SPEED_INIT_Q = 0x180
 BALL_SPEED_MAX_Q  = 0x500
 BALL_SPEED_STEP_Q = 0x020
 HISCORE_COUNT     = 5
+INITIALS_LEN      = 3
+FONT_CELL_W       = 6
 
 # ============================================================
 # Estados
 # ============================================================
-GS_ATTRACT, GS_COUNTDOWN, GS_PLAY, GS_ROUND_END, GS_GAME_OVER, GS_HIGH_SCORES = range(6)
+(GS_ATTRACT, GS_COUNTDOWN, GS_PLAY, GS_ROUND_END,
+ GS_GAME_OVER, GS_ENTER_INITIALS, GS_HIGH_SCORES) = range(7)
 
 # ============================================================
 # Carregar assets de src/assets.c
@@ -176,7 +179,7 @@ class Game:
         self.state = GS_ATTRACT
         self.state_timer = 0
         self.score = [0, 0]
-        self.paddle_y = [(FB_H - PADDLE_H)//2]*2
+        self.paddle_y = [132, 132]   # zona de demo (atract)
         self.last_winner = 0
         self.ball_x = (FB_W // 2) << 8
         self.ball_y = (FB_H - 40) << 8
@@ -186,7 +189,12 @@ class Game:
         self.last_pot_value = [2048, 2048]
         self.baseline_pot = [2048, 2048]
         self.movement_remaining = 0
-        self.hiscores = [(0, 0)] * HISCORE_COUNT
+        # Highscore: (score, player, "ABC")
+        self.hiscores = [(0, 0, "   ")] * HISCORE_COUNT
+        # Estado de entrada de iniciais
+        self.initials_buf = list("   ")
+        self.initials_slot = 0
+        self.initials_armed = False
         # Input mockado por mouse: cada frame setamos
         self.input_pot = [2048, 2048]
         self.input_start = False
@@ -233,6 +241,7 @@ class Game:
         self.paddle_y[1] = self.input_paddle_y(1)
 
     def update_paddles_demo(self):
+        DEMO_PADDLE_Y_MIN = 116
         for i in (0, 1):
             target = (self.ball_y >> 8) - PADDLE_H // 2
             diff = target - self.paddle_y[i]
@@ -240,7 +249,8 @@ class Game:
             if abs(diff) > speed:
                 diff = speed if diff > 0 else -speed
             self.paddle_y[i] += diff
-            self.paddle_y[i] = max(0, min(FB_H - PADDLE_H, self.paddle_y[i]))
+            self.paddle_y[i] = max(DEMO_PADDLE_Y_MIN,
+                                   min(FB_H - PADDLE_H, self.paddle_y[i]))
 
     def on_paddle_hit(self, idx):
         pad_top = self.paddle_y[idx]
@@ -286,14 +296,18 @@ class Game:
             self.score[0] += 1
             self.set_state(GS_ROUND_END)
 
-    def hi_consider(self, score, player):
+    def hi_qualifies(self, score):
+        return any(score > s for s, _, _ in self.hiscores)
+
+    def hi_consider(self, score, player, initials):
         pos = -1
-        for i, (s, _) in enumerate(self.hiscores):
+        for i, (s, _, _) in enumerate(self.hiscores):
             if score > s:
                 pos = i; break
         if pos < 0:
             return
-        new = (score, player)
+        ini = "".join(c if "A" <= c <= "Z" else " " for c in initials)
+        new = (score, player, (ini + "   ")[:3])
         self.hiscores = self.hiscores[:pos] + [new] + self.hiscores[pos:-1]
 
     # ============== desenho ===============
@@ -316,15 +330,14 @@ class Game:
         self.fb.clear(0)
         lw = self.assets["retrosc_logo_W"]
         lh = self.assets["retrosc_logo_H"]
-        self.fb.blit_1bit(self.assets["retrosc_logo"], lw, lh, (FB_W - lw)//2, 8, 1)
-        center_text(self.fb, self.glyphs, 8 + lh + 10, "PONG", 3)
-        self.fb.dotted_vline(FB_W // 2, FB_H - 70, FB_H - 6, 4, 4)
+        self.fb.blit_1bit(self.assets["retrosc_logo"], lw, lh, (FB_W - lw)//2, 4, 1)
+        center_text(self.fb, self.glyphs, 4 + lh + 8, "RETRO PONG", 3)
+        self.fb.dotted_vline(FB_W // 2, FB_H - 60, FB_H - 12, 4, 4)
         self.fb.fill_rect(PADDLE_MARGIN, self.paddle_y[0], PADDLE_W, PADDLE_H, 1)
         self.fb.fill_rect(FB_W - PADDLE_MARGIN - PADDLE_W, self.paddle_y[1], PADDLE_W, PADDLE_H, 1)
         self.draw_ball()
         if ((self.state_timer >> 5) & 1) == 0:
-            center_text(self.fb, self.glyphs, FB_H - 18, "MOVA UM POTENCIOMETRO", 1)
-        center_text(self.fb, self.glyphs, FB_H - 8, "RETROSC.ORG", 1)
+            center_text(self.fb, self.glyphs, FB_H - 9, "MOVA UM POTENCIOMETRO", 1)
 
     def draw_countdown(self):
         self.fb.clear(0)
@@ -354,14 +367,40 @@ class Game:
         self.fb.clear(0)
         center_text(self.fb, self.glyphs, 8, "HIGH SCORES", 2)
         y = 36
-        for i, (s, p) in enumerate(self.hiscores):
+        for i, (s, p, ini) in enumerate(self.hiscores):
             if s > 0:
-                line = f"{i+1}.  {s:2d}  P{p}"
+                line = f"{i+1}. {ini}  {s:2d}  P{p}"
             else:
-                line = f"{i+1}.   -      "
-            gfx_text(self.fb, self.glyphs, 80, y, line, 1, 1)
+                line = f"{i+1}. ---   -    "
+            gfx_text(self.fb, self.glyphs, 60, y, line, 1, 1)
             y += 14
-        center_text(self.fb, self.glyphs, FB_H - 12, "RETROSC PONG", 1)
+        center_text(self.fb, self.glyphs, FB_H - 12, "RETRO PONG", 1)
+
+    def draw_enter_initials(self):
+        self.fb.clear(0)
+        center_text(self.fb, self.glyphs, 8, "NEW HIGH SCORE!", 2)
+        win = max(self.score)
+        center_text(self.fb, self.glyphs, 32, f"JOGADOR {self.last_winner} - {win}", 1)
+
+        slot_w = FONT_CELL_W * 4
+        gap = 8
+        total = INITIALS_LEN * slot_w + (INITIALS_LEN - 1) * gap
+        x0 = (FB_W - total) // 2
+        y0 = 64
+        for i in range(INITIALS_LEN):
+            sx = x0 + i * (slot_w + gap)
+            c = self.initials_buf[i]
+            s = c if c != " " else ("_" if i != self.initials_slot else " ")
+            # slot atual pisca
+            show = not (i == self.initials_slot and ((self.state_timer >> 3) & 1))
+            if show:
+                gfx_text(self.fb, self.glyphs, sx, y0, s, 4, 1)
+            if i == self.initials_slot:
+                self.fb.fill_rect(sx, y0 + 8*4 + 2, slot_w - 4, 2, 1)
+        center_text(self.fb, self.glyphs, FB_H - 30, "POT = LETRA", 1)
+        if ((self.state_timer >> 5) & 1) == 0:
+            center_text(self.fb, self.glyphs, FB_H - 18, "START PARA CONFIRMAR", 1)
+        center_text(self.fb, self.glyphs, FB_H - 8, f"P{self.last_winner}", 1)
 
     # ============== frame por estado ===============
     def frame(self):
@@ -394,15 +433,37 @@ class Game:
             if self.state_timer >= 60:
                 if self.score[0] >= WIN_SCORE or self.score[1] >= WIN_SCORE:
                     self.last_winner = 1 if self.score[0] > self.score[1] else 2
-                    win = max(self.score)
-                    self.hi_consider(win, self.last_winner)
                     self.set_state(GS_GAME_OVER)
                 else:
                     self.reset_round(1 if self.score[0] > self.score[1] else 2)
                     self.set_state(GS_COUNTDOWN)
         elif self.state == GS_GAME_OVER:
             self.draw_game_over()
-            if self.state_timer >= 4*60: self.set_state(GS_HIGH_SCORES)
+            if self.state_timer >= 3*60:
+                win = max(self.score)
+                if self.hi_qualifies(win):
+                    self.initials_armed = False
+                    self.set_state(GS_ENTER_INITIALS)
+                else:
+                    self.set_state(GS_HIGH_SCORES)
+        elif self.state == GS_ENTER_INITIALS:
+            if not self.initials_armed:
+                self.initials_buf = [" "] * INITIALS_LEN
+                self.initials_slot = 0
+                self.initials_armed = True
+            if self.initials_slot < INITIALS_LEN:
+                pot = self.input_pot[self.last_winner - 1]
+                idx = max(0, min(25, (pot * 26) // 4096))
+                self.initials_buf[self.initials_slot] = chr(ord("A") + idx)
+                if self.input_start:
+                    self.initials_slot += 1
+            else:
+                win = max(self.score)
+                self.hi_consider(win, self.last_winner, "".join(self.initials_buf))
+                self.set_state(GS_HIGH_SCORES)
+                self.state_timer += 1
+                return
+            self.draw_enter_initials()
         elif self.state == GS_HIGH_SCORES:
             self.draw_highscores()
             if self.state_timer >= 10*60 or self.input_start:
