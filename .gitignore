@@ -17,3 +17,7 @@ _deps/
 
 # Inc files intermediarios da conversao de imagens (ja replicados em src/assets.c)
 tools/_*.inc
+
+# Python
+__pycache__/
+*.pyc
