@@ -6,7 +6,7 @@ Componentes para uma unidade do RetroSC Pong.
 | --: | -------------------------------- | ---------------------------- | ------------------------------------------ |
 | 1   | Raspberry Pi Pico (ou clone)     | RP2040, 2 MB flash           | Modelo base; também serve Pico W           |
 | 2   | Potenciômetro                    | 10 kΩ linear (tipo B)        | **CR22E c/ stopper** (preferencial) — veja "Potenciômetros" abaixo |
-| 2   | Manopla / knob                    | Encaixe 6 mm ou 6,35 mm      | Estética arcade                            |
+| 2   | Manopla / knob                    | ~32 mm, furo 6 mm c/ flat/set screw | Veja "Knobs" abaixo                  |
 | 1   | Botão tátil (push button NA)     | 12 mm momentâneo             | START                                      |
 | 1   | Resistor 470 Ω                   | 1/4 W, 5%                    | DAC vídeo (sync)                           |
 | 1   | Resistor 220 Ω                   | 1/4 W, 5%                    | DAC vídeo (video)                          |
@@ -63,6 +63,36 @@ Componentes para uma unidade do RetroSC Pong.
 > só mapeia ADC → posição vertical. O usuário não percebe não-linearidade
 > abaixo de uns 10%. O que IMPORTA é: **vida útil** (arcade = muitos giros)
 > e **suavidade** (sem "saltos" no sinal).
+
+## Knobs / manoplas
+
+**Recomendado: ~32 mm de diâmetro** (faixa útil 30–38 mm). Como os 320°
+elétricos do pot mapeiam a tela inteira, esse diâmetro dá o percurso de dedo
+ideal (~85–105 mm) para varrer toda a raquete numa pegada só — rápido o
+suficiente para reagir e fino o suficiente para mirar.
+
+| Diâmetro | Percurso do dedo (320°) | Sensação |
+| -------: | ----------------------: | ----------------------------- |
+| 20 mm    | ~56 mm                  | Nervoso, ajuste fino difícil  |
+| **32 mm**| **~89 mm**              | **Ideal**                     |
+| 38 mm    | ~106 mm                 | Confortável, leve folga       |
+| 50 mm+   | ~140 mm                 | Lento, exige muito punho      |
+
+Especificação sugerida:
+
+- **Furo 6 mm com flat (D) ou parafuso de fixação (set screw)** — casa com o
+  eixo do CR22E. Evite push-on de plástico genérico (solta no uso intenso).
+- **Pegada serrilhada (knurled) ou canelada (fluted)** — dedo suado escorrega
+  no acabamento liso.
+- **Alumínio** dá peso e cara de arcade ("skirted knob"); ABS sólido serve e
+  é mais barato.
+- **Sem ponteiro/seta** — o controle é por feedback visual da raquete, não por
+  posição absoluta.
+
+> **Espaçamento no painel:** o corpo do pot é Φ22 mm. Com knobs de 32–38 mm,
+> deixe ≥ ~45–50 mm entre centros se os dois ficarem lado a lado. Em Pong de
+> 2 jogadores eles normalmente ficam em lados opostos, então raramente é
+> problema.
 
 ## Substituições aceitáveis
 
