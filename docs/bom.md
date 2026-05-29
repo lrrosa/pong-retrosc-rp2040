@@ -6,7 +6,7 @@ Componentes para uma unidade do RetroSC Pong.
 | --: | -------------------------------- | ---------------------------- | ------------------------------------------ |
 | 1   | Raspberry Pi Pico (ou clone)     | RP2040, 2 MB flash           | Modelo base; também serve Pico W           |
 | 2   | Potenciômetro                    | 10 kΩ linear (tipo B)        | **CR22E c/ stopper** (preferencial) — veja "Potenciômetros" abaixo |
-| 2   | Manopla / knob                    | ~32 mm, furo 6 mm c/ flat/set screw | Veja "Knobs" abaixo                  |
+| 2   | Manopla / knob                    | Ø~32 mm × ~20 mm alt., furo 6 mm c/ flat/set screw | Veja "Knobs" abaixo     |
 | 1   | Botão tátil (push button NA)     | 12 mm momentâneo             | START                                      |
 | 1   | Resistor 470 Ω                   | 1/4 W, 5%                    | DAC vídeo (sync)                           |
 | 1   | Resistor 220 Ω                   | 1/4 W, 5%                    | DAC vídeo (video)                          |
@@ -78,8 +78,16 @@ suficiente para reagir e fino o suficiente para mirar.
 | 38 mm    | ~106 mm                 | Confortável, leve folga       |
 | 50 mm+   | ~140 mm                 | Lento, exige muito punho      |
 
+**Altura recomendada: ~20 mm** (faixa útil 15–22 mm). Com Ø32 mm dá uma
+proporção confortável para girar com polegar + 1–2 dedos. Abaixo de ~15 mm
+falta superfície de pega; acima de ~25–30 mm o knob vira "alavanca" e força a
+bucha do pot (folga/desgaste). O furo (bore) deve assentar em boa parte do
+eixo (~14–15 mm dos ~15–17 mm úteis do CR22E) — não pode encostar só na ponta,
+senão balança.
+
 Especificação sugerida:
 
+- **Ø ~32 mm × ~20 mm de altura** — ver tabelas acima.
 - **Furo 6 mm com flat (D) ou parafuso de fixação (set screw)** — casa com o
   eixo do CR22E. Evite push-on de plástico genérico (solta no uso intenso).
 - **Pegada serrilhada (knurled) ou canelada (fluted)** — dedo suado escorrega
