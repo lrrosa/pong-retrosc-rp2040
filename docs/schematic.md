@@ -62,6 +62,29 @@ V_white = (3.3/470 + 3.3/220) / G = 1,103 V
 > **Por que não 1 kΩ + 470 Ω?** Funciona, mas o nível branco fica em ~0,63 V
 > (imagem escura). Os valores acima dão um Vpp próximo do ideal de 1 V.
 
+### Impedância de saída do GPIO (drive strength)
+
+O cálculo acima assume uma fonte ideal de 3,3 V. Na prática, cada pino GPIO do
+RP2040 tem uma impedância de saída em série que se soma a R1/R2 e **abaixa**
+os níveis (o branco fica abaixo de 1,10 V). No default (drive de 4 mA) essa
+impedância é de ~40–50 Ω; o projeto [obstruse/pico-composite8](https://github.com/obstruse/pico-composite8)
+mediu ~40 Ω e teve que compensar nos resistores do seu DAC R2R de 8 bits.
+
+No nosso DAC de 3 níveis isso é menos crítico (a TV tolera bem a faixa), mas
+em `src/ntsc.c` configuramos os pinos de vídeo para **drive de 12 mA com slew
+rate rápido**, o que reduz a impedância de saída, aproxima os níveis do
+calculado e deixa preto/branco mais consistentes:
+
+```c
+gpio_set_drive_strength(NTSC_SYNC_PIN,  GPIO_DRIVE_STRENGTH_12MA);
+gpio_set_drive_strength(NTSC_VIDEO_PIN, GPIO_DRIVE_STRENGTH_12MA);
+gpio_set_slew_rate(NTSC_SYNC_PIN,  GPIO_SLEW_RATE_FAST);
+gpio_set_slew_rate(NTSC_VIDEO_PIN, GPIO_SLEW_RATE_FAST);
+```
+
+> Se quiser calibrar com precisão, meça o branco com a TV conectada (carga de
+> 75 Ω) e ajuste R2 alguns ohms para baixo até chegar perto de 1,0–1,1 V.
+
 ## Áudio (PWM filtrado + amplificador)
 
 ```

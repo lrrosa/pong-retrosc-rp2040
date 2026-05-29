@@ -5,6 +5,7 @@
 #include "hardware/dma.h"
 #include "hardware/clocks.h"
 #include "hardware/irq.h"
+#include "hardware/gpio.h"
 
 #include "ntsc.pio.h"
 
@@ -82,6 +83,17 @@ void ntsc_init(void) {
     pio_gpio_init(NTSC_PIO, NTSC_VIDEO_PIN);
     pio_sm_set_consecutive_pindirs(NTSC_PIO, SM_SYNC, NTSC_SYNC_PIN, 1, true);
     pio_sm_set_consecutive_pindirs(NTSC_PIO, SM_DATA, NTSC_VIDEO_PIN, 1, true);
+
+    // Drive strength maximo (12 mA) + slew rate rapido nos pinos do DAC.
+    // O GPIO do RP2040 tem ~40-50 ohm de impedancia de saida no default
+    // (4 mA), o que abaixa os niveis do DAC Thevenin (branco fica < 1,10 V).
+    // Subir para 12 mA reduz essa impedancia e aproxima os niveis do
+    // calculado, deixando preto/branco mais consistentes e a imagem mais
+    // nitida. (Insight do projeto obstruse/pico-composite8.)
+    gpio_set_drive_strength(NTSC_SYNC_PIN,  GPIO_DRIVE_STRENGTH_12MA);
+    gpio_set_drive_strength(NTSC_VIDEO_PIN, GPIO_DRIVE_STRENGTH_12MA);
+    gpio_set_slew_rate(NTSC_SYNC_PIN,  GPIO_SLEW_RATE_FAST);
+    gpio_set_slew_rate(NTSC_VIDEO_PIN, GPIO_SLEW_RATE_FAST);
 
     // ----- 5. Configura sync SM -----
     {
