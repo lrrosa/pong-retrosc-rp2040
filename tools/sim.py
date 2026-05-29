@@ -61,7 +61,7 @@ def load_assets():
     root = Path(__file__).parent.parent
     text = (root / "src" / "assets.c").read_text(encoding="utf-8", errors="replace")
     assets = {}
-    for sym in ("retrosc_logo", "retrosc_mascote"):
+    for sym in ("retrosc_logo",):
         m = re.search(rf"{sym}_data\[\d+\]\s*=\s*\{{(.*?)\}};", text, re.DOTALL)
         if not m:
             raise RuntimeError(f"Nao achei {sym}_data em assets.c")

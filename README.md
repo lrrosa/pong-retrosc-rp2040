@@ -33,7 +33,7 @@ pong-rp2040/
 │   ├── schematic.md     <-- esquemático ASCII completo
 │   ├── pinout.md        <-- pinout do Pico
 │   ├── bom.md           <-- lista de materiais
-│   └── images/          <-- logo, mascote, fotos do gabinete
+│   └── images/          <-- logo, fotos do gabinete
 ├── src/
 │   ├── main.c
 │   ├── config.h         <-- constantes do projeto (pinos, dimensões, etc.)
@@ -185,9 +185,8 @@ Tudo importante está em [`src/config.h`](src/config.h):
 Para trocar o logo do attract:
 
 ```bash
-python tools/png_to_c.py docs/images/seu_logo.png   retrosc_logo   0   0   threshold > tools/_logo.inc
-python tools/png_to_c.py docs/images/seu_mascote.png retrosc_mascote 80 80 threshold > tools/_mascote.inc
-# Substituir os arrays correspondentes em src/assets.c
+python tools/png_to_c.py docs/images/seu_logo.png retrosc_logo 0 0 threshold > tools/_logo.inc
+# Substituir o array correspondente em src/assets.c
 ```
 
 Modo `threshold` (corte fixo em 128) é melhor para arte com contornos
@@ -195,8 +194,8 @@ definidos (logos, ícones). Modo `dither` (Floyd-Steinberg) é melhor para
 fotos com gradientes — mas em 60 Hz num CRT, o padrão de dithering pode
 ficar tremido. Para o evento, prefira `threshold`.
 
-Veja `docs/images/preview_logo_1bit.png` e `preview_mascote_1bit.png` para
-saber como ficou a versão 1-bit.
+Veja `docs/images/preview_logo_1bit.png` para saber como ficou a versão
+1-bit.
 
 ## Limitações conhecidas
 
@@ -217,9 +216,9 @@ saber como ficou a versão 1-bit.
   Este projeto é uma implementação independente (não copia o código), mas a
   análise daquele repositório foi essencial para definir o timing.
 - Pong original: Allan Alcorn, Atari (1972).
-- Logo e mascote da RetroSC: cortesia do evento [RetroSC](https://retrosc.org/).
+- Logo da RetroSC: cortesia do evento [RetroSC](https://retrosc.org/).
 
 ## Licença
 
-Código sob [MIT](LICENSE). Marcas e arte do evento RetroSC (logo, mascote)
+Código sob [MIT](LICENSE). Marcas e arte do evento RetroSC (logo)
 permanecem propriedade do evento — ver nota no `LICENSE`.

@@ -22,7 +22,7 @@ SOFTWARE.
 
 ----------------------------------------------------------------------------
 
-Os bitmaps do logo e do mascote da RetroSC localizados em docs/images/ e
+Os bitmaps do logo da RetroSC localizados em docs/images/ e
 embutidos como C arrays em src/assets.c sao marcas de RetroSC
 (https://retrosc.org/) e nao estao cobertos por esta licenca; estao
 incluidos para uso na atrac�o do evento RetroSC.
