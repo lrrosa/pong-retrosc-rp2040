@@ -5,7 +5,7 @@ Componentes para uma unidade do RetroSC Pong.
 | Qtd | Componente                       | Especificação                | Observações                                |
 | --: | -------------------------------- | ---------------------------- | ------------------------------------------ |
 | 1   | Raspberry Pi Pico (ou clone)     | RP2040, 2 MB flash           | Modelo base; também serve Pico W           |
-| 2   | Potenciômetro                    | 10 kΩ linear (tipo B)        | Veja "Potenciômetros" abaixo               |
+| 2   | Potenciômetro                    | 10 kΩ linear (tipo B)        | **CR22E c/ stopper** (preferencial) — veja "Potenciômetros" abaixo |
 | 2   | Manopla / knob                    | Encaixe 6 mm ou 6,35 mm      | Estética arcade                            |
 | 1   | Botão tátil (push button NA)     | 12 mm momentâneo             | START                                      |
 | 1   | Resistor 470 Ω                   | 1/4 W, 5%                    | DAC vídeo (sync)                           |
@@ -32,11 +32,21 @@ Componentes para uma unidade do RetroSC Pong.
 
 ## Potenciômetros — escolha por durabilidade
 
-**Tier 1 (recomendado para arcade):**
-- **Sakae FCP22E, 10 kΩ Linear (L), com Stopper** — conductive plastic,
-  vida útil ~10⁷ ciclos, eixo 6,35 mm, bushing M10. O stopper é importante:
-  sem ele o eixo gira "sem fim" e o jogador sente uma zona morta de 40°
-  acima/abaixo do curso elétrico. Datasheet:
+**Tier 1 — PREFERENCIAL (melhor custo × durabilidade):**
+- **CR22E, 10 kΩ Linear, com Stopper** — plástico condutivo, vida útil
+  **5×10⁶ ciclos**, linearidade ±1,5% (±1% versão precisão), ângulo elétrico
+  320°, eixo **6 mm com flat (D)**, bushing **M9 × P0,75**, furo de painel
+  Φ10,32 mm, corpo Φ22 mm, IP40, escova de liga de 6 elementos. Disponível em
+  marketplaces (AliExpress etc.) por uma fração do preço do Sakae, com
+  qualidade de plástico condutivo equivalente. **Atenção:** a versão padrão é
+  360° (rotação contínua / sem fim) — peça obrigatoriamente a variante **"com
+  stopper" (com batente)**; sem ela o eixo gira sem fim e o jogador sente uma
+  zona morta de 40° acima/abaixo do curso elétrico.
+
+**Tier 1 — premium (máxima durabilidade):**
+- **Sakae FCP22E, 10 kΩ Linear (L), com Stopper** — plástico condutivo,
+  vida útil ~10⁷ ciclos (2× o CR22E), eixo 6,35 mm, bushing M10. Mesmo cuidado
+  com o stopper: sem ele há a mesma zona morta de 40°. Datasheet:
   [folheto Sakae FCP22E](https://www.sakae-tsushin.co.jp/) (ou via
   distribuidores Mouser/Digi-Key).
 

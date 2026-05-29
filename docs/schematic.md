@@ -101,12 +101,14 @@ acoplamento de 10 µF — volume baixo, mas funciona.
 - **Linear** (tipo B / "L"). Logarítmico (tipo A) também funciona mas o
   movimento fica não-uniforme.
 - O capacitor de 100 nF entre wiper e GND reduz ruído do ADC.
-- **Para arcade:** recomendado Sakae FCP22E 10 kΩ Linear **com stopper**
-  (conductive plastic, ~10⁷ ciclos, eixo 6,35 mm). Sem stopper, o eixo
-  gira sem batente e o jogador encontra uma "zona morta" de 40° acima/
-  abaixo do curso elétrico (que é 320°). Veja [docs/bom.md](bom.md).
-- Furação do painel: **10,5 mm** (bushing M10 do FCP22E pede furo de
-  10,32 mm).
+- **Para arcade:** preferencial **CR22E 10 kΩ Linear com stopper** (plástico
+  condutivo, 5×10⁶ ciclos, eixo 6 mm com flat, bushing M9). Alternativa
+  premium: Sakae FCP22E (~10⁷ ciclos, eixo 6,35 mm, bushing M10). Em ambos o
+  **stopper é obrigatório**: sem ele o eixo gira sem batente e o jogador
+  encontra uma "zona morta" de 40° acima/abaixo do curso elétrico (que é
+  320°). Veja [docs/bom.md](bom.md).
+- Furação do painel: **10,5 mm** (ambos os bushings — M9 do CR22E e M10 do
+  FCP22E — pedem furo de Φ10,32 mm).
 
 ## Botão START
 
