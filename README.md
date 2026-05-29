@@ -4,7 +4,7 @@ Pong clássico de 2 jogadores em um Raspberry Pi Pico, com saída de **vídeo
 composto** (NTSC 1-bit gerado por PIO) e **áudio PWM**. Foi feito para uma
 máquina arcade do evento [**RetroSC**](https://retrosc.org/).
 
-![logo](docs/images/logo_retrosc.png) ![mascote](docs/images/mascote_retrosc.jpg)
+![logo](docs/images/logo_retrosc.png)
 
 ## Recursos
 
