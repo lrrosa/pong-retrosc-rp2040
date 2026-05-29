@@ -5,8 +5,8 @@ Componentes para uma unidade do RetroSC Pong.
 | Qtd | Componente                       | Especificação                | Observações                                |
 | --: | -------------------------------- | ---------------------------- | ------------------------------------------ |
 | 1   | Raspberry Pi Pico (ou clone)     | RP2040, 2 MB flash           | Modelo base; também serve Pico W           |
-| 2   | Potenciômetro                    | 10 kΩ linear (tipo B)        | Eixo longo para manopla externa            |
-| 2   | Manopla / knob                    | Encaixe 6 mm                 | Estética arcade                            |
+| 2   | Potenciômetro                    | 10 kΩ linear (tipo B)        | Veja "Potenciômetros" abaixo               |
+| 2   | Manopla / knob                    | Encaixe 6 mm ou 6,35 mm      | Estética arcade                            |
 | 1   | Botão tátil (push button NA)     | 12 mm momentâneo             | START                                      |
 | 1   | Resistor 470 Ω                   | 1/4 W, 5%                    | DAC vídeo (sync)                           |
 | 1   | Resistor 220 Ω                   | 1/4 W, 5%                    | DAC vídeo (video)                          |
@@ -29,6 +29,30 @@ Componentes para uma unidade do RetroSC Pong.
 | 1   | Fonte USB 5 V / 1 A              | Para alimentar o Pico sem PC               |
 | -   | Madeira / MDF p/ gabinete        | Caixa arcade compatível com a TV           |
 | -   | Adesivos / artes                 | Logo RetroSC nas laterais                  |
+
+## Potenciômetros — escolha por durabilidade
+
+**Tier 1 (recomendado para arcade):**
+- **Sakae FCP22E, 10 kΩ Linear (L), com Stopper** — conductive plastic,
+  vida útil ~10⁷ ciclos, eixo 6,35 mm, bushing M10. O stopper é importante:
+  sem ele o eixo gira "sem fim" e o jogador sente uma zona morta de 40°
+  acima/abaixo do curso elétrico. Datasheet:
+  [folheto Sakae FCP22E](https://www.sakae-tsushin.co.jp/) (ou via
+  distribuidores Mouser/Digi-Key).
+
+**Tier 2 (médio prazo):**
+- Bourns 3852A-282-103AL ou similar conductive plastic com stopper.
+- Vishay/Spectrol 248 series.
+
+**Tier 3 (protótipo / hobby):**
+- Qualquer pot 10 kΩ linear tipo B, eixo 6 mm, ~300° de rotação com
+  batente. Funciona bem mas dura bem menos em uso intensivo de evento.
+  Modelos comuns: Alpha RV16, WH148, ou os 10kΩ genéricos chineses.
+
+> A linearidade (±15% é normal em pots baratos) NÃO é crítica — o software
+> só mapeia ADC → posição vertical. O usuário não percebe não-linearidade
+> abaixo de uns 10%. O que IMPORTA é: **vida útil** (arcade = muitos giros)
+> e **suavidade** (sem "saltos" no sinal).
 
 ## Substituições aceitáveis
 
