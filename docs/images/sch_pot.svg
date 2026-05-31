@@ -43,7 +43,7 @@
   <text x="238" y="179" fill="#5b6b7a" font-size="12">100 nF</text>
 
   <!-- output -->
-  <polygon points="360,124 373,130 360,136" fill="#2563eb"/>
+  <polygon points="360,118 373,124 360,130" fill="#2563eb"/>
   <text x="380" y="121" fill="#2563eb">→ GP26 / GP27</text>
   <text x="380" y="137" fill="#5b6b7a" font-size="12">(ADC0 / ADC1)</text>
 
