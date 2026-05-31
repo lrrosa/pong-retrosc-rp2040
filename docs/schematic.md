@@ -1,46 +1,14 @@
 # Esquemático
 
-Esquemático em ASCII (referência para protoboard ou PCB). Para um
-diagrama gráfico, recomenda-se reconstruir em KiCad ou EasyEDA usando estas
-informações.
+Diagramas por **bloco funcional** (SVG). Cada bloco é independente; o mapa
+abaixo mostra apenas quais pinos do Pico vão para cada um. Para uma PCB,
+reconstrua em KiCad/EasyEDA a partir destes valores.
 
-```
-                          Raspberry Pi Pico (RP2040)
-                       +-----------------------------+
-                       |  USB                        |
-                       |                             |
-                       |  GP16 (pino 21) -- SYNC --+ |
-                       |  GP17 (pino 22) -- VIDEO -+-|---+---R1=470 Ω---+----- composto (RCA center)
-                       |  GP18 (pino 24) -- AUDIO -|--+                 |
-                       |                           |  |  R2=220 Ω <-----+ (do GP17)
-                       |  GP22 (pino 29) -- START -|  |  |
-                       |                           |  |  + (composto)
-                       |  GP26 (pino 31) <- P1 ----|--|--|---+ (wiper P1)
-                       |  GP27 (pino 32) <- P2 ----|--|--|---|----+ (wiper P2)
-                       |                           |  |  |   |    |
-                       |  3V3 (pino 36) ------------> |  |   |    |
-                       |  GND (pino 38) ----+         |  |   |    |
-                       |  VBUS(pino 40) -----------+  |  |   |    |
-                       +---------------------------|--|--|---|----+
-                                                   |  |  |   |
-                                                   |  |  |   |
-                                                   |  |  |   |
-   (DAC para video composto)                       v  v  v   v
-                                                                                
-                                                                                
-   +----------------+                                                            
-   | SYNC pin GP16  |----R1 = 470 Ω-----+                                        
-   +----------------+                   |                                        
-                                        +----o----+---o RCA Center (composto)   
-   +----------------+                   |    |    |                              
-   | VIDEO pin GP17 |----R2 = 220 Ω-----+    |    +---o RCA Shield (GND)         
-   +----------------+                        |                                   
-                                            === 75 Ω terminacao opcional         
-                                             |                                   
-                                            GND                                  
-```
+![Mapa de pinos usados](images/sch_pinout.svg)
 
 ## DAC de vídeo composto (2 resistores)
+
+![DAC de vídeo composto de 2 resistores](images/sch_video.svg)
 
 Combina os 2 pinos GPIO num sinal de 3 níveis lido pela TV:
 
@@ -99,16 +67,7 @@ corrente". Dois números úteis dele para este DAC:
 
 ## Áudio (PWM filtrado + amplificador)
 
-```
-                     R3=1k                                 +---- entrada IN+ do PAM8403
-   GP18 -----------/\/\/\------+-----+------+--------------+
-                               |     |      |
-                              ===   ===    ===
-                              C1    C2     (saida do filtro)
-                              100n   1u
-                               |     |
-                              GND   GND   ----- entrada IN- do PAM8403 (= GND)
-```
+![Áudio: filtro RC passa-baixa + amplificador](images/sch_audio.svg)
 
 - **R3 = 1 kΩ + C1 = 100 nF**: filtro RC passa-baixa (fc ≈ 1,6 kHz). Remove
   componentes do PWM, deixando passar os beeps do Pong (até ~500 Hz).
@@ -123,15 +82,7 @@ acoplamento de 10 µF — volume baixo, mas funciona.
 
 ## Potenciômetros
 
-```
-   +3V3 ---+
-           |
-          [pot 10K linear]  <-- wiper -----> GPIO (26 ou 27)
-           |                          |
-          GND                       100nF
-                                      |
-                                     GND
-```
+![Ligação do potenciômetro ao ADC](images/sch_pot.svg)
 
 - **Linear** (tipo B / "L"). Logarítmico (tipo A) também funciona mas o
   movimento fica não-uniforme.
@@ -162,11 +113,7 @@ acoplamento de 10 µF — volume baixo, mas funciona.
 
 ## Botão START
 
-```
-   GPIO22 ---+----[ botão NA ]---- GND
-             |
-             (pull-up interno habilitado em software)
-```
+![Botão START ligado ao GP22](images/sch_button.svg)
 
 Push-button momentâneo. Quando aberto, GP22 fica em 3,3 V (via pull-up
 interno). Quando pressionado, GP22 vai a GND e o software detecta o
