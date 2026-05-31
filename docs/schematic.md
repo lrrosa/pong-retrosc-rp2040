@@ -115,9 +115,10 @@ acoplamento de 10 µF — volume baixo, mas funciona.
 
 ![Botão START ligado ao GP22](images/sch_button.svg)
 
-Push-button momentâneo. Quando aberto, GP22 fica em 3,3 V (via pull-up
-interno). Quando pressionado, GP22 vai a GND e o software detecta o
-flanco de descida.
+Push-button momentâneo. **Só precisa de 2 fios: GP22 e GND** — o botão **não**
+recebe 3,3 V. Quando aberto, GP22 fica em 3,3 V via **pull-up interno** ao
+RP2040 (habilitado por software com `gpio_pull_up()`); quando pressionado, GP22
+vai a GND e o firmware detecta o flanco de descida.
 
 ## Alimentação
 
