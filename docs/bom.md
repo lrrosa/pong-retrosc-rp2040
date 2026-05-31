@@ -59,6 +59,25 @@ Componentes para uma unidade do RetroSC Pong.
   batente. Funciona bem mas dura bem menos em uso intensivo de evento.
   Modelos comuns: Alpha RV16, WH148, ou os 10kΩ genéricos chineses.
 
+### Como achar o modelo certo (termos de busca)
+
+A variante "com stopper" aparece com **vários nomes** nos marketplaces. Procure
+por qualquer um destes:
+
+- **"with stopper" / "com batente"**
+- **"end stop"** (ou "with end stop")
+- **"single turn"** — single-turn = uma volta limitada (~270–320°) com batente,
+  que é exatamente o que queremos.
+
+E **evite** os termos que indicam o oposto (gira sem fim, com a zona morta):
+
+- "endless" / "continuous rotation" / "360°" / "无限" (sem fim, em chinês)
+- "multi-turn" / "multiturn" — são pots de várias voltas (ex.: 10-turn), de
+  ajuste fino; lentos demais para controlar a raquete.
+
+> Dica: em muitos anúncios do CR22E/equivalentes há um seletor "with stopper /
+> without stopper" — confira que o escolhido é o **com** stopper antes de fechar.
+
 > A linearidade (±15% é normal em pots baratos) NÃO é crítica — o software
 > só mapeia ADC → posição vertical. O usuário não percebe não-linearidade
 > abaixo de uns 10%. O que IMPORTA é: **vida útil** (arcade = muitos giros)
