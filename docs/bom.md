@@ -64,6 +64,11 @@ Componentes para uma unidade do RetroSC Pong.
 > abaixo de uns 10%. O que IMPORTA é: **vida útil** (arcade = muitos giros)
 > e **suavidade** (sem "saltos" no sinal).
 
+> **10 kΩ ou 5 kΩ?** Tanto faz para o ADC do RP2040 — o datasheet diz que a
+> entrada tem impedância > 100 kΩ e dispensa buffer para sinais DC, então a
+> impedância do pot (≤ 2,5 kΩ) é irrelevante. Ficamos com 10 kΩ por convenção
+> e menor consumo. Detalhes em [docs/schematic.md](schematic.md#potenciômetros).
+
 ## Knobs / manoplas
 
 **Recomendado: ~32 mm de diâmetro** (faixa útil 30–38 mm). Como os 320°

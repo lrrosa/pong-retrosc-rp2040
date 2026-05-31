@@ -17,6 +17,13 @@ static bool last_button = false;
 static bool button_edge = false;
 
 void input_init(void) {
+    // Forca o SMPS da placa Pico em modo PWM (GPIO23 alto) para reduzir o
+    // ripple no supply do ADC -> leituras dos pots mais limpas. Inofensivo em
+    // clones onde esse pino nao tem essa funcao. (Datasheet do Pico, sec. 4.3.)
+    gpio_init(PICO_SMPS_PS_PIN);
+    gpio_set_dir(PICO_SMPS_PS_PIN, GPIO_OUT);
+    gpio_put(PICO_SMPS_PS_PIN, 1);
+
     adc_init();
     adc_gpio_init(POT_P1_GPIO);
     adc_gpio_init(POT_P2_GPIO);

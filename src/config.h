@@ -23,10 +23,18 @@
 // Potenciometros 10K (ADC). Wiper para o GPIO, extremos para 3V3 e GND.
 //   GPIO 26 = ADC0 = P1
 //   GPIO 27 = ADC1 = P2
+// (10K esta folgado: o ADC do RP2040 tem impedancia de entrada > 100k e
+//  dispensa buffer para sinais DC -- datasheet RP2040 secao 4.9.2.)
 #define POT_P1_GPIO       26
 #define POT_P2_GPIO       27
 #define POT_P1_ADC        0
 #define POT_P2_ADC        1
+
+// Pino de controle do SMPS da placa Pico (GPIO23 = "PS"). Colocar em nivel
+// alto forca o regulador em modo PWM, reduzindo o ripple no supply do ADC e
+// deixando as leituras dos pots mais estaveis (datasheet do Pico, secao 4.3).
+// Num arcade alimentado pela tomada/USB a perda de eficiencia e irrelevante.
+#define PICO_SMPS_PS_PIN  23
 
 // ===== Video =====
 #define FB_WIDTH          256

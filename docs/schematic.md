@@ -85,6 +85,18 @@ gpio_set_slew_rate(NTSC_VIDEO_PIN, GPIO_SLEW_RATE_FAST);
 > Se quiser calibrar com precisão, meça o branco com a TV conectada (carga de
 > 75 Ω) e ajuste R2 alguns ohms para baixo até chegar perto de 1,0–1,1 V.
 
+O datasheet do RP2040 (seção 5.5.3.5) confirma essa abordagem: "quanto maior o
+drive strength, mais próxima a tensão de saída fica de IOVDD para uma dada
+corrente". Dois números úteis dele para este DAC:
+
+- **Margem de corrente:** o limite do banco de IO é `I_IOVDD_MAX = 50 mA`. No
+  pior caso (branco, os dois pinos em '1') o DAC puxa ~10 mA no pino de vídeo
+  (220 Ω) + ~5 mA no de sync (470 Ω) = **~15 mA**. Folga enorme; sem risco. O
+  `VOH` mínimo a 3,3 V é 2,62 V já na corrente nominal, e puxamos bem menos.
+- **Decoupling de IOVDD:** o datasheet pede 100 nF perto de cada pino IOVDD.
+  Na **placa Pico isso já está pronto** — só importa se você fizer uma PCB com
+  o **RP2040 cru** (sem módulo), onde esses capacitores precisam ser incluídos.
+
 ## Áudio (PWM filtrado + amplificador)
 
 ```
@@ -124,6 +136,21 @@ acoplamento de 10 µF — volume baixo, mas funciona.
 - **Linear** (tipo B / "L"). Logarítmico (tipo A) também funciona mas o
   movimento fica não-uniforme.
 - O capacitor de 100 nF entre wiper e GND reduz ruído do ADC.
+- **Por que 10 kΩ (e não 5 kΩ)?** Para o ADC do RP2040 dá no mesmo: o
+  datasheet (seção 4.9.2) diz que a entrada tem impedância efetiva **> 100 kΩ**
+  e que para sinais DC **não há necessidade de buffer**. A impedância de saída
+  de um pot é no máximo `R/4` (≈ 2,5 kΩ no 10 kΩ), desprezível frente a 100 kΩ.
+  Escolhemos 10 kΩ por convenção e menor consumo (0,33 mA vs 0,66 mA por pot),
+  não por exigência do ADC. (Diferente de AVR/Arduino, que pedem fonte < 10 kΩ.)
+- **Retorno de terra:** ligue o GND dos pots ao **AGND (pino 33)** do Pico, que
+  tem um plano de terra analógico separado sob os GPIO26–29 — leitura mais
+  limpa do que usar o GND digital.
+- **Supply do ADC mais limpo:** o firmware põe o **GPIO23 em nível alto**, o que
+  força o SMPS da placa em modo PWM e reduz o ripple no ADC_VREF (datasheet do
+  Pico, seção 4.3). Nada a fazer no hardware.
+- **Resolução real:** o ADC tem ENOB ≈ **8,7 bits** (não 12) e picos de DNL em
+  4 códigos isolados (errata RP2040-E11); irrelevante aqui, pois mapeamos
+  0–4095 → ~168 px e ainda filtramos.
 - **Para arcade:** preferencial **CR22E 10 kΩ Linear com stopper** (plástico
   condutivo, 5×10⁶ ciclos, eixo 6 mm com flat, bushing M9). Alternativa
   premium: Sakae FCP22E (~10⁷ ciclos, eixo 6,35 mm, bushing M10). Em ambos o
