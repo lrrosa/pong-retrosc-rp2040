@@ -186,16 +186,25 @@ mkdir build && cd build && cmake -G Ninja .. && ninja && cd ..
 Controles no Wokwi: gire os **potenciômetros** (mouse) para mover as raquetes;
 **botão verde** = START.
 
+> **Importante:** abra a pasta `pong-rp2040` como raiz do workspace do VS Code
+> (o `wokwi.toml` precisa estar na raiz). Se clicar em "play" e nada acontecer,
+> rode antes `Ctrl+Shift+P` → "Wokwi: Request a New License" (token gratuito).
+
+> **Velocidade:** o Wokwi roda a ~30% do tempo real — é normal. Emular o vídeo
+> composto ciclo-a-ciclo no navegador é pesado. O **hardware real roda a 60 fps**
+> (PIO + DMA fazem o vídeo, a CPU fica livre).
+
 > **Se o Wokwi não abre no seu navegador:** ele exige WebAssembly + isolamento
 > cross-origin (`SharedArrayBuffer`); extensões ou políticas às vezes bloqueiam.
 > Use a **extensão do VS Code** (roda local) ou teste numa aba anônima. Se nem
 > os projetos públicos do Wokwi rodam aí, conserte isso antes — não é do nosso
 > projeto.
 
-> **Nota:** o `wokwi-tv` tem timing próprio; a imagem pode aparecer numa escala
-> diferente da TV real (nosso framebuffer é 256×192). Serve para validar
-> gameplay, sincronismo e o visual geral — a fidelidade final do sinal só na
-> TV CRT física.
+> **Centralização Wokwi × TV real:** a "janela visível" do `wokwi-tv` é
+> deslocada para cima, então `LINES_TOP_BLANK` (em `src/config.h`) está em **55**
+> para centralizar no simulador. Numa **TV CRT real** o centro padrão fica em
+> **~30–35** — reduza esse valor (ou use o controle de V-Position/V-Hold da TV).
+> A posição horizontal sai do "back porch" em `src/ntsc.pio`.
 
 ## Como jogar
 
