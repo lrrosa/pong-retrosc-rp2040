@@ -102,8 +102,9 @@ void ntsc_init(void) {
         sm_config_set_out_shift(&c, true /*shift right*/, false /*no autopull*/, 32);
         sm_config_set_in_shift(&c, false, false, 32);
         sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
-        // clkdiv = 294.236 -> linha de 27 ciclos casa com 63.555 us de NTSC
-        sm_config_set_clkdiv(&c, 294.236f);
+        // clkdiv = 147.118 -> linha de 54 ciclos casa com 63.555 us de NTSC.
+        // (54 ciclos em vez de 27 para o H-sync ficar em 4.71 us, padrao.)
+        sm_config_set_clkdiv(&c, 147.118f);
         pio_sm_init(NTSC_PIO, SM_SYNC, sync_offset, &c);
     }
 

@@ -21,3 +21,6 @@ tools/_*.inc
 # Python
 __pycache__/
 *.pyc
+
+# Wokwi: captura do analisador logico (debug, gerada localmente)
+*.vcd

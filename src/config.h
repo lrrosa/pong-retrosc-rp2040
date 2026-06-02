@@ -44,7 +44,11 @@
 
 #define LINES_PER_FRAME   262
 #define LINES_VSYNC       3
-#define LINES_TOP_BLANK   22
+// LINES_TOP_BLANK posiciona a imagem verticalmente (mais = imagem mais baixa).
+// 55 centraliza no simulador Wokwi (a "janela visivel" do wokwi-tv e deslocada
+// para cima). Numa TV CRT real o centro padrao fica em ~30-35; ajuste aqui ou
+// use o controle de V-Position/V-Hold da TV.
+#define LINES_TOP_BLANK   55
 #define LINES_ACTIVE      FB_HEIGHT          // 192
 #define LINES_BOT_BLANK   (LINES_PER_FRAME - LINES_VSYNC - LINES_TOP_BLANK - LINES_ACTIVE)
 

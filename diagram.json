@@ -7,29 +7,29 @@
     {
       "type": "wokwi-pi-pico",
       "id": "pico",
-      "top": 470,
+      "top": 680,
       "left": 60,
       "attrs": { "clock": "accurate" }
     },
     {
       "type": "wokwi-potentiometer",
       "id": "pot1",
-      "top": 540,
+      "top": 740,
       "left": 280,
       "attrs": { "value": "512" }
     },
-    { "type": "wokwi-buzzer", "id": "bz1", "top": 560, "left": 470, "attrs": {} },
+    { "type": "wokwi-buzzer", "id": "bz1", "top": 760, "left": 470, "attrs": {} },
     {
       "type": "wokwi-pushbutton",
       "id": "btn1",
-      "top": 580,
+      "top": 780,
       "left": 600,
       "attrs": { "color": "green", "label": "START", "key": "Space" }
     },
     {
       "type": "wokwi-potentiometer",
       "id": "pot2",
-      "top": 540,
+      "top": 740,
       "left": 740,
       "attrs": { "value": "512" }
     }
