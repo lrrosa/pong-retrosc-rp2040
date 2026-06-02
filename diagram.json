@@ -3,36 +3,36 @@
   "author": "RetroSC Pong",
   "editor": "wokwi",
   "parts": [
+    { "type": "wokwi-tv", "id": "tv1", "top": 0, "left": 180, "attrs": {} },
     {
       "type": "wokwi-pi-pico",
       "id": "pico",
-      "top": 0,
-      "left": 0,
+      "top": 470,
+      "left": 60,
       "attrs": { "clock": "accurate" }
     },
-    { "type": "wokwi-tv", "id": "tv1", "top": -280, "left": 40, "attrs": {} },
     {
       "type": "wokwi-potentiometer",
       "id": "pot1",
-      "top": 190,
-      "left": -180,
+      "top": 540,
+      "left": 280,
       "attrs": { "value": "512" }
+    },
+    { "type": "wokwi-buzzer", "id": "bz1", "top": 560, "left": 470, "attrs": {} },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "btn1",
+      "top": 580,
+      "left": 600,
+      "attrs": { "color": "green", "label": "START", "key": "Space" }
     },
     {
       "type": "wokwi-potentiometer",
       "id": "pot2",
-      "top": 190,
-      "left": 200,
+      "top": 540,
+      "left": 740,
       "attrs": { "value": "512" }
-    },
-    {
-      "type": "wokwi-pushbutton",
-      "id": "btn1",
-      "top": 230,
-      "left": 90,
-      "attrs": { "color": "green", "label": "START", "key": "Space" }
-    },
-    { "type": "wokwi-buzzer", "id": "bz1", "top": 230, "left": -40, "attrs": {} }
+    }
   ],
   "connections": [
     [ "pico:GP16", "tv1:SYNC", "gold", [] ],
