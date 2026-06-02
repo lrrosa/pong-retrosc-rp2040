@@ -161,6 +161,42 @@ no topo de `crt_effect()` em [tools/crt_preview.py](tools/crt_preview.py)
 e são bons pontos de partida; mexa neles pra ajustar pra TV verde, âmbar,
 ou ajustar o "estado" do tubo.
 
+## Simulador Wokwi (TV de verdade no navegador)
+
+Diferente do simulador Python (que reproduz a lógica do jogo), o **Wokwi roda
+o firmware compilado de verdade** no RP2040 emulado e mostra a saída de vídeo
+composto numa **TV virtual** (`wokwi-tv`), com potenciômetros, botão e buzzer.
+
+O `wokwi-tv` não usa DAC resistivo: ele lê os 2 pinos digitais direto e segue
+os pulsos de sync (funciona com NTSC e PAL). Os arquivos já estão no repo:
+
+- [`diagram.json`](diagram.json) — fiação: `GP16→SYNC`, `GP17→IN`, 2
+  potenciômetros em `GP26`/`GP27`, botão START em `GP22`, buzzer em `GP18`.
+- [`wokwi.toml`](wokwi.toml) — aponta para `build/pong-rp2040.uf2`/`.elf`.
+
+Como rodar (extensão do VS Code, mais confiável que o site):
+
+```bash
+# 1. Compile o firmware
+mkdir build && cd build && cmake -G Ninja .. && ninja && cd ..
+# 2. No VS Code: instale a extensão "Wokwi for VS Code" e faça login (grátis)
+# 3. Abra diagram.json e rode o comando "Wokwi: Start Simulator"
+```
+
+Controles no Wokwi: gire os **potenciômetros** (mouse) para mover as raquetes;
+**botão verde** = START.
+
+> **Se o Wokwi não abre no seu navegador:** ele exige WebAssembly + isolamento
+> cross-origin (`SharedArrayBuffer`); extensões ou políticas às vezes bloqueiam.
+> Use a **extensão do VS Code** (roda local) ou teste numa aba anônima. Se nem
+> os projetos públicos do Wokwi rodam aí, conserte isso antes — não é do nosso
+> projeto.
+
+> **Nota:** o `wokwi-tv` tem timing próprio; a imagem pode aparecer numa escala
+> diferente da TV real (nosso framebuffer é 256×192). Serve para validar
+> gameplay, sincronismo e o visual geral — a fidelidade final do sinal só na
+> TV CRT física.
+
 ## Como jogar
 
 - **Liga**: conecte alimentação (USB ou fonte 5 V).
