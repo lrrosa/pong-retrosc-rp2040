@@ -87,6 +87,18 @@ acoplamento de 10 µF — volume baixo, mas funciona.
 - **Linear** (tipo B / "L"). Logarítmico (tipo A) também funciona mas o
   movimento fica não-uniforme.
 - O capacitor de 100 nF entre wiper e GND reduz ruído do ADC.
+- **Onde montar o 100 nF: na placa, junto ao pino do ADC (GP26/GP27) — não no
+  potenciômetro.** Ele faz duas coisas e ambas pedem proximidade do pino: (1)
+  serve de reservatório de carga para o sample-and-hold do ADC (só funciona com
+  o cap colado no pino, sem cabo no meio); (2) drena para o terra o ruído que o
+  fio do wiper (alta impedância, ~2,5 kΩ) captou ao longo de todo o percurso,
+  **antes** de entrar no chip. A frequência de corte (~640 Hz) é a mesma
+  independente da posição, então não se perde filtragem ao montar na placa.
+- **Cabeamento do gabinete:** o fio do wiper é o ponto sensível. Mantenha-o
+  curto, roteie longe do amp de áudio / DAC de vídeo / fonte, e use par trançado
+  (wiper + GND) ou cabo blindado se passar de ~30–40 cm. Em gabinete muito
+  ruidoso dá para adicionar um segundo 100 nF no próprio pot (não atrapalha),
+  mas não é necessário.
 - **Por que 10 kΩ (e não 5 kΩ)?** Para o ADC do RP2040 dá no mesmo: o
   datasheet (seção 4.9.2) diz que a entrada tem impedância efetiva **> 100 kΩ**
   e que para sinais DC **não há necessidade de buffer**. A impedância de saída
