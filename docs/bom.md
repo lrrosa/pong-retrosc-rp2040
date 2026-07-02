@@ -10,9 +10,9 @@ Componentes para uma unidade do RetroSC Pong.
 | 1   | Botão tátil (push button NA)     | 12 mm momentâneo             | START                                      |
 | 1   | Resistor 470 Ω                   | 1/4 W, 5%                    | DAC vídeo (sync)                           |
 | 1   | Resistor 220 Ω                   | 1/4 W, 5%                    | DAC vídeo (video)                          |
-| 1   | Resistor 1 kΩ                    | 1/4 W                        | Filtro RC do áudio                         |
+| 3   | Resistor 1 kΩ                    | 1/4 W                        | Filtro RC (1) + entradas L/R do amp (2)    |
 | 1   | Capacitor 100 nF                 | cerâmico                     | Filtro RC                                  |
-| 1   | Capacitor 1 µF                   | eletrolítico ou tântalo       | Acoplamento DC do áudio                    |
+| 1   | Capacitor 1 µF                   | eletrolítico ou tântalo       | Acoplamento DC do áudio (obrigatório c/ chave no volume) |
 | 2   | Capacitor 100 nF                 | cerâmico                     | Filtragem dos ADCs                         |
 | 1   | Módulo amplificador              | PAM8403 (3 W) ou similar     | Alimentação 5 V                            |
 | 1   | Alto-falante                     | 4–8 Ω, 1–3 W                 | Tamanho conforme caixa                     |

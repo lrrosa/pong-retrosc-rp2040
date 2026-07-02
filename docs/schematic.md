@@ -71,11 +71,21 @@ corrente". Dois números úteis dele para este DAC:
 
 - **R3 = 1 kΩ + C1 = 100 nF**: filtro RC passa-baixa (fc ≈ 1,6 kHz). Remove
   componentes do PWM, deixando passar os beeps do Pong (até ~500 Hz).
-- **C2 = 1 µF**: capacitor de acoplamento DC, opcional dependendo do amp.
+- **C2 = 1 µF**: acoplamento DC. **Não é opcional** se o módulo tiver chave
+  liga/desliga no pot de volume: com o amp desligado e sem o C2, o PWM do GP18
+  injeta corrente pelo diodo de proteção da entrada do chip ("back-powering")
+  e o ruído resultante no terra chega a disparar a detecção de movimento dos
+  potenciômetros (sintoma real: o jogo "pulava" a tela de attract sozinho).
+- **2× 1 kΩ depois do C2, um para cada entrada (L e R)**: alimenta os dois
+  canais do PAM8403 com o sinal mono e isola uma entrada da outra. A carga
+  resultante (~5,5 kΩ) causa perda de ~15% no nível — irrelevante. Nenhuma
+  entrada fica aberta (entrada flutuando = chiado no canal sem uso).
 
 Amplificador sugerido: **PAM8403** (módulo barato, 3 W). Saída direta para
 alto-falante de 4–8 Ω (3 W). Ajustar potenciômetro de volume do módulo, ou
-adicionar um trimpot de 10 kΩ entre o filtro e a entrada do amp.
+adicionar um trimpot de 10 kΩ entre o filtro e a entrada do amp. **Deixe o
+amp sempre alimentado** — não use a chave do pot de volume para cortar o 5 V
+(ver nota do C2 acima).
 
 Alternativa minimalista: alto-falante de PC (8 Ω) direto via capacitor de
 acoplamento de 10 µF — volume baixo, mas funciona.
@@ -138,8 +148,19 @@ vai a GND e o firmware detecta o flanco de descida.
 - O PAM8403 precisa de 5 V — pode ser pegado em **VBUS** (pino 40) do Pico.
 - Se usar uma fonte externa, ligue em **VSYS** (pino 39) e o RP2040 regula
   para 3,3 V. NÃO ligue 5 V em 3V3 OUT.
-- Aterramento comum (GND): conecte o GND da fonte/USB, do amp, dos
-  potenciômetros e do RCA juntos.
+- **Aterramento em ESTRELA (importante!):** todos os GND são a mesma rede,
+  mas cada bloco deve ter o **seu próprio fio** até um pino GND do Pico — os
+  fios só se encontram no Pico, nunca encadeados um no outro:
+  - RCA shield (vídeo) → **GND pino 23** (ao lado de GP16/GP17);
+  - PAM8403 power − (retorno do alto-falante) → **GND pino 38**;
+  - G da entrada de áudio → junto do power − (no módulo é o mesmo plano);
+  - potenciômetros → **AGND pino 33**.
+
+  O retorno do alto-falante carrega picos de centenas de mA a cada beep; se
+  ele compartilhar o fio do shield do RCA, o terra do vídeo "salta" e a TV
+  perde o sincronismo no ritmo dos beeps (sintoma real observado: CRT piscando
+  a cada ~2 s na tela de attract — a cadência das rebatidas do demo — e TV
+  LED sem conseguir travar).
 
 ## Saída para TV
 
