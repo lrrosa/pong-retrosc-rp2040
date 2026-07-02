@@ -88,8 +88,11 @@ live in `src/config.h`.
   exactly 54 cycles**; with `.side_set 1` the max delay is `[15]`, so long waits are split.
 - **Image centering is two separate knobs:** horizontal = the back-porch `nop [..]`
   before `irq nowait 4` in `ntsc.pio` (~7 px/cycle); vertical = `LINES_TOP_BLANK` in
-  `config.h` (1 line/unit). `LINES_TOP_BLANK = 55` centers in Wokwi (its visible window
-  is shifted up); a **real TV wants ~30–35**.
+  `config.h` (1 line/unit). `LINES_TOP_BLANK = 35` centers on a **real TV** (the
+  project target); Wokwi's visible window is shifted up and would want ~55.
+- **Vsync must be serrated.** Each of the 3 vsync lines carries 2 half-line broad
+  pulses (23 cycles LOW + 4 HIGH). A whole-line LOW vsync loses the TV's H-lock:
+  CRTs drop sync periodically and LED TVs never lock (real-hardware validated).
 - **XIP suspends during flash writes**, so anything the running PIO/DMA dereferences must
   live in RAM, not flash/XIP. `fb_base_ptr` and `desc_base_ptr` in `ntsc.c` are
   deliberately non-`const` for this reason.

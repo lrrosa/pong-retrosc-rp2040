@@ -19,7 +19,9 @@
 ;   linha = 54 ciclos = 63.55 us  (NTSC: 63.555 us)
 ;   frame = 262 linhas = 16.65 ms (~60 Hz field)
 ;   H-sync = 4 ciclos = 4.71 us   (padrao NTSC/TVout; antes era 9.4 us)
-;   V-sync = 50 ciclos baixos = 58.85 us (padrao; igual ao TVout)
+;   V-sync = 3 linhas com 2 broad pulses serrilhados cada (meia-linha:
+;            23 LOW + 4 HIGH), como consoles 240p. TVs LED exigem as
+;            serrations para manter o H-lock durante o vsync.
 ;
 ; Data SM clock: sysclk / 4 = 31.25 MHz (periodo 32 ns)
 ;   bit period = 5 ciclos = 160 ns -> pixel rate = 6.25 MHz
@@ -43,20 +45,26 @@ top:
     out y, 1            side 0          ; (3)  LOW  y = active flag
     jmp !x normal       side 0          ; (4)  LOW  x=0 -> normal ; x=1 -> vsync (cai)
 
-; ---- VSYNC line: baixo ate ~58.85 us, depois alto ----
+; ---- VSYNC line: 2 "broad pulses" serrilhados a meia-linha (padrao NTSC) ----
+; Cada meia-linha (27 ciclos): 23 LOW (27.07 us) + 4 HIGH (4.71 us de serration).
+; 3 linhas destas = 6 broad pulses, como consoles classicos em 240p. O sync
+; separator da TV depende dessas serrations para manter o H-lock durante o
+; vsync; o formato anterior (linha inteira LOW) e rejeitado por muitas TVs LED.
     nop                 side 0 [15]     ; (5..20)  LOW (16)
-    nop                 side 0 [15]     ; (21..36) LOW (16)
-    nop                 side 0 [13]     ; (37..50) LOW (14)  -> baixo ciclos 1..50
+    nop                 side 0 [2]      ; (21..23) LOW (3)   -> LOW ciclos 1..23
+    nop                 side 1 [3]      ; (24..27) HIGH (4)  serration
+    nop                 side 0 [15]     ; (28..43) LOW (16)
+    nop                 side 0 [6]      ; (44..50) LOW (7)   -> LOW ciclos 28..50
     nop                 side 1 [2]      ; (51..53) HIGH (3)
-    jmp top             side 1          ; (54)     HIGH
+    jmp top             side 1          ; (54)     HIGH      serration final
 
 normal:
     jmp !y blank        side 1          ; (5)  HIGH libera sync; y=0 -> blank
-    nop                 side 1 [9]      ; (6..15)  HIGH back porch (10) -> centra horizontal
-    irq nowait 4        side 1          ; (16) HIGH aciona data SM
-    nop                 side 1 [15]     ; (17..32) HIGH (16)
-    nop                 side 1 [15]     ; (33..48) HIGH (16)
-    nop                 side 1 [4]      ; (49..53) HIGH (5)
+    nop                 side 1 [7]      ; (6..13)  HIGH back porch (8)
+    irq nowait 4        side 1          ; (14) HIGH aciona data SM (video comeca ~16.5us)
+    nop                 side 1 [15]     ; (15..30) HIGH (16)
+    nop                 side 1 [15]     ; (31..46) HIGH (16)
+    nop                 side 1 [6]      ; (47..53) HIGH (7)
     jmp top             side 1          ; (54) HIGH
 
 blank:
