@@ -67,7 +67,7 @@ corrente". Dois números úteis dele para este DAC:
 
 ## Áudio (PWM filtrado + amplificador)
 
-![Áudio: filtro RC passa-baixa + amplificador](images/sch_audio.svg)
+![Áudio: filtro RC + chave A/B (linha para TV ou PAM8403 + alto-falante)](images/sch_audio.svg)
 
 - **R3 = 1 kΩ + C1 = 100 nF**: filtro RC passa-baixa (fc ≈ 1,6 kHz). Remove
   componentes do PWM, deixando passar os beeps do Pong (até ~500 Hz).
@@ -99,6 +99,31 @@ amp sempre alimentado** — não use a chave do pot de volume para cortar o 5 V
 
 Alternativa minimalista: alto-falante de PC (8 Ω) direto via capacitor de
 acoplamento de 10 µF — volume baixo, mas funciona.
+
+### Chave A/B — áudio pela TV ou pelo alto-falante
+
+Uma **chave SPDT** (1 polo × 2 posições, mini toggle ON-ON) logo depois do C2
+seleciona o destino do áudio (ver diagrama acima):
+
+- **Posição A — TV:** o sinal passa por um divisor **10 kΩ (série) + 1 kΩ
+  (para GND)**, que derruba os ~2,8 Vpp do beep para ~0,25 Vpp (nível de
+  linha), e vai ao **RCA de áudio da TV** (centro = sinal, shield = GND na
+  estrela do Pico). Saída de linha é referenciada ao terra **por projeto** —
+  o terra comum interno da TV deixa de ser problema. Se o volume ficar baixo,
+  troque o 10 kΩ por 4,7 kΩ (~0,45 Vpp). Passe o cabo de áudio junto do cabo
+  de vídeo para minimizar a área do laço de terra.
+- **Posição B — alto-falante:** o sinal segue para os 2× 1 kΩ e o PAM8403,
+  com o alto-falante **flutuando** no par +/− do canal (ver alerta BTL acima).
+- O **10 kΩ para GND no lado B** da chave mantém as entradas do amp
+  referenciadas quando a chave está em A (entrada flutuando = chiado no
+  alto-falante).
+
+> ⚠️ **Nunca ligue a saída do PAM8403 na entrada de áudio da TV.** Dentro da
+> TV, os shields de todos os RCAs (vídeo e áudio) são o mesmo terra — plugar
+> o par de saída BTL ali aterra o Lout−/Rout− "por dentro" da TV, mesmo que
+> no multímetro (na bancada, cabos soltos) tudo pareça isolado. Sintoma real:
+> imagem perdendo o sincronismo total com o volume ligado. A posição A existe
+> exatamente para isso: som na TV vem do **nível de linha antes do amp**.
 
 ## Potenciômetros
 

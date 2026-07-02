@@ -1,65 +1,113 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 270" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
-  <rect x="0.5" y="0.5" width="659" height="269" rx="10" fill="#ffffff" stroke="#d0d7de"/>
-  <text x="20" y="30" font-size="14" font-weight="bold" fill="#16202a">Áudio — filtro RC + acoplamento + entradas L/R do PAM8403</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 440" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
+  <rect x="0.5" y="0.5" width="699" height="439" rx="10" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="20" y="30" font-size="14" font-weight="bold" fill="#16202a">Áudio — chave A/B: linha para a TV ou PAM8403 + alto-falante</text>
 
   <!-- pin -->
-  <rect x="16" y="80" width="120" height="30" rx="5" fill="#eef4ff" stroke="#16202a"/>
-  <text x="76" y="99" text-anchor="middle" fill="#16202a">GP18 · AUDIO</text>
+  <rect x="16" y="95" width="120" height="30" rx="5" fill="#eef4ff" stroke="#16202a"/>
+  <text x="76" y="114" text-anchor="middle" fill="#16202a">GP18 · AUDIO</text>
 
   <!-- R3 -->
-  <rect x="166" y="83" width="88" height="24" rx="3" fill="#ffffff" stroke="#16202a"/>
-  <text x="210" y="100" text-anchor="middle" fill="#16202a">R3 1 kΩ</text>
+  <rect x="166" y="98" width="88" height="24" rx="3" fill="#ffffff" stroke="#16202a"/>
+  <text x="210" y="115" text-anchor="middle" fill="#16202a">R3 1 kΩ</text>
 
-  <!-- main wires -->
+  <!-- chain wires -->
   <g stroke="#16202a" stroke-width="2" fill="none">
-    <line x1="136" y1="95" x2="166" y2="95"/>
-    <line x1="254" y1="95" x2="306" y2="95"/>
-    <line x1="314" y1="95" x2="368" y2="95"/>
-    <line x1="368" y1="60" x2="368" y2="130"/>
-    <line x1="368" y1="60" x2="398" y2="60"/>
-    <line x1="368" y1="130" x2="398" y2="130"/>
-    <line x1="478" y1="60" x2="530" y2="60"/>
-    <line x1="478" y1="130" x2="530" y2="130"/>
+    <line x1="136" y1="110" x2="166" y2="110"/>
+    <line x1="254" y1="110" x2="306" y2="110"/>
+    <line x1="314" y1="110" x2="360" y2="110"/>
   </g>
-  <circle cx="280" cy="95" r="3.5" fill="#16202a"/>
-  <circle cx="368" cy="95" r="3.5" fill="#16202a"/>
+  <circle cx="280" cy="110" r="3.5" fill="#16202a"/>
 
-  <!-- C1 shunt to GND -->
+  <!-- C1 shunt -->
   <g stroke="#16202a" stroke-width="2">
-    <line x1="280" y1="95" x2="280" y2="120"/>
-    <line x1="262" y1="120" x2="298" y2="120"/>
-    <line x1="262" y1="128" x2="298" y2="128"/>
-    <line x1="280" y1="128" x2="280" y2="148"/>
-    <line x1="268" y1="148" x2="292" y2="148"/>
-    <line x1="272" y1="153" x2="288" y2="153"/>
-    <line x1="276" y1="158" x2="284" y2="158"/>
+    <line x1="280" y1="110" x2="280" y2="135"/>
+    <line x1="262" y1="135" x2="298" y2="135"/>
+    <line x1="262" y1="143" x2="298" y2="143"/>
+    <line x1="280" y1="143" x2="280" y2="163"/>
+    <line x1="268" y1="163" x2="292" y2="163"/>
+    <line x1="272" y1="168" x2="288" y2="168"/>
+    <line x1="276" y1="173" x2="284" y2="173"/>
   </g>
-  <text x="254" y="128" text-anchor="end" fill="#5b6b7a" font-size="12">C1 100 nF</text>
+  <text x="254" y="147" text-anchor="end" fill="#5b6b7a" font-size="12">C1 100 nF</text>
 
   <!-- C2 series -->
   <g stroke="#16202a" stroke-width="2">
-    <line x1="306" y1="81" x2="306" y2="109"/>
-    <line x1="314" y1="81" x2="314" y2="109"/>
+    <line x1="306" y1="96" x2="306" y2="124"/>
+    <line x1="314" y1="96" x2="314" y2="124"/>
   </g>
-  <text x="310" y="72" text-anchor="middle" fill="#5b6b7a" font-size="12">C2 1 µF</text>
+  <text x="310" y="87" text-anchor="middle" fill="#5b6b7a" font-size="12">C2 1 µF</text>
 
-  <!-- build-out resistors -->
-  <rect x="398" y="48" width="80" height="24" rx="3" fill="#ffffff" stroke="#16202a"/>
-  <text x="438" y="65" text-anchor="middle" fill="#16202a">1 kΩ</text>
-  <rect x="398" y="118" width="80" height="24" rx="3" fill="#ffffff" stroke="#16202a"/>
-  <text x="438" y="135" text-anchor="middle" fill="#16202a">1 kΩ</text>
+  <!-- SPDT switch -->
+  <circle cx="360" cy="110" r="3.5" fill="#16202a"/>
+  <line x1="360" y1="110" x2="408" y2="86" stroke="#16202a" stroke-width="2"/>
+  <line x1="360" y1="110" x2="408" y2="134" stroke="#9aa7b3" stroke-width="2" stroke-dasharray="4 3"/>
+  <circle cx="410" cy="85" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <circle cx="410" cy="135" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <text x="424" y="103" fill="#5b6b7a" font-size="11">A · TV</text>
+  <text x="380" y="155" fill="#5b6b7a" font-size="11">B · amp</text>
+  <text x="256" y="205" fill="#5b6b7a" font-size="11">chave SPDT (A/B)</text>
 
-  <!-- outputs L / R -->
-  <polygon points="530,54 543,60 530,66" fill="#2563eb"/>
-  <text x="550" y="64" fill="#2563eb">L (módulo)</text>
-  <polygon points="530,124 543,130 530,136" fill="#2563eb"/>
-  <text x="550" y="134" fill="#2563eb">R (módulo)</text>
+  <!-- A path: elbow up, 10k series + 1k shunt -> TV -->
+  <g stroke="#16202a" stroke-width="2" fill="none">
+    <line x1="413" y1="85" x2="430" y2="85"/>
+    <line x1="430" y1="85" x2="430" y2="65"/>
+    <line x1="430" y1="65" x2="440" y2="65"/>
+    <line x1="520" y1="65" x2="610" y2="65"/>
+    <line x1="560" y1="65" x2="560" y2="88"/>
+    <line x1="560" y1="112" x2="560" y2="126"/>
+  </g>
+  <rect x="440" y="53" width="80" height="24" rx="3" fill="#ffffff" stroke="#16202a"/>
+  <text x="480" y="70" text-anchor="middle" fill="#16202a">10 kΩ</text>
+  <circle cx="560" cy="65" r="3.5" fill="#16202a"/>
+  <rect x="538" y="88" width="44" height="24" rx="3" fill="#ffffff" stroke="#16202a"/>
+  <text x="560" y="105" text-anchor="middle" font-size="12" fill="#16202a">1 kΩ</text>
+  <g stroke="#16202a" stroke-width="2">
+    <line x1="548" y1="126" x2="572" y2="126"/>
+    <line x1="552" y1="131" x2="568" y2="131"/>
+    <line x1="556" y1="136" x2="564" y2="136"/>
+  </g>
+  <polygon points="610,59 623,65 610,71" fill="#2563eb"/>
+  <text x="628" y="62" fill="#2563eb">TV áudio</text>
+  <text x="616" y="78" fill="#5b6b7a" font-size="11">(RCA centro)</text>
 
-  <!-- G (signal ground) -->
-  <text x="20" y="204" fill="#16202a">GND (pino 38 do Pico)</text>
-  <line x1="200" y1="200" x2="530" y2="200" stroke="#16202a" stroke-width="2"/>
-  <polygon points="530,194 543,200 530,206" fill="#2563eb"/>
-  <text x="550" y="204" fill="#2563eb">G (módulo)</text>
+  <!-- B path: elbow down, 2x 1k -> L/R + 10k bleed -->
+  <g stroke="#16202a" stroke-width="2" fill="none">
+    <line x1="413" y1="135" x2="437" y2="135"/>
+    <line x1="437" y1="135" x2="437" y2="165"/>
+    <line x1="437" y1="165" x2="437" y2="215"/>
+    <line x1="437" y1="165" x2="480" y2="165"/>
+    <line x1="544" y1="165" x2="600" y2="165"/>
+    <line x1="437" y1="215" x2="480" y2="215"/>
+    <line x1="544" y1="215" x2="600" y2="215"/>
+    <line x1="437" y1="215" x2="437" y2="245"/>
+    <line x1="437" y1="269" x2="437" y2="285"/>
+  </g>
+  <circle cx="437" cy="165" r="3.5" fill="#16202a"/>
+  <circle cx="437" cy="215" r="3.5" fill="#16202a"/>
+  <rect x="480" y="153" width="64" height="24" rx="3" fill="#ffffff" stroke="#16202a"/>
+  <text x="512" y="170" text-anchor="middle" font-size="12" fill="#16202a">1 kΩ</text>
+  <rect x="480" y="203" width="64" height="24" rx="3" fill="#ffffff" stroke="#16202a"/>
+  <text x="512" y="220" text-anchor="middle" font-size="12" fill="#16202a">1 kΩ</text>
+  <polygon points="600,159 613,165 600,171" fill="#2563eb"/>
+  <text x="622" y="169" fill="#2563eb">L (módulo)</text>
+  <polygon points="600,209 613,215 600,221" fill="#2563eb"/>
+  <text x="622" y="219" fill="#2563eb">R (módulo)</text>
+  <rect x="415" y="245" width="44" height="24" rx="3" fill="#ffffff" stroke="#16202a"/>
+  <text x="437" y="262" text-anchor="middle" font-size="11" fill="#16202a">10 kΩ</text>
+  <g stroke="#16202a" stroke-width="2">
+    <line x1="425" y1="285" x2="449" y2="285"/>
+    <line x1="429" y1="290" x2="445" y2="290"/>
+    <line x1="433" y1="295" x2="441" y2="295"/>
+  </g>
+  <text x="472" y="262" fill="#5b6b7a" font-size="11">mantém as entradas quietas em A</text>
 
-  <text x="330" y="248" text-anchor="middle" fill="#5b6b7a" font-size="12">fc ≈ 1,6 kHz · C2 bloqueia DC (back-powering) · 2×1 kΩ isolam as entradas L/R</text>
+  <!-- G / grounds -->
+  <text x="20" y="334" fill="#16202a">GND (estrela no Pico)</text>
+  <line x1="215" y1="330" x2="500" y2="330" stroke="#16202a" stroke-width="2"/>
+  <polygon points="500,324 513,330 500,336" fill="#2563eb"/>
+  <text x="523" y="326" fill="#2563eb">G (módulo) e shield</text>
+  <text x="523" y="342" fill="#2563eb">do RCA de áudio</text>
+
+  <text x="350" y="390" text-anchor="middle" fill="#5b6b7a" font-size="12">A: divisor ÷12 → ~0,25 Vpp (nível de linha) · TV baixa? troque 10 kΩ por 4,7 kΩ</text>
+  <text x="350" y="412" text-anchor="middle" fill="#5b6b7a" font-size="12">B: PAM8403 + alto-falante flutuando no par +/− (nunca aterrar a saída — BTL)</text>
 </svg>
