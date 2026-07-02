@@ -87,6 +87,16 @@ adicionar um trimpot de 10 kΩ entre o filtro e a entrada do amp. **Deixe o
 amp sempre alimentado** — não use a chave do pot de volume para cortar o 5 V
 (ver nota do C2 acima).
 
+> ⚠️ **As saídas de alto-falante do PAM8403 NÃO têm terra (BTL).** Cada canal
+> é uma ponte com os dois terminais ativos; o "−" da saída **não é GND**.
+> **Nunca** ligue Lout−/Rout− ao terra (do vídeo ou qualquer outro), **nunca**
+> junte Lout− com Rout−, e não conecte as saídas a fone/linha de outro
+> aparelho — isso curto-circuita uma saída chaveada e pode queimar o chip.
+> Cada alto-falante liga apenas no par +/− do seu canal, com par trançado
+> próprio. Com um alto-falante só, use um canal e deixe o outro par
+> desconectado (saída sem carga é seguro). Os únicos terras verdadeiros do
+> módulo são **power −** e o **G** da entrada — esses sim seguem a estrela.
+
 Alternativa minimalista: alto-falante de PC (8 Ω) direto via capacitor de
 acoplamento de 10 µF — volume baixo, mas funciona.
 
