@@ -3,7 +3,7 @@
 | Pino físico | GPIO   | Função          | Direção | Observações                                 |
 | ----------- | ------ | --------------- | ------- | ------------------------------------------- |
 | 21          | GP16   | NTSC SYNC       | OUT     | Vai para resistor 470 Ω → composto          |
-| 22          | GP17   | NTSC VIDEO      | OUT     | Vai para resistor 220 Ω → composto          |
+| 22          | GP17   | NTSC VIDEO      | OUT     | Vai para resistor 270 Ω → composto          |
 | 24          | GP18   | AUDIO PWM       | OUT     | Filtro RC + amp                             |
 | 29          | GP22   | START BUTTON    | IN      | Pull-up interno, push-button para GND       |
 | 31          | GP26 / ADC0 | POT P1     | AIN     | Wiper do pot esquerdo                       |

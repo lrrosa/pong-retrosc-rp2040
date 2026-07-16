@@ -9,10 +9,11 @@ Componentes para uma unidade do RetroSC Pong.
 | 2   | Manopla / knob                    | Ø~32 mm × ~20 mm alt., furo 6 mm c/ flat/set screw | Veja "Knobs" abaixo     |
 | 1   | Botão tátil (push button NA)     | 12 mm momentâneo             | START                                      |
 | 1   | Resistor 470 Ω                   | 1/4 W, 5%                    | DAC vídeo (sync)                           |
-| 1   | Resistor 220 Ω                   | 1/4 W, 5%                    | DAC vídeo (video)                          |
+| 1   | Resistor 270 Ω                   | 1/4 W, 5%                    | DAC vídeo (video) — branco ~1,0 V, validado na TV real |
 | 4   | Resistor 1 kΩ                    | 1/4 W                        | Filtro RC (1) + entradas L/R do amp (2) + divisor p/ TV (1) |
-| 2   | Resistor 10 kΩ                   | 1/4 W                        | Divisor p/ TV (1) + referência do lado B da chave (1) |
-| 1   | Chave SPDT                       | mini toggle ON-ON            | Seleciona áudio: A = TV (linha), B = alto-falante |
+| 1   | Resistor 10 kΩ                   | 1/4 W                        | Divisor de linha p/ TV                     |
+| 1   | Chave 4PDT                       | mini toggle ON-ON, 4 polos   | RCAs de áudio: A = linha p/ TV, B = saídas do amp |
+| 2   | Conector RCA fêmea (áudio)       | isolado do painel            | Centro e shield chaveados pela 4PDT — ver esquemático |
 | 1   | Capacitor 100 nF                 | cerâmico                     | Filtro RC                                  |
 | 1   | Capacitor 1 µF                   | eletrolítico ou tântalo       | Acoplamento DC do áudio (obrigatório c/ chave no volume) |
 | 2   | Capacitor 100 nF                 | cerâmico                     | Filtragem dos ADCs                         |
@@ -130,8 +131,9 @@ Especificação sugerida:
 
 ## Substituições aceitáveis
 
-- **Resistores DAC**: 1 kΩ + 470 Ω também funciona, mas com branco em
-  ~0,6 V (imagem mais escura). 560 + 270 dá resultado muito similar.
+- **Resistores DAC**: 220 Ω no lugar do 270 Ω também funciona (branco ~1,1 V,
+  um pouco "quente" — o 270 Ω foi validado na TV real com imagem melhor).
+  Evite 1 kΩ + 470 Ω: branco despenca para ~0,6 V (imagem escura).
 - **Amplificador**: LM386 com 8 componentes externos, TDA2030, ou módulos
   prontos baseados em PAM8302/PAM8403.
 - **Pico**: qualquer placa baseada em RP2040 com pelo menos os GPIOs

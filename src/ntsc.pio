@@ -10,10 +10,10 @@
 ;               Levanta IRQ 4 no inicio do active region das linhas ativas.
 ;   ntsc_data : aguarda IRQ 4 e clica 256 bits de pixel data por linha.
 ;
-; Combinacao por DAC resistivo (R_sync = 470 ohm, R_video = 220 ohm, term. 75 ohm):
+; Combinacao por DAC resistivo (R_sync = 470 ohm, R_video = 270 ohm, term. 75 ohm):
 ;   sync=0, data=0  ->  ~0.00 V   (sync tip)
-;   sync=1, data=0  ->  ~0.35 V   (preto / blanking)
-;   sync=1, data=1  ->  ~1.10 V   (branco)
+;   sync=1, data=0  ->  ~0.37 V   (preto / blanking)
+;   sync=1, data=1  ->  ~1.00 V   (branco)
 ;
 ; Sync SM clock: sysclk / 147.118 ~ 849650 Hz (periodo ~1.177 us)
 ;   linha = 54 ciclos = 63.55 us  (NTSC: 63.555 us)

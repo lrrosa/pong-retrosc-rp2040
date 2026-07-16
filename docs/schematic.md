@@ -15,26 +15,28 @@ Combina os 2 pinos GPIO num sinal de 3 níveis lido pela TV:
 | GP16 (SYNC) | GP17 (VIDEO) | Tensão na TV (75 Ω carga) | Significado          |
 | :---------: | :----------: | :-----------------------: | -------------------- |
 | 0           | 0            | 0,00 V                    | Sync tip             |
-| 1           | 0            | ~0,35 V                   | Black (blanking)     |
-| 1           | 1            | ~1,10 V                   | White                |
+| 1           | 0            | ~0,37 V                   | Black (blanking)     |
+| 1           | 1            | ~1,00 V                   | White                |
 | 0           | 1            | (não usado)               | -                    |
 
-Cálculo (Thevenin, 3,3 V, R1=470, R2=220, term=75):
+Cálculo (Thevenin, 3,3 V, R1=470, R2=270, term=75):
 
 ```
-G = 1/470 + 1/220 + 1/75 = 0,02001 S
-V_black = (3.3/470) / G = 0,351 V
-V_white = (3.3/470 + 3.3/220) / G = 1,103 V
+G = 1/470 + 1/270 + 1/75 = 0,01916 S
+V_black = (3.3/470) / G = 0,366 V
+V_white = (3.3/470 + 3.3/270) / G = 1,004 V
 ```
 
-> **Por que não 1 kΩ + 470 Ω?** Funciona, mas o nível branco fica em ~0,63 V
-> (imagem escura). Os valores acima dão um Vpp próximo do ideal de 1 V.
+> **Por que 270 Ω (e não 220 Ω)?** Com 220 Ω o branco fica em ~1,10 V — um
+> pouco "quente" acima do 1,00 V padrão. Com 270 Ω o branco cai exatamente em
+> ~1,00 V; **testado na TV real, a imagem fica visivelmente melhor**. (1 kΩ +
+> 470 Ω também funciona, mas o branco despenca para ~0,63 V — imagem escura.)
 
 ### Impedância de saída do GPIO (drive strength)
 
 O cálculo acima assume uma fonte ideal de 3,3 V. Na prática, cada pino GPIO do
 RP2040 tem uma impedância de saída em série que se soma a R1/R2 e **abaixa**
-os níveis (o branco fica abaixo de 1,10 V). No default (drive de 4 mA) essa
+os níveis (o branco fica abaixo do calculado). No default (drive de 4 mA) essa
 impedância é de ~40–50 Ω; o projeto [obstruse/pico-composite8](https://github.com/obstruse/pico-composite8)
 mediu ~40 Ω e teve que compensar nos resistores do seu DAC R2R de 8 bits.
 
@@ -50,16 +52,18 @@ gpio_set_slew_rate(NTSC_SYNC_PIN,  GPIO_SLEW_RATE_FAST);
 gpio_set_slew_rate(NTSC_VIDEO_PIN, GPIO_SLEW_RATE_FAST);
 ```
 
-> Se quiser calibrar com precisão, meça o branco com a TV conectada (carga de
-> 75 Ω) e ajuste R2 alguns ohms para baixo até chegar perto de 1,0–1,1 V.
+> O próprio **R2 = 270 Ω saiu dessa calibração**: partimos de 220 Ω (branco
+> teórico 1,10 V) e o teste na TV real mostrou imagem melhor com 270 Ω
+> (branco ~1,00 V). Se quiser refinar mais, meça o branco com a TV conectada
+> (carga de 75 Ω) e ajuste R2 até ~1,0 V.
 
 O datasheet do RP2040 (seção 5.5.3.5) confirma essa abordagem: "quanto maior o
 drive strength, mais próxima a tensão de saída fica de IOVDD para uma dada
 corrente". Dois números úteis dele para este DAC:
 
 - **Margem de corrente:** o limite do banco de IO é `I_IOVDD_MAX = 50 mA`. No
-  pior caso (branco, os dois pinos em '1') o DAC puxa ~10 mA no pino de vídeo
-  (220 Ω) + ~5 mA no de sync (470 Ω) = **~15 mA**. Folga enorme; sem risco. O
+  pior caso (branco, os dois pinos em '1') o DAC puxa ~8,5 mA no pino de vídeo
+  (270 Ω) + ~5 mA no de sync (470 Ω) = **~13 mA**. Folga enorme; sem risco. O
   `VOH` mínimo a 3,3 V é 2,62 V já na corrente nominal, e puxamos bem menos.
 - **Decoupling de IOVDD:** o datasheet pede 100 nF perto de cada pino IOVDD.
   Na **placa Pico isso já está pronto** — só importa se você fizer uma PCB com
@@ -67,7 +71,7 @@ corrente". Dois números úteis dele para este DAC:
 
 ## Áudio (PWM filtrado + amplificador)
 
-![Áudio: filtro RC + chave A/B (linha para TV ou PAM8403 + alto-falante)](images/sch_audio.svg)
+![Áudio: filtro RC, divisor de linha e entradas do PAM8403](images/sch_audio.svg)
 
 - **R3 = 1 kΩ + C1 = 100 nF**: filtro RC passa-baixa (fc ≈ 1,6 kHz). Remove
   componentes do PWM, deixando passar os beeps do Pong (até ~500 Hz).
@@ -100,30 +104,42 @@ amp sempre alimentado** — não use a chave do pot de volume para cortar o 5 V
 Alternativa minimalista: alto-falante de PC (8 Ω) direto via capacitor de
 acoplamento de 10 µF — volume baixo, mas funciona.
 
-### Chave A/B — áudio pela TV ou pelo alto-falante
+### Chave A/B — RCAs de áudio: linha p/ TV ou saídas do amp (4PDT)
 
-Uma **chave SPDT** (1 polo × 2 posições, mini toggle ON-ON) logo depois do C2
-seleciona o destino do áudio (ver diagrama acima):
+![Chave 4PDT selecionando o que os RCAs de áudio carregam](images/sch_audio_ab.svg)
 
-- **Posição A — TV:** o sinal passa por um divisor **10 kΩ (série) + 1 kΩ
-  (para GND)**, que derruba os ~2,8 Vpp do beep para ~0,25 Vpp (nível de
-  linha), e vai ao **RCA de áudio da TV** (centro = sinal, shield = GND na
-  estrela do Pico). Saída de linha é referenciada ao terra **por projeto** —
-  o terra comum interno da TV deixa de ser problema. Se o volume ficar baixo,
-  troque o 10 kΩ por 4,7 kΩ (~0,45 Vpp). Passe o cabo de áudio junto do cabo
-  de vídeo para minimizar a área do laço de terra.
-- **Posição B — alto-falante:** o sinal segue para os 2× 1 kΩ e o PAM8403,
-  com o alto-falante **flutuando** no par +/− do canal (ver alerta BTL acima).
-- O **10 kΩ para GND no lado B** da chave mantém as entradas do amp
-  referenciadas quando a chave está em A (entrada flutuando = chiado no
-  alto-falante).
+O gabinete tem **dois RCA fêmea de áudio**. Uma única chave **4PDT** (4 polos
+× 2 posições, mini toggle ou deslizante) escolhe o que eles carregam. **Não há
+chave no caminho de sinal**: o divisor de linha (10 kΩ + 1 kΩ, ~0,2 Vpp) e as
+entradas do amp ficam sempre conectados — por isso as entradas do PAM8403
+nunca flutuam e não é preciso resistor de referência extra.
 
-> ⚠️ **Nunca ligue a saída do PAM8403 na entrada de áudio da TV.** Dentro da
-> TV, os shields de todos os RCAs (vídeo e áudio) são o mesmo terra — plugar
-> o par de saída BTL ali aterra o Lout−/Rout− "por dentro" da TV, mesmo que
-> no multímetro (na bancada, cabos soltos) tudo pareça isolado. Sintoma real:
-> imagem perdendo o sincronismo total com o volume ligado. A posição A existe
-> exatamente para isso: som na TV vem do **nível de linha antes do amp**.
+| Polo | Comum (→ RCA)   | Lado A (TV)        | Lado B (amp) |
+| :--: | ---------------- | ------------------ | ------------ |
+| 1    | RCA-L · centro   | LINHA (divisor)    | Lout+        |
+| 2    | RCA-L · shield   | GND (estrela)      | Lout−        |
+| 3    | RCA-R · centro   | LINHA (divisor)    | Rout+        |
+| 4    | RCA-R · shield   | GND (estrela)      | Rout−        |
+
+- **Modo A — TV:** os RCAs carregam **nível de linha** referenciado ao GND —
+  plugue direto na entrada de áudio da TV. Saída de linha é referenciada ao
+  terra **por projeto**, então o terra comum interno da TV deixa de ser
+  problema. Volume baixo? Troque o 10 kΩ do divisor por 4,7 kΩ (~0,45 Vpp).
+  Passe o cabo de áudio junto do de vídeo para minimizar o laço de terra.
+- **Modo B — amp:** os RCAs carregam as **saídas BTL** do PAM8403 (+ no
+  centro, − no shield) para **caixas passivas** plugadas neles.
+- No modo A o amp amplifica "para o nada" (saída aberta é seguro em
+  classe-D); se preferir, desligue-o no interruptor do volume — o C2 doma o
+  back-powering.
+
+> ⚠️ **Dois cuidados obrigatórios:** (1) os **RCAs devem ser isolados do
+> painel** se ele for metálico — no modo B o shield é Lout−/Rout− (saída
+> ativa), e encostar num chassi aterrado recria o curto BTL. (2) **No modo B,
+> nunca plugue o cabo da TV nos RCAs** — dentro da TV os shields de todos os
+> RCAs são o mesmo terra e o curto se fecha "por dentro" (foi um sintoma real:
+> perda total de sincronismo com o volume ligado; o multímetro na bancada não
+> enxerga porque a junção só existe com os cabos plugados). **Etiquete a
+> chave**: som na TV é só no modo A.
 
 ## Potenciômetros
 

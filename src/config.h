@@ -4,7 +4,7 @@
 // ===== Pinos =====
 // Video composto: DAC resistivo de 2 bits.
 //   SYNC_PIN  --[470 ohm]--+
-//   VIDEO_PIN --[220 ohm]--+---- RCA center (composite out)
+//   VIDEO_PIN --[270 ohm]--+---- RCA center (composite out)
 //                          +---- 75 ohm  ---- GND (terminacao da TV)
 #define NTSC_SYNC_PIN     16
 #define NTSC_VIDEO_PIN    17

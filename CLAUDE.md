@@ -53,7 +53,7 @@ catches timing/instruction errors) plus running a simulator.
   (= 63.55 µs). The first 4 cycles (descriptor fetch, sync held low) are the
   **H-sync = 4.71 µs** — this exact width matters (see gotchas).
 - `ntsc_data` waits on IRQ 4 and clocks 256 framebuffer bits onto the VIDEO pin.
-- The two pins form a **2-resistor DAC** (470 Ω sync + 220 Ω video) → 3 analog
+- The two pins form a **2-resistor DAC** (470 Ω sync + 270 Ω video) → 3 analog
   levels (sync/black/white). On Wokwi the same two pins are read digitally by `wokwi-tv`.
 - `line_descriptors[262]` is built in `ntsc_init()` from `LINES_VSYNC` / `LINES_TOP_BLANK`
   / `LINES_ACTIVE` / `LINES_BOT_BLANK` (`config.h`). DMA chains (sync descriptors and

@@ -12,7 +12,7 @@
   <rect x="184" y="61" width="104" height="24" rx="3" fill="#ffffff" stroke="#16202a"/>
   <text x="236" y="78" text-anchor="middle" fill="#16202a">R1 470 Ω</text>
   <rect x="184" y="135" width="104" height="24" rx="3" fill="#ffffff" stroke="#16202a"/>
-  <text x="236" y="152" text-anchor="middle" fill="#16202a">R2 220 Ω</text>
+  <text x="236" y="152" text-anchor="middle" fill="#16202a">R2 270 Ω</text>
 
   <!-- wires -->
   <g stroke="#16202a" stroke-width="2" fill="none">

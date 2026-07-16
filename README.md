@@ -61,7 +61,7 @@ Resumo do hardware:
 
 | Bloco                  | Pinos do Pico  | Componentes externos                 |
 | ---------------------- | -------------- | ------------------------------------ |
-| Vídeo composto (RCA)   | GP16 (sync), GP17 (video) | 1× 470 Ω, 1× 220 Ω          |
+| Vídeo composto (RCA)   | GP16 (sync), GP17 (video) | 1× 470 Ω, 1× 270 Ω          |
 | Áudio (alto-falante)   | GP18 (PWM)     | 1 kΩ + 100 nF (filtro RC) + amp PAM8403 |
 | Botão START            | GP22           | push button para GND                 |
 | Potenciômetro P1       | GP26 (ADC0)    | pot 10 kΩ linear + 100 nF para GND   |
