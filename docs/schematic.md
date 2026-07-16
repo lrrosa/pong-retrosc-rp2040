@@ -154,12 +154,19 @@ nunca flutuam e não é preciso resistor de referência extra.
 **O áudio do Pong é mono** (um único beep no GP18), então estéreo não agrega
 nada — dá para fazer o mesmo A/B com apenas **2 polos**, usando uma **DPDT**
 (mais fácil de achar; uma chave seletora de tensão de 6 pinos serve). Ligue os
-**dois RCAs em paralelo** e comute-os juntos:
+**dois RCAs em paralelo** e comute-os juntos.
 
-| Polo | Comum (→ RCAs)              | Lado A (TV)     | Lado B (amp) |
-| :--: | --------------------------- | --------------- | ------------ |
-| 1    | centro do RCA-L **+** RCA-R | LINHA (divisor) | Lout+        |
-| 2    | shield do RCA-L **+** RCA-R | GND (estrela)   | Lout−        |
+Numeração típica da DPDT de 6 pinos (vista de baixo, 2 fileiras de 3 — a
+**fileira do meio são os comuns**):
+
+| Pino          | Liga em                             | Quando        |
+| :-----------: | ----------------------------------- | ------------- |
+| **3** (comum) | **centros** dos RCAs (L e R juntos) | sempre        |
+| 1             | LINHA (saída do divisor)            | posição **A** |
+| 5             | Lout+ do PAM8403                    | posição **B** |
+| **4** (comum) | **shields** dos RCAs (L e R juntos) | sempre        |
+| 2             | GND (estrela do Pico)               | posição **A** |
+| 6             | Lout− do PAM8403                    | posição **B** |
 
 - Só o canal **Lout** é usado; **Rout fica livre** (não ligue em nada).
 - **Modo A:** os dois RCAs mandam o mesmo mono para a TV — plugue em L, em R,
@@ -171,11 +178,20 @@ nada — dá para fazer o mesmo A/B com apenas **2 polos**, usando uma **DPDT**
 
 > ⚠️ **"6 pinos" ≠ "6 polos".** Uma chave com 6 terminais em 2 fileiras de 3 é
 > uma **DPDT**: 2 polos × (1 comum + 2 posições). Um 6PDT de verdade teria 18
-> terminais. **Meça antes de soldar:** chaves seletoras de tensão às vezes têm
-> os dois comuns **pontados internamente** — aqui eles precisam ser
-> independentes (sem continuidade entre si). Confirme também qual pino de cada
-> trio é o comum (normalmente o do meio). Corrente não é problema: 3 A / 250 V
-> é folga enorme para sinal de áudio.
+> terminais. Corrente não é problema: 3 A / 250 V é folga enorme para sinal de
+> áudio.
+>
+> **Meça antes de soldar** (a numeração acima é a típica, mas confirme na sua):
+> 1. **Comuns:** com a chave numa posição, o comum é o pino que dá continuidade
+>    com **um** dos vizinhos e, ao virar a alavanca, passa a dar com **o outro**
+>    (normalmente a fileira do meio: 3 e 4).
+> 2. **Independência:** os dois comuns (3 e 4) **não podem ter continuidade
+>    entre si** em nenhuma posição — chaves seletoras de tensão às vezes vêm com
+>    eles pontados internamente, e nesse caso a chave **não serve** (aterraria
+>    o Lout−).
+> 3. **Pares:** confirme que 3 fecha com 1 numa posição e com 5 na outra; e que
+>    4 fecha com 2 e 6 nas mesmas posições (3+1 e 4+2 têm que fechar **juntos**
+>    — é o "ganged").
 
 **Qual escolher?** A **DPDT/mono** é suficiente e mais simples — use-a se tiver
 essa chave à mão. A **4PDT** só vale se você quiser os dois jacks RCA
