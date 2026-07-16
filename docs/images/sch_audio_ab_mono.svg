@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 400" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
+  <rect x="0.5" y="0.5" width="699" height="399" rx="10" fill="#ffffff" stroke="#d0d7de"/>
+  <text x="20" y="30" font-size="14" font-weight="bold" fill="#16202a">Variante mono — chave DPDT (2 polos) nos RCAs de áudio</text>
+  <text x="20" y="52" fill="#5b6b7a" font-size="11">linha cheia = posição A (linha/GND, desenhada) ·</text>
+  <text x="330" y="52" fill="#d1242f" font-size="11">tracejado vermelho = posição B (amp)</text>
+
+  <!-- dashed switch body -->
+  <rect x="228" y="80" width="116" height="160" rx="8" fill="#f6f8fa" stroke="#9aa7b3" stroke-dasharray="5 3"/>
+
+  <!-- ===== pole 1: centros ===== -->
+  <circle cx="253" cy="102" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <circle cx="253" cy="138" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <circle cx="320" cy="120" r="3.5" fill="#16202a"/>
+  <line x1="320" y1="120" x2="256" y2="104" stroke="#16202a" stroke-width="2"/>
+  <line x1="320" y1="120" x2="256" y2="136" stroke="#d1242f" stroke-width="2" stroke-dasharray="5 3"/>
+  <text x="240" y="106" text-anchor="end" fill="#16202a">LINHA</text>
+  <text x="240" y="142" text-anchor="end" fill="#16202a">Lout+</text>
+  <line x1="320" y1="120" x2="400" y2="120" stroke="#16202a" stroke-width="2"/>
+  <polygon points="400,114 413,120 400,126" fill="#2563eb"/>
+  <text x="422" y="116" fill="#2563eb">centro do RCA-L</text>
+  <text x="422" y="132" fill="#2563eb">+ centro do RCA-R</text>
+
+  <!-- ===== pole 2: shields ===== -->
+  <circle cx="253" cy="182" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <circle cx="253" cy="218" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <circle cx="320" cy="200" r="3.5" fill="#16202a"/>
+  <line x1="320" y1="200" x2="256" y2="184" stroke="#16202a" stroke-width="2"/>
+  <line x1="320" y1="200" x2="256" y2="216" stroke="#d1242f" stroke-width="2" stroke-dasharray="5 3"/>
+  <text x="240" y="186" text-anchor="end" fill="#16202a">GND</text>
+  <text x="240" y="222" text-anchor="end" fill="#16202a">Lout−</text>
+  <line x1="320" y1="200" x2="400" y2="200" stroke="#16202a" stroke-width="2"/>
+  <polygon points="400,194 413,200 400,206" fill="#2563eb"/>
+  <text x="422" y="196" fill="#2563eb">shield do RCA-L</text>
+  <text x="422" y="212" fill="#2563eb">+ shield do RCA-R</text>
+
+  <text x="286" y="262" text-anchor="middle" fill="#5b6b7a" font-size="11">2 polos, 1 alavanca</text>
+
+  <text x="350" y="304" text-anchor="middle" fill="#5b6b7a" font-size="12">Áudio do Pong é mono: só o canal Lout é usado (Rout fica livre).</text>
+  <text x="350" y="326" text-anchor="middle" fill="#5b6b7a" font-size="12">Modo B: plugue só UMA caixa passiva (duas em paralelo ≈ 2 Ω forçam o amp).</text>
+  <text x="350" y="348" text-anchor="middle" fill="#d1242f" font-size="12">Meça antes: os 2 comuns têm que ser independentes (sem continuidade entre si).</text>
+  <text x="350" y="370" text-anchor="middle" fill="#5b6b7a" font-size="12">Valem os mesmos avisos da 4PDT: RCAs isolados do painel · modo B nunca na TV.</text>
+</svg>

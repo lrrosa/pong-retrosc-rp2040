@@ -104,7 +104,13 @@ amp sempre alimentado** — não use a chave do pot de volume para cortar o 5 V
 Alternativa minimalista: alto-falante de PC (8 Ω) direto via capacitor de
 acoplamento de 10 µF — volume baixo, mas funciona.
 
-### Chave A/B — RCAs de áudio: linha p/ TV ou saídas do amp (4PDT)
+### Chave A/B — RCAs de áudio: linha p/ TV ou saídas do amp
+
+Duas variantes, mesma ideia: **4PDT** (abaixo, RCAs independentes) ou
+**DPDT/mono** (mais simples — veja no fim da seção; é a suficiente para o
+Pong, cujo áudio é mono).
+
+#### Variante estéreo — chave 4PDT (4 polos)
 
 ![Chave 4PDT selecionando o que os RCAs de áudio carregam](images/sch_audio_ab.svg)
 
@@ -140,6 +146,40 @@ nunca flutuam e não é preciso resistor de referência extra.
 > perda total de sincronismo com o volume ligado; o multímetro na bancada não
 > enxerga porque a junção só existe com os cabos plugados). **Etiquete a
 > chave**: som na TV é só no modo A.
+
+#### Variante mono — chave DPDT (2 polos)
+
+![Variante mono: chave DPDT de 2 polos nos RCAs](images/sch_audio_ab_mono.svg)
+
+**O áudio do Pong é mono** (um único beep no GP18), então estéreo não agrega
+nada — dá para fazer o mesmo A/B com apenas **2 polos**, usando uma **DPDT**
+(mais fácil de achar; uma chave seletora de tensão de 6 pinos serve). Ligue os
+**dois RCAs em paralelo** e comute-os juntos:
+
+| Polo | Comum (→ RCAs)              | Lado A (TV)     | Lado B (amp) |
+| :--: | --------------------------- | --------------- | ------------ |
+| 1    | centro do RCA-L **+** RCA-R | LINHA (divisor) | Lout+        |
+| 2    | shield do RCA-L **+** RCA-R | GND (estrela)   | Lout−        |
+
+- Só o canal **Lout** é usado; **Rout fica livre** (não ligue em nada).
+- **Modo A:** os dois RCAs mandam o mesmo mono para a TV — plugue em L, em R,
+  ou nos dois.
+- **Modo B:** plugue **apenas UMA caixa passiva**. Duas em paralelo caem para
+  ~2 Ω e forçam o amp.
+- Valem os **mesmos dois cuidados** da 4PDT (RCAs isolados do painel; nunca a
+  TV no modo B).
+
+> ⚠️ **"6 pinos" ≠ "6 polos".** Uma chave com 6 terminais em 2 fileiras de 3 é
+> uma **DPDT**: 2 polos × (1 comum + 2 posições). Um 6PDT de verdade teria 18
+> terminais. **Meça antes de soldar:** chaves seletoras de tensão às vezes têm
+> os dois comuns **pontados internamente** — aqui eles precisam ser
+> independentes (sem continuidade entre si). Confirme também qual pino de cada
+> trio é o comum (normalmente o do meio). Corrente não é problema: 3 A / 250 V
+> é folga enorme para sinal de áudio.
+
+**Qual escolher?** A **DPDT/mono** é suficiente e mais simples — use-a se tiver
+essa chave à mão. A **4PDT** só vale se você quiser os dois jacks RCA
+funcionando de forma **independente** (ex.: duas caixas passivas em modo B).
 
 ## Potenciômetros
 

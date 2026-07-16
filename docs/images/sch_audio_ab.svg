@@ -1,58 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 470" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
-  <rect x="0.5" y="0.5" width="699" height="469" rx="10" fill="#ffffff" stroke="#d0d7de"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 490" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
+  <rect x="0.5" y="0.5" width="699" height="489" rx="10" fill="#ffffff" stroke="#d0d7de"/>
   <text x="20" y="30" font-size="14" font-weight="bold" fill="#16202a">Chave 4PDT — RCAs de áudio: A = linha p/ TV · B = saídas do amp</text>
-  <text x="20" y="52" fill="#5b6b7a" font-size="11">throw de cima = lado A (linha/GND) · throw de baixo = lado B (PAM8403)</text>
+  <text x="20" y="52" fill="#5b6b7a" font-size="11">linha cheia = posição A (linha/GND, desenhada) ·</text>
+  <text x="330" y="52" fill="#d1242f" font-size="11">tracejado vermelho = posição B (amp)</text>
 
   <!-- dashed switch body -->
-  <rect x="228" y="72" width="116" height="288" rx="8" fill="#f6f8fa" stroke="#9aa7b3" stroke-dasharray="5 3"/>
+  <rect x="228" y="80" width="116" height="288" rx="8" fill="#f6f8fa" stroke="#9aa7b3" stroke-dasharray="5 3"/>
 
   <!-- ===== pole 1: RCA-L centro ===== -->
-  <circle cx="253" cy="94" r="3.5" fill="#ffffff" stroke="#16202a"/>
-  <circle cx="253" cy="130" r="3.5" fill="#ffffff" stroke="#16202a"/>
-  <circle cx="320" cy="112" r="3.5" fill="#16202a"/>
-  <line x1="320" y1="112" x2="256" y2="96" stroke="#16202a" stroke-width="2"/>
-  <text x="240" y="98" text-anchor="end" fill="#16202a">LINHA</text>
-  <text x="240" y="134" text-anchor="end" fill="#16202a">Lout+</text>
-  <line x1="320" y1="112" x2="400" y2="112" stroke="#16202a" stroke-width="2"/>
-  <polygon points="400,106 413,112 400,118" fill="#2563eb"/>
-  <text x="422" y="116" fill="#2563eb">RCA-L · centro</text>
+  <circle cx="253" cy="102" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <circle cx="253" cy="138" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <circle cx="320" cy="120" r="3.5" fill="#16202a"/>
+  <line x1="320" y1="120" x2="256" y2="104" stroke="#16202a" stroke-width="2"/>
+  <line x1="320" y1="120" x2="256" y2="136" stroke="#d1242f" stroke-width="2" stroke-dasharray="5 3"/>
+  <text x="240" y="106" text-anchor="end" fill="#16202a">LINHA</text>
+  <text x="240" y="142" text-anchor="end" fill="#16202a">Lout+</text>
+  <line x1="320" y1="120" x2="400" y2="120" stroke="#16202a" stroke-width="2"/>
+  <polygon points="400,114 413,120 400,126" fill="#2563eb"/>
+  <text x="422" y="124" fill="#2563eb">RCA-L · centro</text>
 
   <!-- ===== pole 2: RCA-L shield ===== -->
-  <circle cx="253" cy="164" r="3.5" fill="#ffffff" stroke="#16202a"/>
-  <circle cx="253" cy="200" r="3.5" fill="#ffffff" stroke="#16202a"/>
-  <circle cx="320" cy="182" r="3.5" fill="#16202a"/>
-  <line x1="320" y1="182" x2="256" y2="166" stroke="#16202a" stroke-width="2"/>
-  <text x="240" y="168" text-anchor="end" fill="#16202a">GND</text>
-  <text x="240" y="204" text-anchor="end" fill="#16202a">Lout−</text>
-  <line x1="320" y1="182" x2="400" y2="182" stroke="#16202a" stroke-width="2"/>
-  <polygon points="400,176 413,182 400,188" fill="#2563eb"/>
-  <text x="422" y="186" fill="#2563eb">RCA-L · shield</text>
+  <circle cx="253" cy="172" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <circle cx="253" cy="208" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <circle cx="320" cy="190" r="3.5" fill="#16202a"/>
+  <line x1="320" y1="190" x2="256" y2="174" stroke="#16202a" stroke-width="2"/>
+  <line x1="320" y1="190" x2="256" y2="206" stroke="#d1242f" stroke-width="2" stroke-dasharray="5 3"/>
+  <text x="240" y="176" text-anchor="end" fill="#16202a">GND</text>
+  <text x="240" y="212" text-anchor="end" fill="#16202a">Lout−</text>
+  <line x1="320" y1="190" x2="400" y2="190" stroke="#16202a" stroke-width="2"/>
+  <polygon points="400,184 413,190 400,196" fill="#2563eb"/>
+  <text x="422" y="194" fill="#2563eb">RCA-L · shield</text>
 
   <!-- ===== pole 3: RCA-R centro ===== -->
-  <circle cx="253" cy="248" r="3.5" fill="#ffffff" stroke="#16202a"/>
-  <circle cx="253" cy="284" r="3.5" fill="#ffffff" stroke="#16202a"/>
-  <circle cx="320" cy="266" r="3.5" fill="#16202a"/>
-  <line x1="320" y1="266" x2="256" y2="250" stroke="#16202a" stroke-width="2"/>
-  <text x="240" y="252" text-anchor="end" fill="#16202a">LINHA</text>
-  <text x="240" y="288" text-anchor="end" fill="#16202a">Rout+</text>
-  <line x1="320" y1="266" x2="400" y2="266" stroke="#16202a" stroke-width="2"/>
-  <polygon points="400,260 413,266 400,272" fill="#2563eb"/>
-  <text x="422" y="270" fill="#2563eb">RCA-R · centro</text>
+  <circle cx="253" cy="256" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <circle cx="253" cy="292" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <circle cx="320" cy="274" r="3.5" fill="#16202a"/>
+  <line x1="320" y1="274" x2="256" y2="258" stroke="#16202a" stroke-width="2"/>
+  <line x1="320" y1="274" x2="256" y2="290" stroke="#d1242f" stroke-width="2" stroke-dasharray="5 3"/>
+  <text x="240" y="260" text-anchor="end" fill="#16202a">LINHA</text>
+  <text x="240" y="296" text-anchor="end" fill="#16202a">Rout+</text>
+  <line x1="320" y1="274" x2="400" y2="274" stroke="#16202a" stroke-width="2"/>
+  <polygon points="400,268 413,274 400,280" fill="#2563eb"/>
+  <text x="422" y="278" fill="#2563eb">RCA-R · centro</text>
 
   <!-- ===== pole 4: RCA-R shield ===== -->
-  <circle cx="253" cy="318" r="3.5" fill="#ffffff" stroke="#16202a"/>
-  <circle cx="253" cy="354" r="3.5" fill="#ffffff" stroke="#16202a"/>
-  <circle cx="320" cy="336" r="3.5" fill="#16202a"/>
-  <line x1="320" y1="336" x2="256" y2="320" stroke="#16202a" stroke-width="2"/>
-  <text x="240" y="322" text-anchor="end" fill="#16202a">GND</text>
-  <text x="240" y="358" text-anchor="end" fill="#16202a">Rout−</text>
-  <line x1="320" y1="336" x2="400" y2="336" stroke="#16202a" stroke-width="2"/>
-  <polygon points="400,330 413,336 400,342" fill="#2563eb"/>
-  <text x="422" y="340" fill="#2563eb">RCA-R · shield</text>
+  <circle cx="253" cy="326" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <circle cx="253" cy="362" r="3.5" fill="#ffffff" stroke="#16202a"/>
+  <circle cx="320" cy="344" r="3.5" fill="#16202a"/>
+  <line x1="320" y1="344" x2="256" y2="328" stroke="#16202a" stroke-width="2"/>
+  <line x1="320" y1="344" x2="256" y2="360" stroke="#d1242f" stroke-width="2" stroke-dasharray="5 3"/>
+  <text x="240" y="330" text-anchor="end" fill="#16202a">GND</text>
+  <text x="240" y="366" text-anchor="end" fill="#16202a">Rout−</text>
+  <line x1="320" y1="344" x2="400" y2="344" stroke="#16202a" stroke-width="2"/>
+  <polygon points="400,338 413,344 400,350" fill="#2563eb"/>
+  <text x="422" y="348" fill="#2563eb">RCA-R · shield</text>
 
-  <text x="286" y="380" text-anchor="middle" fill="#5b6b7a" font-size="11">4 polos, 1 alavanca —</text>
-  <text x="286" y="394" text-anchor="middle" fill="#5b6b7a" font-size="11">comutam todos juntos</text>
+  <text x="286" y="388" text-anchor="middle" fill="#5b6b7a" font-size="11">4 polos, 1 alavanca — comutam todos juntos</text>
 
-  <text x="350" y="426" text-anchor="middle" fill="#5b6b7a" font-size="12">RCAs isolados de painel metálico — no modo B o shield é saída ativa (BTL).</text>
-  <text x="350" y="448" text-anchor="middle" fill="#5b6b7a" font-size="12">Modo B: só caixas passivas nos RCAs — NUNCA o cabo da TV. Etiquete a chave!</text>
+  <text x="350" y="440" text-anchor="middle" fill="#5b6b7a" font-size="12">RCAs isolados de painel metálico — no modo B o shield é saída ativa (BTL).</text>
+  <text x="350" y="464" text-anchor="middle" fill="#5b6b7a" font-size="12">Modo B: só caixas passivas nos RCAs — NUNCA o cabo da TV. Etiquete a chave!</text>
 </svg>
