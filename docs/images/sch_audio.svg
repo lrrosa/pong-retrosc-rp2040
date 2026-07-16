@@ -83,5 +83,5 @@
   <text x="523" y="254" fill="#2563eb">G (módulo)</text>
 
   <text x="350" y="300" text-anchor="middle" fill="#5b6b7a" font-size="12">Sem chave no sinal: divisor (~0,2 Vpp de linha) e amp ficam SEMPRE conectados.</text>
-  <text x="350" y="318" text-anchor="middle" fill="#5b6b7a" font-size="12">A seleção A/B é feita na SAÍDA, pela chave 4PDT dos RCAs (diagrama abaixo).</text>
+  <text x="350" y="318" text-anchor="middle" fill="#5b6b7a" font-size="12">A seleção A/B é feita na SAÍDA, pela chave dos RCAs (diagrama abaixo).</text>
 </svg>

@@ -12,7 +12,7 @@ Componentes para uma unidade do RetroSC Pong.
 | 1   | Resistor 270 Ω                   | 1/4 W, 5%                    | DAC vídeo (video) — branco ~1,0 V, validado na TV real |
 | 4   | Resistor 1 kΩ                    | 1/4 W                        | Filtro RC (1) + entradas L/R do amp (2) + divisor p/ TV (1) |
 | 1   | Resistor 10 kΩ                   | 1/4 W                        | Divisor de linha p/ TV                     |
-| 1   | Chave DPDT (ou 4PDT)             | ON-ON, 2 polos (6 pinos)     | RCAs de áudio: A = linha p/ TV, B = saídas do amp. DPDT basta (áudio é mono); 4PDT só p/ RCAs independentes |
+| 1   | Chave DPDT                       | ON-ON, 2 polos (6 pinos)     | RCAs de áudio: A = linha p/ TV, B = saídas do amp. Serve uma seletora de tensão. 4PDT só se quiser os 2 RCAs independentes |
 | 2   | Conector RCA fêmea (áudio)       | isolado do painel            | Centro e shield chaveados pela chave A/B — ver esquemático |
 | 1   | Capacitor 100 nF                 | cerâmico                     | Filtro RC                                  |
 | 1   | Capacitor 1 µF                   | eletrolítico ou tântalo       | Acoplamento DC do áudio (obrigatório c/ chave no volume) |

@@ -106,19 +106,84 @@ acoplamento de 10 µF — volume baixo, mas funciona.
 
 ### Chave A/B — RCAs de áudio: linha p/ TV ou saídas do amp
 
-Duas variantes, mesma ideia: **4PDT** (abaixo, RCAs independentes) ou
-**DPDT/mono** (mais simples — veja no fim da seção; é a suficiente para o
-Pong, cujo áudio é mono).
+O gabinete tem **dois RCA fêmea de áudio** e uma chave escolhe o que eles
+carregam:
 
-#### Variante estéreo — chave 4PDT (4 polos)
+- **Modo A — TV:** os RCAs carregam **nível de linha** referenciado ao GND —
+  plugue direto na entrada de áudio da TV. Saída de linha é referenciada ao
+  terra **por projeto**, então o terra comum interno da TV deixa de ser
+  problema. Volume baixo? Troque o 10 kΩ do divisor por 4,7 kΩ (~0,45 Vpp).
+  Passe o cabo de áudio junto do de vídeo para minimizar o laço de terra.
+- **Modo B — amp:** os RCAs carregam as **saídas BTL** do PAM8403 (+ no
+  centro, − no shield) para **caixas passivas** plugadas neles.
 
-![Chave 4PDT selecionando o que os RCAs de áudio carregam](images/sch_audio_ab.svg)
+**Não há chave no caminho de sinal:** o divisor de linha (10 kΩ + 1 kΩ,
+~0,2 Vpp) e as entradas do amp ficam sempre conectados — por isso as entradas
+do PAM8403 nunca flutuam e não é preciso resistor de referência extra. No modo
+A o amp amplifica "para o nada" (saída aberta é seguro em classe-D); se
+preferir, desligue-o no interruptor do volume — o C2 doma o back-powering.
 
-O gabinete tem **dois RCA fêmea de áudio**. Uma única chave **4PDT** (4 polos
-× 2 posições, mini toggle ou deslizante) escolhe o que eles carregam. **Não há
-chave no caminho de sinal**: o divisor de linha (10 kΩ + 1 kΩ, ~0,2 Vpp) e as
-entradas do amp ficam sempre conectados — por isso as entradas do PAM8403
-nunca flutuam e não é preciso resistor de referência extra.
+> ⚠️ **Dois cuidados obrigatórios (valem para as duas variantes):** (1) os
+> **RCAs devem ser isolados do painel** se ele for metálico — no modo B o
+> shield é uma saída ativa (Lout−/Rout−), e encostar num chassi aterrado
+> recria o curto BTL. (2) **No modo B, nunca plugue o cabo da TV nos RCAs** —
+> dentro da TV os shields de todos os RCAs são o mesmo terra e o curto se
+> fecha "por dentro" (foi um sintoma real: perda total de sincronismo com o
+> volume ligado; o multímetro na bancada não enxerga porque a junção só existe
+> com os cabos plugados). **Etiquete a chave**: som na TV é só no modo A.
+
+#### Padrão — chave DPDT (2 polos, mono)
+
+![Chave DPDT de 2 polos nos RCAs: vista de baixo e ligações](images/sch_audio_ab_mono.svg)
+
+**O áudio do Pong é mono** (um único beep no GP18), então estéreo não agrega
+nada — o A/B sai com apenas **2 polos**, numa **DPDT** (bem mais fácil de
+achar; uma chave seletora de tensão de 6 pinos serve). Ligue os **dois RCAs em
+paralelo** e comute-os juntos.
+
+Numeração típica da DPDT de 6 pinos (vista de baixo, 2 fileiras de 3 — a
+**fileira do meio são os comuns**):
+
+| Pino          | Liga em                             | Quando        |
+| :-----------: | ----------------------------------- | ------------- |
+| **3** (comum) | **centros** dos RCAs (L e R juntos) | sempre        |
+| 1             | LINHA (saída do divisor)            | posição **A** |
+| 5             | Lout+ do PAM8403                    | posição **B** |
+| **4** (comum) | **shields** dos RCAs (L e R juntos) | sempre        |
+| 2             | GND (estrela do Pico)               | posição **A** |
+| 6             | Lout− do PAM8403                    | posição **B** |
+
+- Só o canal **Lout** é usado; **Rout fica livre** (não ligue em nada).
+- **Modo A:** os dois RCAs mandam o mesmo mono para a TV — plugue em L, em R,
+  ou nos dois.
+- **Modo B:** plugue **apenas UMA caixa passiva**. Duas em paralelo caem para
+  ~2 Ω e forçam o amp.
+
+> ⚠️ **"6 pinos" ≠ "6 polos".** Uma chave com 6 terminais em 2 fileiras de 3 é
+> uma **DPDT**: 2 polos × (1 comum + 2 posições). Um 6PDT de verdade teria 18
+> terminais. Corrente não é problema: 3 A / 250 V é folga enorme para sinal de
+> áudio.
+>
+> **Meça antes de soldar** (a numeração acima é a típica, mas confirme na sua):
+> 1. **Comuns:** com a chave numa posição, o comum é o pino que dá continuidade
+>    com **um** dos vizinhos e, ao virar a alavanca, passa a dar com **o outro**
+>    (normalmente a fileira do meio: 3 e 4).
+> 2. **Independência:** os dois comuns (3 e 4) **não podem ter continuidade
+>    entre si** em nenhuma posição — chaves seletoras de tensão às vezes vêm com
+>    eles pontados internamente, e nesse caso a chave **não serve** (aterraria
+>    o Lout−).
+> 3. **Pares:** confirme que 3 fecha com 1 numa posição e com 5 na outra; e que
+>    4 fecha com 2 e 6 nas mesmas posições (3+1 e 4+2 têm que fechar **juntos**
+>    — é o "ganged").
+
+#### Opcional — chave 4PDT (4 polos, estéreo)
+
+![Chave 4PDT de 4 polos nos RCAs: vista de baixo e ligações](images/sch_audio_ab.svg)
+
+Só vale a pena se você quiser os **dois jacks RCA independentes** — por
+exemplo, duas caixas passivas distintas no modo B. Com 4 polos, centro e
+shield de cada RCA são comutados separadamente e os dois canais do amp são
+aproveitados.
 
 Numeração típica da 4PDT de 12 pinos (vista de baixo, 4 colunas × 3 fileiras —
 cada **coluna é um polo** e a **fileira do meio (5–8) são os comuns**):
@@ -138,77 +203,9 @@ cada **coluna é um polo** e a **fileira do meio (5–8) são os comuns**):
 | 4             | GND (estrela do Pico)    | posição **A** |
 | 12            | Rout− do PAM8403         | posição **B** |
 
-- **Modo A — TV:** os RCAs carregam **nível de linha** referenciado ao GND —
-  plugue direto na entrada de áudio da TV. Saída de linha é referenciada ao
-  terra **por projeto**, então o terra comum interno da TV deixa de ser
-  problema. Volume baixo? Troque o 10 kΩ do divisor por 4,7 kΩ (~0,45 Vpp).
-  Passe o cabo de áudio junto do de vídeo para minimizar o laço de terra.
-- **Modo B — amp:** os RCAs carregam as **saídas BTL** do PAM8403 (+ no
-  centro, − no shield) para **caixas passivas** plugadas neles.
-- No modo A o amp amplifica "para o nada" (saída aberta é seguro em
-  classe-D); se preferir, desligue-o no interruptor do volume — o C2 doma o
-  back-powering.
 - A numeração acima é a típica, mas **varia por fabricante** — confirme com o
-  multímetro usando o mesmo roteiro de 3 medições da variante DPDT (abaixo).
-
-> ⚠️ **Dois cuidados obrigatórios:** (1) os **RCAs devem ser isolados do
-> painel** se ele for metálico — no modo B o shield é Lout−/Rout− (saída
-> ativa), e encostar num chassi aterrado recria o curto BTL. (2) **No modo B,
-> nunca plugue o cabo da TV nos RCAs** — dentro da TV os shields de todos os
-> RCAs são o mesmo terra e o curto se fecha "por dentro" (foi um sintoma real:
-> perda total de sincronismo com o volume ligado; o multímetro na bancada não
-> enxerga porque a junção só existe com os cabos plugados). **Etiquete a
-> chave**: som na TV é só no modo A.
-
-#### Variante mono — chave DPDT (2 polos)
-
-![Variante mono: chave DPDT de 2 polos nos RCAs](images/sch_audio_ab_mono.svg)
-
-**O áudio do Pong é mono** (um único beep no GP18), então estéreo não agrega
-nada — dá para fazer o mesmo A/B com apenas **2 polos**, usando uma **DPDT**
-(mais fácil de achar; uma chave seletora de tensão de 6 pinos serve). Ligue os
-**dois RCAs em paralelo** e comute-os juntos.
-
-Numeração típica da DPDT de 6 pinos (vista de baixo, 2 fileiras de 3 — a
-**fileira do meio são os comuns**):
-
-| Pino          | Liga em                             | Quando        |
-| :-----------: | ----------------------------------- | ------------- |
-| **3** (comum) | **centros** dos RCAs (L e R juntos) | sempre        |
-| 1             | LINHA (saída do divisor)            | posição **A** |
-| 5             | Lout+ do PAM8403                    | posição **B** |
-| **4** (comum) | **shields** dos RCAs (L e R juntos) | sempre        |
-| 2             | GND (estrela do Pico)               | posição **A** |
-| 6             | Lout− do PAM8403                    | posição **B** |
-
-- Só o canal **Lout** é usado; **Rout fica livre** (não ligue em nada).
-- **Modo A:** os dois RCAs mandam o mesmo mono para a TV — plugue em L, em R,
-  ou nos dois.
-- **Modo B:** plugue **apenas UMA caixa passiva**. Duas em paralelo caem para
-  ~2 Ω e forçam o amp.
-- Valem os **mesmos dois cuidados** da 4PDT (RCAs isolados do painel; nunca a
-  TV no modo B).
-
-> ⚠️ **"6 pinos" ≠ "6 polos".** Uma chave com 6 terminais em 2 fileiras de 3 é
-> uma **DPDT**: 2 polos × (1 comum + 2 posições). Um 6PDT de verdade teria 18
-> terminais. Corrente não é problema: 3 A / 250 V é folga enorme para sinal de
-> áudio.
->
-> **Meça antes de soldar** (a numeração acima é a típica, mas confirme na sua):
-> 1. **Comuns:** com a chave numa posição, o comum é o pino que dá continuidade
->    com **um** dos vizinhos e, ao virar a alavanca, passa a dar com **o outro**
->    (normalmente a fileira do meio: 3 e 4).
-> 2. **Independência:** os dois comuns (3 e 4) **não podem ter continuidade
->    entre si** em nenhuma posição — chaves seletoras de tensão às vezes vêm com
->    eles pontados internamente, e nesse caso a chave **não serve** (aterraria
->    o Lout−).
-> 3. **Pares:** confirme que 3 fecha com 1 numa posição e com 5 na outra; e que
->    4 fecha com 2 e 6 nas mesmas posições (3+1 e 4+2 têm que fechar **juntos**
->    — é o "ganged").
-
-**Qual escolher?** A **DPDT/mono** é suficiente e mais simples — use-a se tiver
-essa chave à mão. A **4PDT** só vale se você quiser os dois jacks RCA
-funcionando de forma **independente** (ex.: duas caixas passivas em modo B).
+  mesmo **roteiro de 3 medições** da DPDT (acima), agora com 4 comuns: nenhum
+  deles pode ter continuidade com outro.
 
 ## Potenciômetros
 
