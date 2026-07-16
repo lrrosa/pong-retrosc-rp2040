@@ -120,12 +120,23 @@ chave no caminho de sinal**: o divisor de linha (10 kΩ + 1 kΩ, ~0,2 Vpp) e as
 entradas do amp ficam sempre conectados — por isso as entradas do PAM8403
 nunca flutuam e não é preciso resistor de referência extra.
 
-| Polo | Comum (→ RCA)   | Lado A (TV)        | Lado B (amp) |
-| :--: | ---------------- | ------------------ | ------------ |
-| 1    | RCA-L · centro   | LINHA (divisor)    | Lout+        |
-| 2    | RCA-L · shield   | GND (estrela)      | Lout−        |
-| 3    | RCA-R · centro   | LINHA (divisor)    | Rout+        |
-| 4    | RCA-R · shield   | GND (estrela)      | Rout−        |
+Numeração típica da 4PDT de 12 pinos (vista de baixo, 4 colunas × 3 fileiras —
+cada **coluna é um polo** e a **fileira do meio (5–8) são os comuns**):
+
+| Pino          | Liga em                  | Quando        |
+| :-----------: | ------------------------ | ------------- |
+| **5** (comum) | centro do **RCA-L**      | sempre        |
+| 1             | LINHA (saída do divisor) | posição **A** |
+| 9             | Lout+ do PAM8403         | posição **B** |
+| **6** (comum) | shield do **RCA-L**      | sempre        |
+| 2             | GND (estrela do Pico)    | posição **A** |
+| 10            | Lout− do PAM8403         | posição **B** |
+| **7** (comum) | centro do **RCA-R**      | sempre        |
+| 3             | LINHA (saída do divisor) | posição **A** |
+| 11            | Rout+ do PAM8403         | posição **B** |
+| **8** (comum) | shield do **RCA-R**      | sempre        |
+| 4             | GND (estrela do Pico)    | posição **A** |
+| 12            | Rout− do PAM8403         | posição **B** |
 
 - **Modo A — TV:** os RCAs carregam **nível de linha** referenciado ao GND —
   plugue direto na entrada de áudio da TV. Saída de linha é referenciada ao
@@ -137,6 +148,8 @@ nunca flutuam e não é preciso resistor de referência extra.
 - No modo A o amp amplifica "para o nada" (saída aberta é seguro em
   classe-D); se preferir, desligue-o no interruptor do volume — o C2 doma o
   back-powering.
+- A numeração acima é a típica, mas **varia por fabricante** — confirme com o
+  multímetro usando o mesmo roteiro de 3 medições da variante DPDT (abaixo).
 
 > ⚠️ **Dois cuidados obrigatórios:** (1) os **RCAs devem ser isolados do
 > painel** se ele for metálico — no modo B o shield é Lout−/Rout− (saída
