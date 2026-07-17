@@ -369,32 +369,33 @@ def build():
     vstub(sh, r5, "1", "LINHA", up=True)
     vstub(sh, r5, "2", "GND", up=False)
 
-    # entradas do amp
-    r6 = sh.symbol("Device:R", "R6", "1k", (U(80), U(48)), 90, footprint=FP_R)
-    stub(sh, r6, "1", U(80), "AUD_C")
-    stub(sh, r6, "2", U(80), "AMP_L")
+    # entradas do amp (mesma faixa do resto do audio, à direita)
+    r6 = sh.symbol("Device:R", "R6", "1k", (U(102), U(36)), 90, footprint=FP_R)
+    stub(sh, r6, "1", None, "AUD_C")
+    stub(sh, r6, "2", None, "AMP_L")
 
-    r7 = sh.symbol("Device:R", "R7", "1k", (U(80), U(54)), 90, footprint=FP_R)
-    stub(sh, r7, "1", U(80), "AUD_C")
-    stub(sh, r7, "2", U(80), "AMP_R")
+    r7 = sh.symbol("Device:R", "R7", "1k", (U(102), U(42)), 90, footprint=FP_R)
+    stub(sh, r7, "1", None, "AUD_C")
+    stub(sh, r7, "2", None, "AMP_R")
 
     j2 = sh.symbol("Connector_Generic:Conn_01x03", "J2", "PAM8403 IN",
-                   (U(96), U(50)), footprint=fp_hdr(3))
+                   (U(120), U(38)), footprint=fp_hdr(3))
     for n, net in (("1", "AMP_L"), ("2", "GND"), ("3", "AMP_R")):
-        stub(sh, j2, n, U(96), net)
+        stub(sh, j2, n, None, net)
 
     j3 = sh.symbol("Connector_Generic:Conn_01x02", "J3", "PAM8403 5V",
-                   (U(96), U(58)), footprint=fp_hdr(2))
-    stub(sh, j3, "1", U(96), "+5V")
-    stub(sh, j3, "2", U(96), "GND")
+                   (U(120), U(46)), footprint=fp_hdr(2))
+    stub(sh, j3, "1", None, "+5V")
+    stub(sh, j3, "2", None, "GND")
 
     j4 = sh.symbol("Connector_Generic:Conn_01x02", "J4", "chave A/B (linha)",
-                   (U(96), U(64)), footprint=fp_hdr(2))
-    stub(sh, j4, "1", U(96), "LINHA")
-    stub(sh, j4, "2", U(96), "GND")
+                   (U(120), U(52)), footprint=fp_hdr(2))
+    stub(sh, j4, "1", None, "LINHA")
+    stub(sh, j4, "2", None, "GND")
 
     # ----------------------------------------------------- potenciometros
-    sh.text("Potenciometros (painel) e botao START", (U(48), U(64)), 2.5)
+    # Titulo bem acima: os labels +3V3/POT sobem dos pots e alcancam ~U(65).
+    sh.text("Potenciometros (painel) e botao START", (U(48), U(58)), 2.5)
     for i, (ref, net, cref, cap) in enumerate(
             [("RV1", "POT1", "C3", "100n"), ("RV2", "POT2", "C4", "100n")]):
         # cada canal ocupa uma faixa larga: pot | cap de filtro | header
