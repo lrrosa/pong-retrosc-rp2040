@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Copyright (C) 2026 RetroSC Pong contributors
 """
 Gera o esquematico KiCad do RetroSC Pong.
 
@@ -257,6 +259,8 @@ class Sheet:
             f'\t\t(date "{date}")\n'
             f'\t\t(rev "{rev}")\n'
             f'\t\t(company "RetroSC")\n'
+            f'\t\t(comment 1 "Hardware licenciado sob CERN-OHL-S-2.0 '
+            f'(SPDX: CERN-OHL-S-2.0) - ver LICENSE-HARDWARE.txt")\n'
             f"\t)\n"
             f"\t(lib_symbols\n{libs}\n\t)\n"
             + "\n".join(self.items) + "\n"

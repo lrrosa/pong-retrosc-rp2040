@@ -265,5 +265,19 @@ Veja `docs/images/preview_logo_1bit.png` para saber como ficou a versão
 
 ## Licença
 
-Código sob [MIT](LICENSE). Marcas e arte do evento RetroSC (logo)
-permanecem propriedade do evento — ver nota no `LICENSE`.
+Projeto com **licença dupla** (ver [`NOTICE`](NOTICE) para o detalhamento por
+arquivo):
+
+- **Software** (firmware em `src/`, ferramentas em `tools/`, build) —
+  **[GPL-3.0-or-later](LICENSE)** (`SPDX-License-Identifier: GPL-3.0-or-later`).
+- **Hardware** (esquemáticos: `kicad/`, `docs/schematic.md`, `docs/bom.md`,
+  `docs/pinout.md`, diagramas SVG) — **[CERN-OHL-S-2.0](LICENSE-HARDWARE.txt)**
+  (`SPDX-License-Identifier: CERN-OHL-S-2.0`), a variante *Strongly Reciprocal*
+  da CERN Open Hardware Licence.
+
+As duas são **recíprocas** (copyleft): trabalhos derivados devem manter a mesma
+licença e disponibilizar as fontes correspondentes (código no caso do software,
+arquivos de projeto no caso do hardware).
+
+As **marcas e arte do evento RetroSC** (logo) permanecem propriedade do evento e
+**não** estão cobertas por essas licenças — ver [`NOTICE`](NOTICE).

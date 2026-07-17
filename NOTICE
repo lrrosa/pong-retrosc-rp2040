@@ -1,0 +1,38 @@
+RetroSC Pong - RP2040
+Copyright (C) 2026 RetroSC Pong contributors
+
+This project is dual-licensed.
+
+================================================================
+Software (firmware + tools) -- GPL-3.0-or-later
+================================================================
+GNU General Public License, version 3 or (at your option) any later version.
+Full text: LICENSE
+SPDX-License-Identifier: GPL-3.0-or-later
+
+Covers:
+  src/**            firmware (C, headers, PIO)
+  tools/**          simulador, conversores e o gerador do esquematico
+  CMakeLists.txt, pico_sdk_import.cmake
+
+================================================================
+Hardware (esquematicos + documentacao de hardware) -- CERN-OHL-S-2.0
+================================================================
+CERN Open Hardware Licence Version 2 - Strongly Reciprocal.
+Full text: LICENSE-HARDWARE.txt
+SPDX-License-Identifier: CERN-OHL-S-2.0
+
+Covers:
+  kicad/**                         projeto e esquematico KiCad
+  docs/schematic.md, docs/bom.md, docs/pinout.md
+  docs/images/sch_*.svg            diagramas dos blocos
+  docs/images/kicad/**             render do esquematico
+  docs/pong-retrosc-esquematico.pdf
+
+================================================================
+Marcas (nao cobertas pelas licencas acima)
+================================================================
+Os bitmaps do logo da RetroSC em docs/images/ e embutidos como C arrays em
+src/assets.c sao marcas do evento RetroSC (https://retrosc.org/). Nao estao
+cobertos pelas licencas acima; estao incluidos apenas para uso na tela de
+attract do evento RetroSC.
