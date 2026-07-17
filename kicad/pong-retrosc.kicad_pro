@@ -1,0 +1,7 @@
+{
+  "board": {},
+  "libraries": {"pinned_footprint_libs": [], "pinned_symbol_libs": []},
+  "meta": {"filename": "pong-retrosc.kicad_pro", "version": 3},
+  "sheets": [["2c1268ca-04c2-4874-9eab-f958d4997c9e", "Root"]],
+  "text_variables": {}
+}

@@ -24,3 +24,8 @@ __pycache__/
 
 # Wokwi: captura do analisador logico (debug, gerada localmente)
 *.vcd
+
+# KiCad: backups e caches locais (o .kicad_sch/.kicad_pro sao versionados)
+kicad/*-backups/
+kicad/fp-info-cache
+kicad/*.kicad_prl
