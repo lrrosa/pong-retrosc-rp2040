@@ -128,13 +128,19 @@ def sym_pin_names(lib_id: str, unit: int = 1) -> dict[str, str]:
 
 
 def check_footprint(fp: str) -> str:
-    """Aborta se o footprint nao existir (evita esquematico que nao vira PCB)."""
+    """Aborta se o footprint nao existir (evita esquematico que nao vira PCB).
+
+    Procura nas libs do KiCad e tambem na lib propria do projeto
+    (kicad/pong-retrosc.pretty), gerada por tools/gen_kicad_fp.py.
+    """
     if not fp:
         return fp
     lib, name = fp.split(":", 1)
-    if not (FPDIR / f"{lib}.pretty" / f"{name}.kicad_mod").exists():
-        raise SystemExit(f"ERRO: footprint inexistente: {fp}")
-    return fp
+    local = Path(__file__).resolve().parent.parent / "kicad"
+    for root in (FPDIR, local):
+        if (root / f"{lib}.pretty" / f"{name}.kicad_mod").exists():
+            return fp
+    raise SystemExit(f"ERRO: footprint inexistente: {fp}")
 
 
 # ------------------------------------------------------- geometria
@@ -275,6 +281,8 @@ FP_R = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"
 FP_C = "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 FP_CP = "Capacitor_THT:CP_Radial_D5.0mm_P2.50mm"
 FP_PICO = "Module:RaspberryPi_Pico_Common_THT"
+FP_RCA = "pong-retrosc:RCA_Jack_THT_Panel"      # lib propria (gen_kicad_fp.py)
+FP_AMP = "pong-retrosc:PAM8403_HW-012"
 
 
 def fp_hdr(n: int) -> str:
@@ -343,8 +351,8 @@ def build():
     vstub(sh, r2, "1", "VIDEO", up=True)
     vstub(sh, r2, "2", "COMPOSITE", up=False)
 
-    j1 = sh.symbol("Connector_Generic:Conn_01x02", "J1", "RCA video (painel)",
-                   (U(76), U(16)), footprint=fp_hdr(2))
+    j1 = sh.symbol("Connector_Generic:Conn_01x02", "J1", "RCA video (na placa)",
+                   (U(76), U(16)), footprint=FP_RCA)
     stub(sh, j1, "1", U(76), "COMPOSITE")
     stub(sh, j1, "2", U(76), "GND")
 
@@ -382,20 +390,15 @@ def build():
     stub(sh, r7, "1", None, "AUD_C")
     stub(sh, r7, "2", None, "AMP_R")
 
-    j2 = sh.symbol("Connector_Generic:Conn_01x03", "J2", "PAM8403 IN",
-                   (U(120), U(38)), footprint=fp_hdr(3))
-    for n, net in (("1", "AMP_L"), ("2", "GND"), ("3", "AMP_R")):
-        stub(sh, j2, n, None, net)
-
-    j3 = sh.symbol("Connector_Generic:Conn_01x02", "J3", "PAM8403 5V",
-                   (U(120), U(46)), footprint=fp_hdr(2))
-    stub(sh, j3, "1", None, "+5V")
-    stub(sh, j3, "2", None, "GND")
-
-    j4 = sh.symbol("Connector_Generic:Conn_01x02", "J4", "chave A/B (linha)",
-                   (U(120), U(52)), footprint=fp_hdr(2))
-    stub(sh, j4, "1", None, "LINHA")
-    stub(sh, j4, "2", None, "GND")
+    # Modulo PAM8403 (HW-012) soldado NA PLACA, como no prototipo.
+    # Pinos: 1=+5V 2=GND 3=IN_L 4=IN_R 5=LOUT+ 6=LOUT- 7=ROUT+ 8=ROUT-
+    amp = sh.symbol("Connector_Generic:Conn_01x08", "U2", "PAM8403 HW-012",
+                    (U(122), U(40)), footprint=FP_AMP)
+    for n, net in (("1", "+5V"), ("2", "GND"), ("3", "AMP_L"), ("4", "AMP_R"),
+                   ("5", "LOUT_P"), ("6", "LOUT_N")):
+        stub(sh, amp, n, None, net)
+    sh.no_connect(amp["7"])          # canal R do amp nao e usado (audio mono)
+    sh.no_connect(amp["8"])
 
     # ----------------------------------------------------- potenciometros
     # Titulo bem acima: os labels +3V3/POT sobem dos pots e alcancam ~U(65).
@@ -432,9 +435,15 @@ def build():
     stub(sh, j7, "1", U(140), "START")
     stub(sh, j7, "2", U(140), "GND")
 
-    # ------------------------------------------- chave A/B + RCAs (painel)
-    sh.text("Chave A/B e RCAs de audio - PAINEL (fora da placa)",
+    # ------------------------------- chave A/B (painel) + RCAs (na placa)
+    sh.text("Chave A/B (painel, via J4) e RCAs de audio (na placa)",
             (U(48), U(80)), 2.5)
+    # A chave fica no painel: 6 fios ate a placa pelo header J4.
+    j4 = sh.symbol("Connector_Generic:Conn_01x06", "J4",
+                   "chave A/B (painel)", (U(30), U(91)), footprint=fp_hdr(6))
+    for n, net in (("1", "RCA_C"), ("2", "RCA_S"), ("3", "LINHA"),
+                   ("4", "GND"), ("5", "LOUT_P"), ("6", "LOUT_N")):
+        stub(sh, j4, n, U(30), net)
     # SW_DPDT_x2 e multi-unidade: um polo por instancia (mesma referencia).
     # Pinagem do simbolo: 2/5 = comum (esquerda), 1/4 = posicao A, 3/6 = B.
     swa = sh.symbol("Switch:SW_DPDT_x2", "SW2", "A/B", (U(56), U(87)),
@@ -449,17 +458,15 @@ def build():
     stub(sh, swb, "4", U(56), "GND")       # A: GND (estrela)
     stub(sh, swb, "6", U(56), "LOUT_N")    # B: Lout-
 
+    # Os dois RCAs de audio ficam NA PLACA, em paralelo (audio e mono).
     for i in range(2):
         j = sh.symbol("Connector_Generic:Conn_01x02", f"J{8+i}",
-                      f"RCA audio {'L' if i == 0 else 'R'} (painel)",
-                      (U(84), U(87 + i * 9)), on_board=False)
+                      f"RCA audio {'L' if i == 0 else 'R'} (na placa)",
+                      (U(84), U(87 + i * 9)), footprint=FP_RCA)
         stub(sh, j, "1", U(84), "RCA_C")
         stub(sh, j, "2", U(84), "RCA_S")
 
-    j10 = sh.symbol("Connector_Generic:Conn_01x02", "J10",
-                    "PAM8403 OUT L (painel)", (U(108), U(91)), on_board=False)
-    stub(sh, j10, "1", U(108), "LOUT_P")
-    stub(sh, j10, "2", U(108), "LOUT_N")
+    # (LOUT+/- vem direto do modulo U2 na placa e sobem para J4 -> chave.)
 
     # ---------------------------------------------------------- notas
     sh.text("Notas: GND em estrela no Pico (RCA video -> pino 23, amp -> 38,",

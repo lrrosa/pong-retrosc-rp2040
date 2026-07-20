@@ -1,0 +1,274 @@
+(footprint "PAM8403_HW-012"
+	(version 20260206)
+	(generator "gen_kicad_fp.py")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Modulo amplificador PAM8403 (HW-012) com pot de volume. MEDIDAS PROVISORIAS - conferir (ver tools/gen_kicad_fp.py).")
+	(tags "PAM8403 HW-012 amplifier module class-D")
+	(attr through_hole)
+	(property "Reference" "REF**"
+		(at 0 -1 0)
+		(layer "F.SilkS")
+		(uuid "fb8d166e-10b7-4d89-b2e1-6771ce0ebbe1")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "PAM8403_HW-012"
+		(at 0 1 0)
+		(layer "F.Fab")
+		(uuid "0f86bfca-5882-4e50-b627-691a49c6af95")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(pad "1" thru_hole rect
+		(at -7.62 -3.81)
+		(size 1.8 1.8)
+		(drill 1.0)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "bd5b1f03-797e-4d8b-b73d-4e9fbb16b01e")
+	)
+	(fp_text user "+5V"
+		(at -11.22 -3.81 0)
+		(layer "F.Fab")
+		(uuid "3b2c5bc0-3d06-43f5-a9d4-5139571ad688")
+		(effects
+			(font
+				(size 0.7 0.7)
+				(thickness 0.12)
+			)
+		)
+	)
+	(pad "2" thru_hole circle
+		(at -7.62 -1.27)
+		(size 1.8 1.8)
+		(drill 1.0)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "83a0f755-7ea3-47bb-bc08-a4c5c042f60f")
+	)
+	(fp_text user "GND"
+		(at -11.22 -1.27 0)
+		(layer "F.Fab")
+		(uuid "b7b6d145-193f-45bf-94da-ebacfb58cd8c")
+		(effects
+			(font
+				(size 0.7 0.7)
+				(thickness 0.12)
+			)
+		)
+	)
+	(pad "3" thru_hole circle
+		(at -7.62 1.27)
+		(size 1.8 1.8)
+		(drill 1.0)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "1e734753-ffef-4935-82cb-1c78a4661977")
+	)
+	(fp_text user "IN_L"
+		(at -11.22 1.27 0)
+		(layer "F.Fab")
+		(uuid "ee4083bf-2346-4a92-aec2-9fb66a7117d4")
+		(effects
+			(font
+				(size 0.7 0.7)
+				(thickness 0.12)
+			)
+		)
+	)
+	(pad "4" thru_hole circle
+		(at -7.62 3.81)
+		(size 1.8 1.8)
+		(drill 1.0)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "5aa042e7-0e8a-4797-b2e0-e81957c5f57f")
+	)
+	(fp_text user "IN_R"
+		(at -11.22 3.81 0)
+		(layer "F.Fab")
+		(uuid "16bb2543-c287-4f3c-a6e5-3886fd1805b3")
+		(effects
+			(font
+				(size 0.7 0.7)
+				(thickness 0.12)
+			)
+		)
+	)
+	(pad "5" thru_hole circle
+		(at 7.62 -3.81)
+		(size 1.8 1.8)
+		(drill 1.0)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "318c79ff-04a9-4a91-98b1-f283d2a72fa9")
+	)
+	(fp_text user "LOUT+"
+		(at 11.22 -3.81 0)
+		(layer "F.Fab")
+		(uuid "6be835ed-b9ab-4893-b0f6-67890be06437")
+		(effects
+			(font
+				(size 0.7 0.7)
+				(thickness 0.12)
+			)
+		)
+	)
+	(pad "6" thru_hole circle
+		(at 7.62 -1.27)
+		(size 1.8 1.8)
+		(drill 1.0)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "fe5e233b-571e-409d-b205-c5388678f6ab")
+	)
+	(fp_text user "LOUT-"
+		(at 11.22 -1.27 0)
+		(layer "F.Fab")
+		(uuid "3a94fce7-0fe5-4604-8622-7b12aefce28f")
+		(effects
+			(font
+				(size 0.7 0.7)
+				(thickness 0.12)
+			)
+		)
+	)
+	(pad "7" thru_hole circle
+		(at 7.62 1.27)
+		(size 1.8 1.8)
+		(drill 1.0)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "bb2eab64-fd0c-4eaa-880e-4a54705d87dc")
+	)
+	(fp_text user "ROUT+"
+		(at 11.22 1.27 0)
+		(layer "F.Fab")
+		(uuid "583b17d7-1d05-44da-be78-582175378ecb")
+		(effects
+			(font
+				(size 0.7 0.7)
+				(thickness 0.12)
+			)
+		)
+	)
+	(pad "8" thru_hole circle
+		(at 7.62 3.81)
+		(size 1.8 1.8)
+		(drill 1.0)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "d379374d-1e72-4017-aecc-e023ae3377c1")
+	)
+	(fp_text user "ROUT-"
+		(at 11.22 3.81 0)
+		(layer "F.Fab")
+		(uuid "707fb0da-32d2-4096-9750-7bdf6df91d3e")
+		(effects
+			(font
+				(size 0.7 0.7)
+				(thickness 0.12)
+			)
+		)
+	)
+	(fp_line
+		(start -11.43 -10.16)
+		(end 11.43 -10.16)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "cad79cb3-47f4-4cf8-b6cd-27f2de0d0f4e")
+	)
+	(fp_line
+		(start 11.43 -10.16)
+		(end 11.43 10.16)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "379d8225-bfa4-4d0b-b32b-d4553800b2bb")
+	)
+	(fp_line
+		(start 11.43 10.16)
+		(end -11.43 10.16)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "2287bd29-0cfa-4f4f-be3d-926150cd26c7")
+	)
+	(fp_line
+		(start -11.43 10.16)
+		(end -11.43 -10.16)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(layer "F.SilkS")
+		(uuid "95370885-a19a-45a0-969a-7d832d117fff")
+	)
+	(fp_line
+		(start -11.73 -10.46)
+		(end 11.73 -10.46)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "5726888d-95bd-4242-a711-156bebb56cd8")
+	)
+	(fp_line
+		(start 11.73 -10.46)
+		(end 11.73 10.46)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "9cded7f7-8955-44de-9808-7f8757f30e4f")
+	)
+	(fp_line
+		(start 11.73 10.46)
+		(end -11.73 10.46)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "08ebf7b5-308e-4918-ad5e-0f1384a2e9ff")
+	)
+	(fp_line
+		(start -11.73 10.46)
+		(end -11.73 -10.46)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+		(uuid "c6259301-3f8a-458a-b7df-bc779451173f")
+	)
+	(fp_text user "PAM8403"
+		(at 0 -11.36 0)
+		(layer "F.SilkS")
+		(uuid "605ad736-933e-4695-91cd-7ffcf8560c35")
+		(effects
+			(font
+				(size 0.8 0.8)
+				(thickness 0.12)
+			)
+		)
+	)
+)
