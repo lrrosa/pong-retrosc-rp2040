@@ -23,32 +23,38 @@ VERSION = "20260206"
 G = 2.54                     # passo da perfboard (grade de 0,1")
 
 # ============================================================
-# [MEDIR] Jack RCA de painel (os dourados do prototipo)
+# Jack RCA de painel, angulo reto (medido pelo usuario)
 # ============================================================
-# Distancia entre o pino central (sinal) e a aba de terra.
-RCA_PIN_TO_GND = 3 * G       # 7.62 mm  = 3 furos
-# Distancia centro-a-centro entre dois RCAs vizinhos (usada no PCB).
-RCA_PITCH = 8 * G            # 20.32 mm = 8 furos
-# Furos de solda.
-RCA_DRILL_SIG, RCA_PAD_SIG = 1.3, 2.4
-RCA_DRILL_GND, RCA_PAD_GND = 1.8, 3.2
-# Corpo (para silk/courtyard): diametro do cilindro e recuo do painel.
-RCA_BODY_D = 10.0
-RCA_BODY_L = 16.0
+# Geometria das pernas, vista de cima, com o barril apontando para -Y
+# (para fora da borda da placa):
+#     pino 1 = sinal, no centro (0,0)
+#     pino 2 = terra, 3 abas: esquerda, direita e frontal
+# Medidas: 10 mm entre as abas esquerda/direita; 5 mm do pino central
+# ate a aba frontal. Ou seja, as 3 abas ficam a 5 mm do centro.
+RCA_GND_SPAN = 10.0          # entre a aba esquerda e a direita
+RCA_GND_FRONT = 5.0          # do pino central ate a aba da frente
+# Abas sao lâminas chatas -> furo oblongo. Pino central e mais fino.
+RCA_SIG_DRILL, RCA_SIG_PAD = 1.5, 2.6
+RCA_GND_DRILL_L, RCA_GND_DRILL_W = 2.4, 1.3   # furo oblongo (compr. x larg.)
+RCA_GND_PAD_L, RCA_GND_PAD_W = 3.4, 2.3
+# Corpo (datasheet do anuncio): barril 8.4 mm, corpo 18 x 12 x 15 mm.
+RCA_BODY_W, RCA_BODY_D = 12.0, 18.0
+RCA_BARREL_D = 8.4
 
 # ============================================================
-# [MEDIR] Modulo PAM8403 HW-012
+# Modulo PAM8403 HW-012 (medidas do anuncio + silk das fotos)
 # ============================================================
-# O modulo e soldado por duas fileiras de pads. Meca:
-HW012_ROW_PITCH = 6 * G      # 15.24 mm = 6 furos entre as duas fileiras
-HW012_PAD_PITCH = G          # 2.54 mm entre pads da mesma fileira
-HW012_W, HW012_H = 9 * G, 8 * G   # contorno do modulo (silk)
-HW012_DRILL, HW012_PAD = 1.0, 1.8
-# Fileira de entrada (esquerda) e de saida (direita), de cima para baixo.
-HW012_LEFT = ["1", "2", "3", "4"]     # +5V, GND, IN_L, IN_R
-HW012_RIGHT = ["5", "6", "7", "8"]    # L+, L-, R+, R-
-HW012_NAMES = {"1": "+5V", "2": "GND", "3": "IN_L", "4": "IN_R",
-               "5": "LOUT+", "6": "LOUT-", "7": "ROUT+", "8": "ROUT-"}
+# PCB 29.5 x 20.2 mm; o potenciometro avanca ~15.8 mm para fora de um
+# dos lados e tem 15 mm de altura -> deixar espaco livre nesse lado.
+HW012_PCB_W, HW012_PCB_H = 29.5, 20.2
+HW012_POT_CLEAR = 15.8       # avanco do pot (so vira keep-out no silk)
+HW012_PAD_PITCH = G          # 2.54 mm entre pads
+HW012_DRILL, HW012_PAD = 1.1, 1.9
+# Fileira unica na borda inferior, na ordem que aparece no silk do modulo:
+HW012_PADS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+HW012_NAMES = {"1": "ROUT-", "2": "ROUT+", "3": "LOUT+", "4": "LOUT-",
+               "5": "PWR-", "6": "PWR+", "7": "IN_L", "8": "IN_G",
+               "9": "IN_R"}
 
 
 def _u():
@@ -78,11 +84,21 @@ def _prop(key, val, x, y, layer):
             f"\t\t\t\t(thickness 0.15)\n\t\t\t)\n\t\t)\n\t)\n")
 
 
-def _pad(num, x, y, drill, size, shape="circle"):
+def _pad(num, x, y, drill, size, shape="circle", rot=0):
+    """drill/size escalares = furo redondo; tuplas (l, w) = oblongo."""
+    if isinstance(size, tuple):
+        sz = f"{size[0]} {size[1]}"
+    else:
+        sz = f"{size} {size}"
+    if isinstance(drill, tuple):
+        dr = f"oval {drill[0]} {drill[1]}"
+    else:
+        dr = f"{drill}"
+    at = f"{round(x,3)} {round(y,3)}" + (f" {rot}" if rot else "")
     return (f'\t(pad "{num}" thru_hole {shape}\n'
-            f"\t\t(at {round(x,3)} {round(y,3)})\n"
-            f"\t\t(size {size} {size})\n"
-            f"\t\t(drill {drill})\n"
+            f"\t\t(at {at})\n"
+            f"\t\t(size {sz})\n"
+            f"\t\t(drill {dr})\n"
             f'\t\t(layers "*.Cu" "*.Mask")\n'
             f'\t\t(remove_unused_layers no)\n'
             f'\t\t(uuid "{_u()}")\n\t)\n')
@@ -108,42 +124,68 @@ def _text(s, x, y, layer="F.SilkS", size=0.8):
 
 
 def rca_jack():
-    """Pino 1 = sinal (centro), pino 2 = terra (aba/carcaca)."""
+    """Pino 1 = sinal (centro); pino 2 = terra (3 abas: esq., dir. e frente).
+
+    Origem = pino de sinal. O barril aponta para -Y, ou seja, para fora da
+    borda da placa -- posicione o footprint com -Y virado para a borda.
+    """
     n = "RCA_Jack_THT_Panel"
-    s = _hdr(n, "Jack RCA de painel, montagem THT. MEDIDAS PROVISORIAS - "
-                "conferir com a peca real (ver tools/gen_kicad_fp.py).",
-             "RCA phono connector THT panel audio video")
-    s += _pad("1", 0, 0, RCA_DRILL_SIG, RCA_PAD_SIG, "rect")
-    s += _pad("2", 0, RCA_PIN_TO_GND, RCA_DRILL_GND, RCA_PAD_GND)
-    # contorno do corpo + courtyard
-    half = RCA_BODY_D / 2
-    s += _rect(-half, -half, half, RCA_PIN_TO_GND + half)
-    s += _rect(-half - 0.3, -half - 0.3, half + 0.3,
-               RCA_PIN_TO_GND + half + 0.3, "F.CrtYd", 0.05)
-    s += _text("SIG", half + 0.8, 0)
-    s += _text("GND", half + 0.8, RCA_PIN_TO_GND)
+    s = _hdr(n, "Jack RCA de painel, angulo reto, THT. Sinal ao centro e 3 "
+                "abas de terra a 5 mm (esquerda, direita e frontal). Barril "
+                "8.4 mm; corpo 18 x 12 x 15 mm.",
+             "RCA phono connector THT right-angle audio video")
+    half = RCA_GND_SPAN / 2
+    s += _pad("1", 0, 0, RCA_SIG_DRILL, RCA_SIG_PAD, "circle")
+    # abas laterais: lamina no eixo Y -> furo oblongo girado 90 graus
+    for x in (-half, half):
+        s += _pad("2", x, 0,
+                  (RCA_GND_DRILL_L, RCA_GND_DRILL_W),
+                  (RCA_GND_PAD_L, RCA_GND_PAD_W), "oval", 90)
+    # aba frontal: lamina no eixo X
+    s += _pad("2", 0, -RCA_GND_FRONT,
+              (RCA_GND_DRILL_L, RCA_GND_DRILL_W),
+              (RCA_GND_PAD_L, RCA_GND_PAD_W), "oval")
+    # contorno do corpo (barril para -Y, alem da borda da placa)
+    bw, bd = RCA_BODY_W / 2, RCA_BODY_D
+    s += _rect(-bw, -RCA_GND_FRONT - 2.0, bw, -RCA_GND_FRONT + 8.0)
+    s += _line(-RCA_BARREL_D / 2, -RCA_GND_FRONT - 2.0,
+               -RCA_BARREL_D / 2, -bd + 2)
+    s += _line(RCA_BARREL_D / 2, -RCA_GND_FRONT - 2.0,
+               RCA_BARREL_D / 2, -bd + 2)
+    s += _rect(-bw - 0.3, -bd - 0.3, bw + 0.3, 4.3, "F.CrtYd", 0.05)
+    s += _text("SIG", bw + 1.0, 0, "F.Fab")
+    s += _text("GND", bw + 1.0, -RCA_GND_FRONT, "F.Fab")
     return n, s + ")\n"
 
 
 def pam8403():
-    """Modulo HW-012: duas fileiras de pads de 2,54 mm."""
+    """Modulo HW-012: 9 pads em fileira unica na borda inferior.
+
+    Origem = pad 1. O potenciometro avanca para +X (ver HW012_POT_CLEAR):
+    deixe esse lado livre na placa.
+    """
     n = "PAM8403_HW-012"
-    s = _hdr(n, "Modulo amplificador PAM8403 (HW-012) com pot de volume. "
-                "MEDIDAS PROVISORIAS - conferir (ver tools/gen_kicad_fp.py).",
-             "PAM8403 HW-012 amplifier module class-D")
-    x0 = -HW012_ROW_PITCH / 2
-    for side, pads in ((x0, HW012_LEFT), (x0 + HW012_ROW_PITCH, HW012_RIGHT)):
-        y0 = -(len(pads) - 1) * HW012_PAD_PITCH / 2
-        for i, num in enumerate(pads):
-            y = y0 + i * HW012_PAD_PITCH
-            s += _pad(num, side, y, HW012_DRILL, HW012_PAD,
-                      "rect" if num == "1" else "circle")
-            s += _text(HW012_NAMES[num],
-                       side + (-3.6 if side < 0 else 3.6), y, "F.Fab", 0.7)
-    s += _rect(-HW012_W / 2, -HW012_H / 2, HW012_W / 2, HW012_H / 2)
-    s += _rect(-HW012_W / 2 - 0.3, -HW012_H / 2 - 0.3,
-               HW012_W / 2 + 0.3, HW012_H / 2 + 0.3, "F.CrtYd", 0.05)
-    s += _text("PAM8403", 0, -HH if (HH := HW012_H / 2 + 1.2) else 0)
+    s = _hdr(n, "Modulo amplificador classe-D PAM8403 (HW-012) com "
+                "potenciometro de volume. PCB 29.5 x 20.2 mm; o pot avanca "
+                "~15.8 mm e tem 15 mm de altura.",
+             "PAM8403 HW-012 amplifier module class-D audio")
+    span = (len(HW012_PADS) - 1) * HW012_PAD_PITCH
+    for i, num in enumerate(HW012_PADS):
+        x = i * HW012_PAD_PITCH
+        s += _pad(num, x, 0, HW012_DRILL, HW012_PAD,
+                  "rect" if num == "1" else "circle")
+        s += _text(HW012_NAMES[num], x, 2.0, "F.Fab", 0.6)
+    # contorno do PCB do modulo: pads na borda inferior, corpo para -Y
+    x0 = span / 2 - HW012_PCB_W / 2
+    s += _rect(x0, -HW012_PCB_H, x0 + HW012_PCB_W, -1.6)
+    # area do potenciometro (keep-out mecanico)
+    s += _rect(x0 + HW012_PCB_W, -HW012_PCB_H,
+               x0 + HW012_PCB_W + HW012_POT_CLEAR, -1.6, "F.CrtYd", 0.05)
+    s += _text("POT", x0 + HW012_PCB_W + HW012_POT_CLEAR / 2,
+               -HW012_PCB_H / 2, "F.Fab", 0.8)
+    s += _rect(x0 - 0.3, -HW012_PCB_H - 0.3,
+               x0 + HW012_PCB_W + HW012_POT_CLEAR + 0.3, 1.3, "F.CrtYd", 0.05)
+    s += _text("PAM8403 HW-012", x0 + 1, -HW012_PCB_H + 1.5)
     return n, s + ")\n"
 
 
