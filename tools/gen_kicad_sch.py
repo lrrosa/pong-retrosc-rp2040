@@ -390,15 +390,17 @@ def build():
     stub(sh, r7, "1", None, "AUD_C")
     stub(sh, r7, "2", None, "AMP_R")
 
-    # Modulo PAM8403 (HW-012) soldado NA PLACA, como no prototipo.
-    # Pinos: 1=+5V 2=GND 3=IN_L 4=IN_R 5=LOUT+ 6=LOUT- 7=ROUT+ 8=ROUT-
-    amp = sh.symbol("Connector_Generic:Conn_01x08", "U2", "PAM8403 HW-012",
+    # Modulo PAM8403 (HW-012) soldado NA PLACA (em pe, como no prototipo).
+    # Pinagem FISICA da fileira de 9 pads (esq -> dir no silk do modulo):
+    #   1=ROUT-  2=ROUT+  3=LOUT+  4=LOUT-  5=PWR-  6=PWR+  7=IN_L  8=IN_G  9=IN_R
+    amp = sh.symbol("Connector_Generic:Conn_01x09", "U2", "PAM8403 HW-012",
                     (U(122), U(40)), footprint=FP_AMP)
-    for n, net in (("1", "+5V"), ("2", "GND"), ("3", "AMP_L"), ("4", "AMP_R"),
-                   ("5", "LOUT_P"), ("6", "LOUT_N")):
+    for n, net in (("3", "LOUT_P"), ("4", "LOUT_N"), ("5", "GND"),
+                   ("6", "+5V"), ("7", "AMP_L"), ("8", "GND"),
+                   ("9", "AMP_R")):
         stub(sh, amp, n, None, net)
-    sh.no_connect(amp["7"])          # canal R do amp nao e usado (audio mono)
-    sh.no_connect(amp["8"])
+    sh.no_connect(amp["1"])   # ROUT-: canal R nao usado (audio mono)
+    sh.no_connect(amp["2"])   # ROUT+
 
     # ----------------------------------------------------- potenciometros
     # Titulo bem acima: os labels +3V3/POT sobem dos pots e alcancam ~U(65).

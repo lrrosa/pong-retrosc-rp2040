@@ -29,3 +29,7 @@ __pycache__/
 kicad/*-backups/
 kicad/fp-info-cache
 kicad/*.kicad_prl
+# Intermediarios do roteamento (regeraveis: make_decoy.py + freerouting)
+kicad/*-decoy.*
+kicad/*.dsn
+kicad/*.ses

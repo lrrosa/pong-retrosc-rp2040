@@ -152,40 +152,37 @@ def rca_jack():
                -RCA_BARREL_D / 2, -bd + 2)
     s += _line(RCA_BARREL_D / 2, -RCA_GND_FRONT - 2.0,
                RCA_BARREL_D / 2, -bd + 2)
-    s += _rect(-bw - 0.3, -bd - 0.3, bw + 0.3, 4.3, "F.CrtYd", 0.05)
+    s += _rect(-bw - 0.3, -bd - 0.3, bw + 0.3, 2.6, "F.CrtYd", 0.05)
     s += _text("SIG", bw + 1.0, 0, "F.Fab")
     s += _text("GND", bw + 1.0, -RCA_GND_FRONT, "F.Fab")
     return n, s + ")\n"
 
 
 def pam8403():
-    """Modulo HW-012: 9 pads em fileira unica na borda inferior.
+    """Modulo HW-012 montado EM PE (vertical), como no prototipo.
 
-    Origem = pad 1. O potenciometro avanca para +X (ver HW012_POT_CLEAR):
-    deixe esse lado livre na placa.
+    Fica na placa apenas a fileira de 9 pads; o PCB do modulo (29.5 x
+    20.2 mm) sobe perpendicular e o potenciometro fica no alto, fora do
+    plano da placa. Footprint estilo SIP: faixa fina de silk.
+    Origem = pad 1.
     """
     n = "PAM8403_HW-012"
-    s = _hdr(n, "Modulo amplificador classe-D PAM8403 (HW-012) com "
-                "potenciometro de volume. PCB 29.5 x 20.2 mm; o pot avanca "
-                "~15.8 mm e tem 15 mm de altura.",
-             "PAM8403 HW-012 amplifier module class-D audio")
+    s = _hdr(n, "Modulo amplificador classe-D PAM8403 (HW-012) montado em pe "
+                "(vertical) pela fileira de 9 pads. PCB do modulo 29.5 x "
+                "20.2 mm sobe perpendicular; pot de volume no topo. Deixar "
+                "~21 mm livres acima da placa.",
+             "PAM8403 HW-012 amplifier module class-D audio SIP vertical")
     span = (len(HW012_PADS) - 1) * HW012_PAD_PITCH
     for i, num in enumerate(HW012_PADS):
         x = i * HW012_PAD_PITCH
         s += _pad(num, x, 0, HW012_DRILL, HW012_PAD,
                   "rect" if num == "1" else "circle")
-        s += _text(HW012_NAMES[num], x, 2.0, "F.Fab", 0.6)
-    # contorno do PCB do modulo: pads na borda inferior, corpo para -Y
+        s += _text(HW012_NAMES[num], x, 2.4, "F.Fab", 0.55)
+    # faixa SIP: modulo em pe, PCB dele e mais largo que a fileira de pads
     x0 = span / 2 - HW012_PCB_W / 2
-    s += _rect(x0, -HW012_PCB_H, x0 + HW012_PCB_W, -1.6)
-    # area do potenciometro (keep-out mecanico)
-    s += _rect(x0 + HW012_PCB_W, -HW012_PCB_H,
-               x0 + HW012_PCB_W + HW012_POT_CLEAR, -1.6, "F.CrtYd", 0.05)
-    s += _text("POT", x0 + HW012_PCB_W + HW012_POT_CLEAR / 2,
-               -HW012_PCB_H / 2, "F.Fab", 0.8)
-    s += _rect(x0 - 0.3, -HW012_PCB_H - 0.3,
-               x0 + HW012_PCB_W + HW012_POT_CLEAR + 0.3, 1.3, "F.CrtYd", 0.05)
-    s += _text("PAM8403 HW-012", x0 + 1, -HW012_PCB_H + 1.5)
+    s += _rect(x0, -1.8, x0 + HW012_PCB_W, 1.8)
+    s += _rect(x0 - 0.3, -2.1, x0 + HW012_PCB_W + 0.3, 3.4, "F.CrtYd", 0.05)
+    s += _text("PAM8403 (em pe)", span / 2, -3.2)
     return n, s + ")\n"
 
 
