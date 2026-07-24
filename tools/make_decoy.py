@@ -14,19 +14,22 @@ Por que a isca (ver skill kicad-freerouting):
 As zonas voltam na placa REAL, ao importar o SES.
 
 Uso (Python do KiCad):
-  python tools/make_decoy.py
-Gera: kicad/pong-retrosc-decoy.kicad_pcb (+ .kicad_pro) e .dsn
+  python tools/make_decoy.py [--yd]
+--yd opera na variante YD-RP2040 (pong-retrosc-yd.*).
+Gera: kicad/<projeto>-decoy.kicad_pcb (+ .kicad_pro) e .dsn
 """
 
 import shutil
+import sys
 from pathlib import Path
 
 import pcbnew
 
 KICAD = Path(__file__).resolve().parent.parent / "kicad"
-REAL = KICAD / "pong-retrosc.kicad_pcb"
-DECOY = KICAD / "pong-retrosc-decoy.kicad_pcb"
-DSN = KICAD / "pong-retrosc-decoy.dsn"
+PROJECT = "pong-retrosc-yd" if "--yd" in sys.argv else "pong-retrosc"
+REAL = KICAD / f"{PROJECT}.kicad_pcb"
+DECOY = KICAD / f"{PROJECT}-decoy.kicad_pcb"
+DSN = KICAD / f"{PROJECT}-decoy.dsn"
 RECESS = 0.35
 mm = pcbnew.FromMM
 

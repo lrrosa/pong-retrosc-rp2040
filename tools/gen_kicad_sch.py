@@ -21,13 +21,16 @@ import uuid as _uuid
 from pathlib import Path
 
 # ---------------------------------------------------------------- libs
-KICAD_ROOT = Path(sys.argv[1] if len(sys.argv) > 1
-                  else r"C:\Program Files\KiCad\10.0")
+# --yd: variante para o modulo RP2040 "roxo" de 1 botao (USB-C, 16 MB;
+# mesmas dimensoes e furacao, mas outra funcao em cada posicao de pino).
+VARIANT_YD = "--yd" in sys.argv
+_args = [a for a in sys.argv[1:] if a != "--yd"]
+KICAD_ROOT = Path(_args[0] if _args else r"C:\Program Files\KiCad\10.0")
 SYMDIR = KICAD_ROOT / "share" / "kicad" / "symbols"
 FPDIR = KICAD_ROOT / "share" / "kicad" / "footprints"
 
 OUT = Path(__file__).resolve().parent.parent / "kicad"
-PROJECT = "pong-retrosc"
+PROJECT = "pong-retrosc-yd" if VARIANT_YD else "pong-retrosc"
 VERSION = "20250610"          # formato do KiCad 10
 
 _sym_cache: dict[str, str] = {}
@@ -321,14 +324,49 @@ def build():
     sh = Sheet(root)
 
     # ---------------------------------------------------------- Pico
-    sh.text("Raspberry Pi Pico", (U(8), U(18)), 2.5)
+    # O footprint e a furacao sao os MESMOS nas duas variantes; o que muda
+    # e a funcao em cada posicao fisica (numeracao do Pico: 1-20 desce a
+    # esquerda, 21-40 sobe a direita). Funcoes usadas e onde cada modulo
+    # as expoe:
+    #             funcao       Pico oficial   roxa 1 botao
+    #   SYNC      GP16         21             19
+    #   VIDEO     GP17         22             20
+    #   AUDIO_PWM GP18         24             21
+    #   START     GP22         29             25
+    #   POT1      GP26/A0      31             30
+    #   POT2      GP27/A1      32             31
+    #   AGND                   33             29
+    #   +3V3                   36             36
+    #   +5V       VBUS         40             40
+    #   GND (estrela video)    23             38
     px, py = U(22), U(46)
-    pico = sh.symbol("MCU_Module:RaspberryPi_Pico", "U1", "RaspberryPi_Pico",
-                     (px, py), footprint=FP_PICO, fields_hidden=("Value",))
-    used = {"21": "SYNC", "22": "VIDEO", "24": "AUDIO_PWM", "29": "START",
-            "31": "POT1", "32": "POT2", "33": "AGND", "36": "+3V3",
-            "40": "+5V", "23": "GND"}
-    names = sym_pin_names("MCU_Module:RaspberryPi_Pico")
+    if VARIANT_YD:
+        # ATENCAO: o simbolo do Pico une pinos de mesmo nome (os 8 GND) --
+        # ligar um GND arrastaria os outros 7, que no YD sao GPIOs! Por
+        # isso a variante usa um conector generico 2x20 com a MESMA
+        # numeracao fisica (1-20 desce a esq., 21-40 sobe a dir.) e o mesmo
+        # footprint; cada pino e ligado individualmente.
+        sh.text("RP2040 roxo 1 botao (clone do Pico - pinagem propria)",
+                (U(8), U(18)), 2.5)
+        pico = sh.symbol("Connector_Generic:Conn_02x20_Counter_Clockwise",
+                         "U1", "RP2040 roxo 1 botao", (px, py), footprint=FP_PICO,
+                         fields_hidden=("Value",))
+        used = {"19": "SYNC", "20": "VIDEO", "21": "AUDIO_PWM",
+                "25": "START", "30": "POT1", "31": "POT2", "29": "AGND",
+                "36": "+3V3", "40": "+5V", "38": "GND"}
+        gnd_extra = {"6", "15", "35"}       # demais GNDs reais da roxa
+        names = sym_pin_names(
+            "Connector_Generic:Conn_02x20_Counter_Clockwise")
+    else:
+        sh.text("Raspberry Pi Pico", (U(8), U(18)), 2.5)
+        pico = sh.symbol("MCU_Module:RaspberryPi_Pico", "U1",
+                         "RaspberryPi_Pico", (px, py), footprint=FP_PICO,
+                         fields_hidden=("Value",))
+        used = {"21": "SYNC", "22": "VIDEO", "24": "AUDIO_PWM",
+                "29": "START", "31": "POT1", "32": "POT2", "33": "AGND",
+                "36": "+3V3", "40": "+5V", "23": "GND"}
+        gnd_extra = None                    # usa os nomes GND do simbolo
+        names = sym_pin_names("MCU_Module:RaspberryPi_Pico")
     for num, net in used.items():
         stub(sh, pico, num, px, net)
     # Os demais GND do modulo tambem vao para a estrela; o resto leva
@@ -336,10 +374,16 @@ def build():
     for num, nm in names.items():
         if num in used:
             continue
-        if nm.strip().upper() == "GND":
+        is_gnd = (num in gnd_extra) if gnd_extra is not None \
+            else (nm.strip().upper() == "GND")
+        if is_gnd:
             stub(sh, pico, num, px, "GND")
         else:
             sh.no_connect(pico[num])
+    if VARIANT_YD:
+        sh.text("U1 = modulo RP2040 roxo 1 botao (posicoes na numeracao do "
+                "Pico: 1-20 desce a esq., 21-40 sobe a dir.)",
+                (U(8), U(76)), 1.8)
 
     # ------------------------------------------------------- video DAC
     sh.text("Video composto - DAC de 2 resistores", (U(48), U(8)), 2.5)
@@ -482,7 +526,9 @@ def build():
 
     OUT.mkdir(exist_ok=True)
     sch = OUT / f"{PROJECT}.kicad_sch"
-    sch.write_text(sh.render("RetroSC Pong - RP2040", "1.0", "2026-06-08"),
+    title = ("RetroSC Pong - RP2040"
+             + (" (RP2040 roxo 1 botao)" if VARIANT_YD else ""))
+    sch.write_text(sh.render(title, "1.0", "2026-06-08"),
                    encoding="utf-8")
 
     pro = OUT / f"{PROJECT}.kicad_pro"

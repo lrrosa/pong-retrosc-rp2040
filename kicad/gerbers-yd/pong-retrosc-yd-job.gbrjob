@@ -5,12 +5,12 @@
       "Application": "Pcbnew",
       "Version": "10.0.4"
     },
-    "CreationDate": "2026-07-23T22:33:39-03:00"
+    "CreationDate": "2026-07-23T22:47:19-03:00"
   },
   "GeneralSpecs": {
     "ProjectId": {
-      "Name": "pong-retrosc",
-      "GUID": "706f6e67-2d72-4657-9472-6f73632e6b69",
+      "Name": "pong-retrosc-yd",
+      "GUID": "706f6e67-2d72-4657-9472-6f73632d7964",
       "Revision": "rev?"
     },
     "Size": {
@@ -27,44 +27,44 @@
       "PadToPad": 0.15,
       "PadToTrack": 0.15,
       "TrackToTrack": 0.15,
-      "MinLineWidth": 0.3,
+      "MinLineWidth": 0.25,
       "TrackToRegion": 0.2,
       "RegionToRegion": 0.2
     }
   ],
   "FilesAttributes": [
     {
-      "Path": "pong-retrosc-F_Cu.gtl",
+      "Path": "pong-retrosc-yd-F_Cu.gtl",
       "FileFunction": "Copper,L1,Top",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "pong-retrosc-B_Cu.gbl",
+      "Path": "pong-retrosc-yd-B_Cu.gbl",
       "FileFunction": "Copper,L2,Bot",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "pong-retrosc-F_Silkscreen.gto",
+      "Path": "pong-retrosc-yd-F_Silkscreen.gto",
       "FileFunction": "Legend,Top",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "pong-retrosc-B_Silkscreen.gbo",
+      "Path": "pong-retrosc-yd-B_Silkscreen.gbo",
       "FileFunction": "Legend,Bot",
       "FilePolarity": "Positive"
     },
     {
-      "Path": "pong-retrosc-F_Mask.gts",
+      "Path": "pong-retrosc-yd-F_Mask.gts",
       "FileFunction": "SolderMask,Top",
       "FilePolarity": "Negative"
     },
     {
-      "Path": "pong-retrosc-B_Mask.gbs",
+      "Path": "pong-retrosc-yd-B_Mask.gbs",
       "FileFunction": "SolderMask,Bot",
       "FilePolarity": "Negative"
     },
     {
-      "Path": "pong-retrosc-Edge_Cuts.gm1",
+      "Path": "pong-retrosc-yd-Edge_Cuts.gm1",
       "FileFunction": "Profile",
       "FilePolarity": "Positive"
     }

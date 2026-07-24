@@ -54,8 +54,12 @@ pong-rp2040/
 Veja os arquivos em [docs/](docs/) para detalhes:
 
 - [docs/schematic.md](docs/schematic.md) — esquemático completo
-- [docs/pinout.md](docs/pinout.md) — mapa dos GPIOs do Pico
+- [docs/pinout.md](docs/pinout.md) — pinagem dos **3 módulos RP2040
+  suportados** (Pico oficial, YD-RP2040 de 3 botões e "roxa" de 1 botão) e
+  qual variante de PCB usar com cada um
 - [docs/bom.md](docs/bom.md) — lista de materiais e custo
+- [kicad/README.md](kicad/README.md) — as **duas variantes de PCB** prontas
+  para fabricar (gerbers zipados)
 
 Resumo do hardware:
 

@@ -14,16 +14,19 @@ Nao chama ZONE_FILLER (crasha fora do processo do pcbnew). O preenchimento e
 feito depois por: kicad-cli pcb drc --refill-zones --save-board ...
 
 Uso (Python do KiCad):
-  python tools/import_ses.py
+  python tools/import_ses.py [--yd]
+--yd opera na variante YD-RP2040 (pong-retrosc-yd.*).
 """
 
+import sys
 from pathlib import Path
 
 import pcbnew
 
 KICAD = Path(__file__).resolve().parent.parent / "kicad"
-PCB = KICAD / "pong-retrosc.kicad_pcb"
-SES = KICAD / "pong-retrosc-decoy.ses"
+PROJECT = "pong-retrosc-yd" if "--yd" in sys.argv else "pong-retrosc"
+PCB = KICAD / f"{PROJECT}.kicad_pcb"
+SES = KICAD / f"{PROJECT}-decoy.ses"
 
 if not SES.exists():
     raise SystemExit(f"ERRO: {SES.name} ausente (rode make_decoy + freerouting)")

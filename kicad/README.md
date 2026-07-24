@@ -4,16 +4,29 @@ Placa de 2 camadas com plano de terra, gerada por scripts (reprodutível) e
 roteada com o Freerouting. Hardware sob **CERN-OHL-S-2.0** (ver
 [`../LICENSE-HARDWARE.txt`](../LICENSE-HARDWARE.txt)).
 
+**Duas variantes**, escolhidas pelo módulo RP2040 que você tem (mesma
+furação, pinagens diferentes — ver [../docs/pinout.md](../docs/pinout.md) e
+as marcas GP17/GP18 no silk):
+
+| Variante | Módulo | Arquivos |
+| --- | --- | --- |
+| oficial | Raspberry Pi Pico **ou** YD-RP2040 de **3 botões** (pinagem ≈ Pico) | `pong-retrosc.*`, `gerbers/`, `pong-retrosc-gerbers.zip` |
+| YD | RP2040 **roxa de 1 botão** (USB-C, 16 MB) | `pong-retrosc-yd.*`, `gerbers-yd/`, `pong-retrosc-yd-gerbers.zip` |
+
+> Atenção: existem clones parecidos com pinagens diferentes entre si. O que
+> define a variante é a **pinagem**, não a cor/marca — na dúvida, confira a
+> tabela completa em `docs/pinout.md` e as marcas GP17/GP18.
+
 ## Arquivos versionados
 
 | Arquivo | O quê |
 | --- | --- |
-| `pong-retrosc.kicad_sch` / `.kicad_pro` | esquemático e projeto |
-| `pong-retrosc.kicad_pcb` | **placa roteada** (DRC 0 erros) |
+| `pong-retrosc[-yd].kicad_sch` / `.kicad_pro` | esquemático e projeto |
+| `pong-retrosc[-yd].kicad_pcb` | **placa roteada** (DRC 0 erros) |
 | `pong-retrosc.pretty/` | footprints próprios (RCA de painel, PAM8403 HW-012) |
 | `fp-lib-table` | registra a lib de footprints do projeto |
-| `gerbers/` | Gerbers + furação (Excellon) prontos para fábrica |
-| `pong-retrosc-gerbers.zip` | os mesmos gerbers zipados — **baixe e envie direto à fábrica** |
+| `gerbers[-yd]/` | Gerbers + furação (Excellon) prontos para fábrica |
+| `pong-retrosc[-yd]-gerbers.zip` | os mesmos gerbers zipados — **baixe e envie direto à fábrica** |
 
 Intermediários (`*-decoy.*`, `*.dsn`, `*.ses`, `*.net`) são **gitignored** —
 regeráveis pelo pipeline abaixo.
@@ -58,6 +71,15 @@ python tools/gen_kicad_fp.py
 powershell -c "Compress-Archive -Path kicad\gerbers\* -DestinationPath kicad\pong-retrosc-gerbers.zip -Force"
 ```
 
+**Variante YD-RP2040:** repita os passos com `--yd` nos scripts Python e o
+sufixo `-yd` nos nomes de arquivo (`pong-retrosc-yd.*`, `gerbers-yd/`). Entre
+os passos 3 e 4, afine a trilha de sinal para 0,25 mm — com 0,30 mm o net
+START não fecha nessa variante:
+
+```sh
+python tools/dsn_tweak.py kicad/pong-retrosc-yd-decoy.dsn 250 500 150
+```
+
 **Por que a isca (passo 3):** com as zonas presentes, o DSN as exporta como
 *planes* que o Freerouting trata como obstáculo — ele vira quase mono-camada e
 abandona os nets longos. Sem zonas, roteia livre nas 2 faces; o plano de GND
@@ -84,6 +106,11 @@ redundantes).
   `docs/images/logo_retrosc_1bit.png` com preto/branco invertidos (o traço
   do logo é a tinta). O logo é marca do evento e **não** é coberto pelas
   licenças do projeto.
+- **Marcas GP17/GP18 no silk** ao lado dos furos correspondentes de cada
+  variante (Pico: coluna direita, posições 22/24; YD-RP2040: cantos da base,
+  posições 20/21). Antes de soldar, confira se elas batem com os rótulos do
+  seu módulo — é o jeito rápido de ver se a placa e o módulo são da mesma
+  variante.
 - **DRC: 0 erros.** Restam avisos de silk (desenho do barril/USB atravessa a
   borda; referências sobre furos) — cosméticos, não bloqueiam a fabricação.
 - Regras: trilha de sinal 0,3 mm, isolamento 0,15 mm, via 0,7/0,35 mm (JLCPCB

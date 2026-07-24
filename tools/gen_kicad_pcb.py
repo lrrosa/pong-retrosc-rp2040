@@ -24,8 +24,11 @@ from pathlib import Path
 import pcbnew
 
 REPO = Path(__file__).resolve().parent.parent
-NETLIST = REPO / "kicad" / "pong-retrosc.net"
-OUT = REPO / "kicad" / "pong-retrosc.kicad_pcb"
+# --yd: variante para o modulo YD-RP2040 (mesma furacao, pinagem propria)
+VARIANT_YD = "--yd" in sys.argv
+PROJECT = "pong-retrosc-yd" if VARIANT_YD else "pong-retrosc"
+NETLIST = REPO / "kicad" / f"{PROJECT}.net"
+OUT = REPO / "kicad" / f"{PROJECT}.kicad_pcb"
 FP_LOCAL = REPO / "kicad" / "pong-retrosc.pretty"
 FP_SYS = Path(sys.executable).parent.parent / "share" / "kicad" / "footprints"
 
@@ -245,6 +248,33 @@ def main():
         t.SetTextThickness(mm(0.15))
         board.Add(t)
 
+    # ----- marcacao GP17/GP18 no silk (difere entre Pico e YD-RP2040) -----
+    # E o jeito rapido de notar qual variante de placa se tem em maos: no
+    # Pico oficial GP17/GP18 ficam na coluna DIREITA (posicoes 22/24); no
+    # YD-RP2040 ficam na BASE (GP17 = canto esq, pos 20; GP18 = canto dir,
+    # pos 21). Quem montar confere o rotulo contra o silk do proprio modulo.
+    if VARIANT_YD:
+        GP_MARKS = [("GP17", "20", 2.8, 0.0, 0),    # a direita do pad 20
+                    ("GP18", "21", -2.8, 0.0, 0)]   # a esquerda do pad 21
+    else:
+        GP_MARKS = [("GP17", "22", 2.6, 0.0, 90),   # fresta entre U1 e U2
+                    ("GP18", "24", 2.6, 0.0, 90)]
+    for txt, padnum, dx, dy, rot in GP_MARKS:
+        pad = next((p for p in footprints["U1"].Pads()
+                    if p.GetNumber() == padnum), None)
+        if pad is None:
+            continue
+        t = pcbnew.PCB_TEXT(board)
+        t.SetText(txt)
+        t.SetPosition(pcbnew.VECTOR2I(pad.GetPosition().x + mm(dx),
+                                      pad.GetPosition().y + mm(dy)))
+        t.SetLayer(pcbnew.F_SilkS)
+        if rot:
+            t.SetTextAngle(pcbnew.EDA_ANGLE(rot, pcbnew.DEGREES_T))
+        t.SetTextSize(pcbnew.VECTOR2I(mm(0.8), mm(0.8)))
+        t.SetTextThickness(mm(0.15))
+        board.Add(t)
+
     # ----- rotulo de funcao POR PINO nos headers de painel -----
     # texto vertical (90 graus) logo acima de cada pad, lido a partir da
     # posicao real do pad -> robusto a rotacao/direcao do footprint.
@@ -366,8 +396,12 @@ def main():
     print("stage: texto", flush=True)
     try:
         t = pcbnew.PCB_TEXT(board)
-        t.SetText("RetroSC Pong v1.0")
-        t.SetPosition(V(41, 87))            # rodape, entre H4 e H3
+        if VARIANT_YD:
+            t.SetText("RetroSC Pong v1.0 (RP2040 roxo 1 botao)")
+            t.SetPosition(V(28, 87))        # rodape (texto mais longo)
+        else:
+            t.SetText("RetroSC Pong v1.0")
+            t.SetPosition(V(41, 87))        # rodape, entre H4 e H3
         t.SetLayer(pcbnew.F_SilkS)
         t.SetTextSize(pcbnew.VECTOR2I(mm(1.0), mm(1.0)))
         board.Add(t)
@@ -390,7 +424,8 @@ def main():
         lpx = img.load()
         S = 0.22                            # mm por pixel do logo
         BLEED = 0.01                        # funde runs vizinhos na tinta
-        LX, LY = 4.4, 1.8                   # canto do logo (rel, na placa)
+        LX, LY = 4.4, 1.0                   # canto do logo (deixa a base do
+                                            # modulo livre p/ marcas GP17/18)
         # um PCB_SHAPE poly do arquivo so guarda 1 contorno -> um RECT
         # preenchido por run de pixels
         nruns = 0
