@@ -38,15 +38,21 @@ if not ok:
 
 has_gnd_zone = any(board.GetArea(i).GetNetname().lstrip("/") == "GND"
                    for i in range(board.GetAreaCount()))
+
+# ATENCAO: neste build (KiCad 10 SWIG) ImportSpecctraSES invalida o proxy do
+# container de trilhas: GetTracks() funciona UMA vez logo apos o import e quebra
+# na 2a chamada. Entao materializamos a lista de uma vez e operamos sobre ela.
+tracks = list(board.GetTracks())
+n = len(tracks)
 removed = 0
 if has_gnd_zone:
-    for t in list(board.GetTracks()):
+    for t in tracks:
         if t.GetNetname().lstrip("/") == "GND":
             board.Remove(t)
             removed += 1
+    n -= removed
 
 pcbnew.SaveBoard(str(PCB), board)
-n = sum(1 for _ in board.GetTracks())
 print(f"SES importado; {removed} trilhas de GND removidas (plano cuida do GND)")
 print(f"placa salva com {n} segmentos de sinal. Agora rode o DRC com "
       f"--refill-zones para preencher o plano.")

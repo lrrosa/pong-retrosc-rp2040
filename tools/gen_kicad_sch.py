@@ -277,7 +277,7 @@ class Sheet:
 
 
 # ------------------------------------------------------- footprints
-FP_R = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal"
+FP_R = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 FP_C = "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 FP_CP = "Capacitor_THT:CP_Radial_D5.0mm_P2.50mm"
 FP_PICO = "Module:RaspberryPi_Pico_Common_THT"

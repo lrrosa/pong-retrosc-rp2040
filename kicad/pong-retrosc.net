@@ -2,7 +2,7 @@
 	(version "E")
 	(design
 		(source "F:\\downloads\\_montagens - kits\\Pong para RP2040\\pong-rp2040\\kicad\\pong-retrosc.kicad_sch")
-		(date "2026-07-19T22:24:59")
+		(date "2026-07-22T19:32:51")
 		(tool "Eeschema 10.0.4")
 		(sheet
 			(number "1")
@@ -93,7 +93,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "6587111b-65ee-4109-b2a9-5cf7f641ab83")
+			(tstamps "381b60cf-a91b-42dd-9cfb-bf5be6ebcbc8")
 			(units
 				(unit
 					(name "A")
@@ -147,7 +147,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "1eb13450-5a2e-4c1b-8593-eabdd2178485")
+			(tstamps "b6419517-7382-4102-b489-4798289c6b85")
 			(units
 				(unit
 					(name "A")
@@ -201,7 +201,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "6cd104c3-c7da-4f5c-abf7-aaf697a41b73")
+			(tstamps "66d34bfd-fc35-492c-af86-10ae94932756")
 			(units
 				(unit
 					(name "A")
@@ -255,7 +255,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "21d6f808-432b-46e6-83c4-18151037a4a7")
+			(tstamps "6c2b4f4e-302d-43d3-be8e-219c0d38cbe3")
 			(units
 				(unit
 					(name "A")
@@ -309,7 +309,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "95b549b6-94b2-488a-a9aa-dd65c80b181d")
+			(tstamps "e7e6f384-0969-4884-a55e-fbef4ad5eed2")
 			(units
 				(unit
 					(name "A")
@@ -363,7 +363,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "9239a6b1-e87c-4632-9446-9d6621db36c4")
+			(tstamps "ae81f812-44fc-4756-b16a-074e8ad38278")
 			(units
 				(unit
 					(name "A")
@@ -429,7 +429,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "e92e3c0a-efba-493f-8fe1-04ef52fb0e30")
+			(tstamps "646f1bcb-e7bf-41c3-ab0e-c33e72da334e")
 			(units
 				(unit
 					(name "A")
@@ -486,7 +486,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "b592b5be-f85b-4310-be9a-50297acabb63")
+			(tstamps "ecc917ca-092e-4576-abff-e554038d457e")
 			(units
 				(unit
 					(name "A")
@@ -543,7 +543,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "20f48055-8a82-4325-8716-74383ed7cb43")
+			(tstamps "9e75325a-4665-411c-a8e5-8ef0f6e33fb0")
 			(units
 				(unit
 					(name "A")
@@ -597,7 +597,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "9b37ffff-932b-43fc-8787-c2d1e352c392")
+			(tstamps "f6b0baa9-6e4c-4f95-97aa-27223efce1fc")
 			(units
 				(unit
 					(name "A")
@@ -651,7 +651,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "b5f93ff5-f564-4242-8a33-8e8030401136")
+			(tstamps "c13568f9-d492-4292-8633-da9f80eea227")
 			(units
 				(unit
 					(name "A")
@@ -669,10 +669,10 @@
 		(comp
 			(ref "R1")
 			(value "470")
-			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 			(fields
 				(field
-					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 				(field
 					(name "Datasheet")
 				)
@@ -705,7 +705,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "fd01a9a7-fb28-4bfe-a46c-011dd86c6d7f")
+			(tstamps "f3c8a562-5c37-4152-bf70-064fd6fb272b")
 			(units
 				(unit
 					(name "A")
@@ -723,10 +723,10 @@
 		(comp
 			(ref "R2")
 			(value "270")
-			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 			(fields
 				(field
-					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 				(field
 					(name "Datasheet")
 				)
@@ -759,7 +759,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "d8199684-e5db-4d5f-8ef9-af897ca1e09b")
+			(tstamps "b8fb87f7-445b-4d42-817b-22c72e03a039")
 			(units
 				(unit
 					(name "A")
@@ -777,10 +777,10 @@
 		(comp
 			(ref "R3")
 			(value "1k")
-			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 			(fields
 				(field
-					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 				(field
 					(name "Datasheet")
 				)
@@ -813,7 +813,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "463948a9-3d60-4656-9ef8-37d1e5118953")
+			(tstamps "a02821d7-e083-4e4e-be30-0488de76a209")
 			(units
 				(unit
 					(name "A")
@@ -831,10 +831,10 @@
 		(comp
 			(ref "R4")
 			(value "10k")
-			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 			(fields
 				(field
-					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 				(field
 					(name "Datasheet")
 				)
@@ -867,7 +867,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "26275bdd-187d-4ff2-9cea-3ae1f6c4541e")
+			(tstamps "d29abd7a-bf24-49a1-9fe4-4090ccb9b2d4")
 			(units
 				(unit
 					(name "A")
@@ -885,10 +885,10 @@
 		(comp
 			(ref "R5")
 			(value "1k")
-			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 			(fields
 				(field
-					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 				(field
 					(name "Datasheet")
 				)
@@ -921,7 +921,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "a1043d30-7cd2-42be-9125-afcc6f9b9aa2")
+			(tstamps "3a6f4cb9-dbce-4d03-b9b1-b662efad7258")
 			(units
 				(unit
 					(name "A")
@@ -939,10 +939,10 @@
 		(comp
 			(ref "R6")
 			(value "1k")
-			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 			(fields
 				(field
-					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 				(field
 					(name "Datasheet")
 				)
@@ -975,7 +975,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "47f0ad8d-e3e7-450a-9d2f-5a1fe04fd9d8")
+			(tstamps "a4763226-69b2-4668-8df1-7c07cda1e5d1")
 			(units
 				(unit
 					(name "A")
@@ -993,10 +993,10 @@
 		(comp
 			(ref "R7")
 			(value "1k")
-			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+			(footprint "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 			(fields
 				(field
-					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P10.16mm_Horizontal")
+					(name "Footprint") "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical")
 				(field
 					(name "Datasheet")
 				)
@@ -1029,7 +1029,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "d770acc4-f1ac-4c46-9c4a-5a1ba7b8fcb4")
+			(tstamps "ad44e402-ae17-4bf9-85c5-ee7fdade842a")
 			(units
 				(unit
 					(name "A")
@@ -1083,7 +1083,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "ce69f858-6afe-4996-ad76-3384e75dc4a4")
+			(tstamps "a9eccdfa-1edf-46be-b18e-83355e7a2956")
 			(units
 				(unit
 					(name "A")
@@ -1251,7 +1251,7 @@
 				(names "/")
 				(tstamps "/")
 			)
-			(tstamps "320ddbce-b10a-406b-92da-a87e99383516")
+			(tstamps "f9cf7d20-5205-4790-a475-fe4f0b4b0a4d")
 			(units
 				(unit
 					(name "A")

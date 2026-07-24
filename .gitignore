@@ -33,3 +33,4 @@ kicad/*.kicad_prl
 kicad/*-decoy.*
 kicad/*.dsn
 kicad/*.ses
+kicad/.history/

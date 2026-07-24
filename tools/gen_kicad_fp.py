@@ -44,17 +44,19 @@ RCA_BARREL_D = 8.4
 # ============================================================
 # Modulo PAM8403 HW-012 (medidas do anuncio + silk das fotos)
 # ============================================================
-# PCB 29.5 x 20.2 mm; o potenciometro avanca ~15.8 mm para fora de um
-# dos lados e tem 15 mm de altura -> deixar espaco livre nesse lado.
-HW012_PCB_W, HW012_PCB_H = 29.5, 20.2
-HW012_POT_CLEAR = 15.8       # avanco do pot (so vira keep-out no silk)
-HW012_PAD_PITCH = G          # 2.54 mm entre pads
+# PCB 29 x 20 mm; potenciometro de volume protrai de um lado (~1.5 cm).
+# A fileira de solda equivale a uma barra de 11 posicoes de 2.54 mm: 4
+# pads (rout/lout) + 1 vazio + 2 pads (power) + 1 vazio + 3 pads (input).
+HW012_PCB_W, HW012_PCB_H = 29.0, 20.0
+HW012_POT_W, HW012_POT_D = 14.0, 15.0   # pot: largura x quanto protrai (-Y)
+HW012_PAD_PITCH = G          # 2.54 mm entre posicoes
 HW012_DRILL, HW012_PAD = 1.1, 1.9
-# Fileira unica na borda inferior, na ordem que aparece no silk do modulo:
-HW012_PADS = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
-HW012_NAMES = {"1": "ROUT-", "2": "ROUT+", "3": "LOUT+", "4": "LOUT-",
-               "5": "PWR-", "6": "PWR+", "7": "IN_L", "8": "IN_G",
-               "9": "IN_R"}
+# (numero_do_pad, indice na barra de 11 posicoes, nome no silk)
+HW012_PADS = [
+    ("1", 0, "ROUT-"), ("2", 1, "ROUT+"), ("3", 2, "LOUT+"), ("4", 3, "LOUT-"),
+    ("5", 5, "PWR-"), ("6", 6, "PWR+"),                       # apos 1 vazio
+    ("7", 8, "IN_L"), ("8", 9, "IN_G"), ("9", 10, "IN_R"),    # apos 1 vazio
+]
 
 
 def _u():
@@ -159,30 +161,42 @@ def rca_jack():
 
 
 def pam8403():
-    """Modulo HW-012 montado EM PE (vertical), como no prototipo.
+    """Modulo HW-012 deitado sobre a placa, soldado pela barra de 9 pads.
 
-    Fica na placa apenas a fileira de 9 pads; o PCB do modulo (29.5 x
-    20.2 mm) sobe perpendicular e o potenciometro fica no alto, fora do
-    plano da placa. Footprint estilo SIP: faixa fina de silk.
-    Origem = pad 1.
+    A barra de solda equivale a 11 posicoes de 2.54 mm com 2 vazios. O
+    corpo do modulo (29 x 20 mm) fica na direcao -Y (acima dos pads) e o
+    potenciometro protrai do lado -Y/direito. Origem = pad 1.
+    Posicione com -Y apontando para FORA da placa, para o eixo do pot
+    ficar acessivel (nao apontar para dentro da placa).
     """
     n = "PAM8403_HW-012"
-    s = _hdr(n, "Modulo amplificador classe-D PAM8403 (HW-012) montado em pe "
-                "(vertical) pela fileira de 9 pads. PCB do modulo 29.5 x "
-                "20.2 mm sobe perpendicular; pot de volume no topo. Deixar "
-                "~21 mm livres acima da placa.",
-             "PAM8403 HW-012 amplifier module class-D audio SIP vertical")
-    span = (len(HW012_PADS) - 1) * HW012_PAD_PITCH
-    for i, num in enumerate(HW012_PADS):
-        x = i * HW012_PAD_PITCH
+    s = _hdr(n, "Modulo amplificador classe-D PAM8403 (HW-012) com pot de "
+                "volume, deitado. Barra de 9 pads em 11 posicoes de 2.54 mm "
+                "(4 + vazio + 2 + vazio + 3). Corpo 29 x 20 mm; pot protrai "
+                "~15 mm -- montar com o pot para FORA da placa.",
+             "PAM8403 HW-012 amplifier module class-D audio")
+    xs = [idx * HW012_PAD_PITCH for _, idx, _ in HW012_PADS]
+    for num, idx, name in HW012_PADS:
+        x = idx * HW012_PAD_PITCH
         s += _pad(num, x, 0, HW012_DRILL, HW012_PAD,
                   "rect" if num == "1" else "circle")
-        s += _text(HW012_NAMES[num], x, 2.4, "F.Fab", 0.55)
-    # faixa SIP: modulo em pe, PCB dele e mais largo que a fileira de pads
-    x0 = span / 2 - HW012_PCB_W / 2
-    s += _rect(x0, -1.8, x0 + HW012_PCB_W, 1.8)
-    s += _rect(x0 - 0.3, -2.1, x0 + HW012_PCB_W + 0.3, 3.4, "F.CrtYd", 0.05)
-    s += _text("PAM8403 (em pe)", span / 2, -3.2)
+        s += _text(name, x, 2.2, "F.Fab", 0.5)
+    # corpo do modulo (29 x 20) na direcao -Y, centrado na barra de pads
+    cx = (min(xs) + max(xs)) / 2
+    bl, br = cx - HW012_PCB_W / 2, cx + HW012_PCB_W / 2
+    s += _rect(bl, -1.8, br, -1.8 - HW012_PCB_H)
+    s += _text("PAM8403", cx, -1.8 - HW012_PCB_H + 2.5)
+    # Potenciometro de volume: protrai ~15 mm da borda OPOSTA aos pads (-Y),
+    # dentro da largura do corpo (lado direito). Assim, montando o modulo com
+    # essa borda encostada na borda da placa, o corpo fica todo sobre a placa
+    # e SO o pot fica para fora -- que e como ele deve ser acessado.
+    pot_l, pot_r = br - HW012_POT_W - 2.0, br - 2.0
+    y_body = -1.8 - HW012_PCB_H
+    s += _rect(pot_l, y_body, pot_r, y_body - HW012_POT_D, "F.CrtYd", 0.05)
+    s += _text("POT", (pot_l + pot_r) / 2, y_body - HW012_POT_D / 2, "F.Fab", 0.8)
+    # courtyard geral cobrindo corpo + pot
+    s += _rect(bl - 0.3, 2.6, br + 0.3, y_body - HW012_POT_D - 0.3,
+               "F.CrtYd", 0.05)
     return n, s + ")\n"
 
 

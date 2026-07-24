@@ -13,6 +13,7 @@ roteada com o Freerouting. Hardware sob **CERN-OHL-S-2.0** (ver
 | `pong-retrosc.pretty/` | footprints próprios (RCA de painel, PAM8403 HW-012) |
 | `fp-lib-table` | registra a lib de footprints do projeto |
 | `gerbers/` | Gerbers + furação (Excellon) prontos para fábrica |
+| `pong-retrosc-gerbers.zip` | os mesmos gerbers zipados — **baixe e envie direto à fábrica** |
 
 Intermediários (`*-decoy.*`, `*.dsn`, `*.ses`, `*.net`) são **gitignored** —
 regeráveis pelo pipeline abaixo.
@@ -48,12 +49,13 @@ python tools/gen_kicad_fp.py
 "$CLI" pcb drc --refill-zones --save-board --severity-error \
        --exit-code-violations kicad/pong-retrosc.kicad_pcb
 
-# 7. gerbers + furacao
+# 7. gerbers + furacao + zip para a fabrica
 "$CLI" pcb export gerbers --layers "F.Cu,B.Cu,F.SilkS,B.SilkS,F.Mask,B.Mask,Edge.Cuts" \
        --subtract-soldermask -o kicad/gerbers/ kicad/pong-retrosc.kicad_pcb
 "$CLI" pcb export drill --format excellon --drill-origin absolute \
        --excellon-units mm --generate-map --map-format gerberx2 \
        -o kicad/gerbers/ kicad/pong-retrosc.kicad_pcb
+powershell -c "Compress-Archive -Path kicad\gerbers\* -DestinationPath kicad\pong-retrosc-gerbers.zip -Force"
 ```
 
 **Por que a isca (passo 3):** com as zonas presentes, o DSN as exporta como
@@ -64,9 +66,27 @@ redundantes).
 
 ## Estado
 
-- **DRC: 0 erros.** Restam avisos de silk (referências sobre cobre/borda) —
-  cosméticos, não bloqueiam a fabricação.
-- Regras: trilha de sinal 0,3 mm, isolamento 0,2 mm, via 0,7/0,35 mm (JLCPCB
+- **Placa 55 × 88 mm**, retrato: Pico com USB na borda superior; PAM8403 ao
+  lado, corpo na placa e pot de volume saindo pela mesma borda; RCAs na borda
+  direita com o **barril protraindo ~8,5 mm para fora** (o cabo pluga de fora);
+  headers de painel empilhados à esquerda, cada um com o nome e a função de
+  cada pino na serigrafia.
+- **Furos de montagem M3** com passo de **45 mm**: base em y84 com H2 (5, 84),
+  H4 (27,5, 84) e H3 (50, 84) — H2↔H3 = 45 mm, H4 no centro — e H1 (27,5, 39)
+  no eixo X, 45 mm acima de H4. Um retângulo de 4 furos nos cantos não fecha
+  nesta placa (os cantos superiores são do Pico e do RCA de vídeo).
+- **J5 + J6 (pots)** ficam na mesma fileira com **uma posição vaga** entre
+  eles: um único conector fêmea 1×7 (2,54 mm) serve os dois, deixando o
+  contato do meio sem uso.
+- **Logo RetroSC no silk da frente**, dentro do espaço do Pico (48,4 ×
+  15,2 mm a 0,22 mm/pixel, entre as duas fileiras de pinos — fica visível
+  antes da montagem ou com o Pico socketado). Gerado de
+  `docs/images/logo_retrosc_1bit.png` com preto/branco invertidos (o traço
+  do logo é a tinta). O logo é marca do evento e **não** é coberto pelas
+  licenças do projeto.
+- **DRC: 0 erros.** Restam avisos de silk (desenho do barril/USB atravessa a
+  borda; referências sobre furos) — cosméticos, não bloqueiam a fabricação.
+- Regras: trilha de sinal 0,3 mm, isolamento 0,15 mm, via 0,7/0,35 mm (JLCPCB
   2 camadas).
 
 ## ATENÇÃO antes de fabricar
