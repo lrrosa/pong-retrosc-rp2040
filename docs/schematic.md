@@ -6,6 +6,13 @@ reconstrua em KiCad/EasyEDA a partir destes valores.
 
 ![Mapa de pinos usados](images/sch_pinout.svg)
 
+> ⚠️ **Os números de pino deste documento são as posições do Pico oficial**
+> (valem também para a YD-RP2040 de 3 botões). A **roxa de 1 botão** usa
+> outras posições — confira em [pinout.md](pinout.md) antes de ligar os fios.
+> Coincidem nas três: **p36** (3V3), **p38** (GND), **p39** (VSYS/VIN) e
+> **p40** (+5 V). Mudam, entre outros: GP16/17/18, GP22, GP26/27 e o **AGND**
+> (p33 no Pico, **p29** na roxa).
+
 ## DAC de vídeo composto (2 resistores)
 
 ![DAC de vídeo composto de 2 resistores](images/sch_video.svg)
@@ -150,8 +157,16 @@ Numeração típica da DPDT de 6 pinos (vista de baixo, 2 fileiras de 3 — a
 | 1             | LINHA (saída do divisor)            | posição **A** |
 | 5             | Lout+ do PAM8403                    | posição **B** |
 | **4** (comum) | **shields** dos RCAs (L e R juntos) | sempre        |
-| 2             | GND (estrela do Pico)               | posição **A** |
+| 2             | GND do áudio (pino 38)               | posição **A** |
 | 6             | Lout− do PAM8403                    | posição **B** |
+
+> **Que GND é esse?** "Estrela" é o **jeito de passar os fios**, não um pino:
+> cada bloco leva o seu próprio fio até um pino GND do Pico (ver
+> [Aterramento em estrela](#alimentação)). O retorno do áudio de linha
+> pertence ao bloco de áudio, então vai no **pino 38**, junto do power − do
+> amp — que é onde o resistor de baixo do divisor (o de 1 kΩ) também aterra.
+> **Não use o AGND** (p33 no Pico, p29 na roxa): ele é exclusivo dos pots; jogar o
+> retorno de áudio nele injeta o sinal justamente na referência que o ADC usa.
 
 - Só o canal **Lout** é usado; **Rout fica livre** (não ligue em nada).
 - **Modo A:** os dois RCAs mandam o mesmo mono para a TV — plugue em L, em R,
@@ -194,13 +209,13 @@ cada **coluna é um polo** e a **fileira do meio (5–8) são os comuns**):
 | 1             | LINHA (saída do divisor) | posição **A** |
 | 9             | Lout+ do PAM8403         | posição **B** |
 | **6** (comum) | shield do **RCA-L**      | sempre        |
-| 2             | GND (estrela do Pico)    | posição **A** |
+| 2             | GND do áudio (pino 38)    | posição **A** |
 | 10            | Lout− do PAM8403         | posição **B** |
 | **7** (comum) | centro do **RCA-R**      | sempre        |
 | 3             | LINHA (saída do divisor) | posição **A** |
 | 11            | Rout+ do PAM8403         | posição **B** |
 | **8** (comum) | shield do **RCA-R**      | sempre        |
-| 4             | GND (estrela do Pico)    | posição **A** |
+| 4             | GND do áudio (pino 38)    | posição **A** |
 | 12            | Rout− do PAM8403         | posição **B** |
 
 - A numeração acima é a típica, mas **varia por fabricante** — confirme com o
@@ -232,7 +247,7 @@ cada **coluna é um polo** e a **fileira do meio (5–8) são os comuns**):
   de um pot é no máximo `R/4` (≈ 2,5 kΩ no 10 kΩ), desprezível frente a 100 kΩ.
   Escolhemos 10 kΩ por convenção e menor consumo (0,33 mA vs 0,66 mA por pot),
   não por exigência do ADC. (Diferente de AVR/Arduino, que pedem fonte < 10 kΩ.)
-- **Retorno de terra:** ligue o GND dos pots ao **AGND (pino 33)** do Pico, que
+- **Retorno de terra:** ligue o GND dos pots ao **AGND** (p33 no Pico, p29 na roxa), que
   tem um plano de terra analógico separado sob os GPIO26–29 — leitura mais
   limpa do que usar o GND digital.
 - **Supply do ADC mais limpo:** o firmware põe o **GPIO23 em nível alto**, o que
@@ -268,10 +283,25 @@ vai a GND e o firmware detecta o flanco de descida.
 - **Aterramento em ESTRELA (importante!):** todos os GND são a mesma rede,
   mas cada bloco deve ter o **seu próprio fio** até um pino GND do Pico — os
   fios só se encontram no Pico, nunca encadeados um no outro:
-  - RCA shield (vídeo) → **GND pino 23** (ao lado de GP16/GP17);
-  - PAM8403 power − (retorno do alto-falante) → **GND pino 38**;
+  - RCA shield (vídeo) → um **GND ao lado de GP16/GP17** (Pico **p23**;
+    na roxa o 23 é GP20 — use o **p15**, o GND mais próximo dos dois);
+  - PAM8403 power − (retorno do alto-falante) → **GND p38** (é GND nas três);
   - G da entrada de áudio → junto do power − (no módulo é o mesmo plano);
-  - potenciômetros → **AGND pino 33**.
+  - potenciômetros → **AGND** (Pico **p33**; roxa **p29**) — só eles;
+  - retorno do áudio de linha (shield dos RCAs no modo A) → junto do
+    bloco de áudio, **pino 38**.
+
+  "Estrela" é a **topologia dos fios**, não um pino: o centro da estrela é o
+  próprio módulo. Todos os pinos GND dele são a mesma rede internamente (no
+  Pico: 3, 8, 13, 18, 23, 28 e 38; na roxa: 6, 15, 35 e 38) — o que importa é
+  **cada bloco ter o seu fio**, sem encadear um no outro. O **AGND** é a
+  exceção: mantenha-o exclusivo dos pots, para o ADC não ler o ruído dos
+  outros blocos.
+
+  > Na **PCB** isso já vem resolvido: o plano de terra das duas faces é a
+  > estrela (impedância baixa em qualquer caminho), e o AGND é uma rede
+  > separada, que só encontra o GND dentro do módulo Pico. A instrução acima
+  > vale para montagem em **perfboard/fiação manual**.
 
   O retorno do alto-falante carrega picos de centenas de mA a cada beep; se
   ele compartilhar o fio do shield do RCA, o terra do vídeo "salta" e a TV

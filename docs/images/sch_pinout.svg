@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 430" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
-  <rect x="0.5" y="0.5" width="659" height="429" rx="10" fill="#ffffff" stroke="#d0d7de"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 452" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
+  <rect x="0.5" y="0.5" width="659" height="451" rx="10" fill="#ffffff" stroke="#d0d7de"/>
   <text x="20" y="30" font-size="14" font-weight="bold" fill="#16202a">Mapa de pinos usados — Raspberry Pi Pico (RP2040)</text>
 
   <!-- Pico body -->
@@ -64,4 +64,5 @@
   </g>
 
   <text x="330" y="420" text-anchor="middle" fill="#5b6b7a" font-size="12">Só pinos do header. GP23 (modo PWM do SMPS) é interno e setado por firmware.</text>
+  <text x="330" y="442" text-anchor="middle" fill="#d1242f" font-size="12">Posições do Pico oficial (e da YD de 3 botões). Na roxa de 1 botão mudam — ver pinout.md.</text>
 </svg>

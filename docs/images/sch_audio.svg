@@ -77,7 +77,7 @@
   <text x="602" y="209" fill="#2563eb">R (módulo)</text>
 
   <!-- G / grounds -->
-  <text x="20" y="254" fill="#16202a">GND (estrela no Pico)</text>
+  <text x="20" y="254" fill="#16202a">GND do áudio (pino 38)</text>
   <line x1="215" y1="250" x2="500" y2="250" stroke="#16202a" stroke-width="2"/>
   <polygon points="500,244 513,250 500,256" fill="#2563eb"/>
   <text x="523" y="254" fill="#2563eb">G (módulo)</text>

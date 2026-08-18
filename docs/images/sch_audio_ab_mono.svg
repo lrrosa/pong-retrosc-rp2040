@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 430" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
-  <rect x="0.5" y="0.5" width="699" height="429" rx="10" fill="#ffffff" stroke="#d0d7de"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 452" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
+  <rect x="0.5" y="0.5" width="699" height="451" rx="10" fill="#ffffff" stroke="#d0d7de"/>
   <text x="20" y="30" font-size="14" font-weight="bold" fill="#16202a">Variante mono — chave DPDT (2 polos, 6 pinos)</text>
   <text x="20" y="52" fill="#5b6b7a" font-size="11">linha cheia = posição A (TV) ·</text>
   <text x="216" y="52" fill="#d1242f" font-size="11">tracejado vermelho = posição B (amp)</text>
@@ -43,7 +43,7 @@
   <g fill="#16202a">
     <text x="548" y="125">LINHA (divisor)</text>
     <text x="548" y="185">Lout+</text>
-    <text x="548" y="245">GND (estrela)</text>
+    <text x="548" y="245">GND áudio (p38)</text>
     <text x="548" y="305">Lout−</text>
   </g>
 
@@ -76,4 +76,5 @@
   <text x="350" y="374" text-anchor="middle" fill="#5b6b7a" font-size="12">Áudio do Pong é mono: só o canal Lout é usado (Rout fica livre).</text>
   <text x="350" y="394" text-anchor="middle" fill="#d1242f" font-size="12">Meça antes: 3 e 4 não podem ter continuidade entre si (comuns independentes).</text>
   <text x="350" y="414" text-anchor="middle" fill="#5b6b7a" font-size="12">Modo B: só UMA caixa passiva · RCAs isolados do painel · nunca a TV em B.</text>
+  <text x="350" y="436" text-anchor="middle" fill="#5b6b7a" font-size="12">GND aqui = terra do áudio (pino 38) — NÃO o AGND (33), exclusivo dos pots.</text>
 </svg>
