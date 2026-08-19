@@ -10,8 +10,8 @@ Le os simbolos direto das bibliotecas instaladas do KiCad, embute-os no
 Uso:
     python tools/gen_kicad_sch.py [caminho_do_kicad]
 
-Gera em kicad/: pong-retrosc.kicad_sch e pong-retrosc.kicad_pro
-Valide com:  kicad-cli sch export svg -o docs/images/kicad kicad/pong-retrosc.kicad_sch
+Gera em kicad/: retrosc-pong.kicad_sch e retrosc-pong.kicad_pro
+Valide com:  kicad-cli sch export svg -o docs/images/kicad kicad/retrosc-pong.kicad_sch
 """
 
 import math
@@ -30,7 +30,7 @@ SYMDIR = KICAD_ROOT / "share" / "kicad" / "symbols"
 FPDIR = KICAD_ROOT / "share" / "kicad" / "footprints"
 
 OUT = Path(__file__).resolve().parent.parent / "kicad"
-PROJECT = "pong-retrosc-yd" if VARIANT_YD else "pong-retrosc"
+PROJECT = "retrosc-pong-yd" if VARIANT_YD else "retrosc-pong"
 VERSION = "20250610"          # formato do KiCad 10
 
 _sym_cache: dict[str, str] = {}
@@ -134,7 +134,7 @@ def check_footprint(fp: str) -> str:
     """Aborta se o footprint nao existir (evita esquematico que nao vira PCB).
 
     Procura nas libs do KiCad e tambem na lib propria do projeto
-    (kicad/pong-retrosc.pretty), gerada por tools/gen_kicad_fp.py.
+    (kicad/retrosc-pong.pretty), gerada por tools/gen_kicad_fp.py.
     """
     if not fp:
         return fp
@@ -284,8 +284,8 @@ FP_R = "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P2.54mm_Vertical"
 FP_C = "Capacitor_THT:C_Disc_D5.0mm_W2.5mm_P5.00mm"
 FP_CP = "Capacitor_THT:CP_Radial_D5.0mm_P2.50mm"
 FP_PICO = "Module:RaspberryPi_Pico_Common_THT"
-FP_RCA = "pong-retrosc:RCA_Jack_THT_Panel"      # lib propria (gen_kicad_fp.py)
-FP_AMP = "pong-retrosc:PAM8403_HW-012"
+FP_RCA = "retrosc-pong:RCA_Jack_THT_Panel"      # lib propria (gen_kicad_fp.py)
+FP_AMP = "retrosc-pong:PAM8403_HW-012"
 
 
 def fp_hdr(n: int) -> str:

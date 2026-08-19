@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # Copyright (C) 2026 RetroSC Pong contributors
 """
-Gera kicad/pong-retrosc.kicad_pcb a partir da netlist do esquematico.
+Gera kicad/retrosc-pong.kicad_pcb a partir da netlist do esquematico.
 
 Requer o Python DO KICAD (modulo pcbnew):
-  1. kicad-cli sch export netlist -o kicad/pong-retrosc.net kicad/pong-retrosc.kicad_sch
+  1. kicad-cli sch export netlist -o kicad/retrosc-pong.net kicad/retrosc-pong.kicad_sch
   2. "C:/Program Files/KiCad/10.0/bin/python.exe" tools/gen_kicad_pcb.py
 
 Placement (placa 80 x 66, para a caixa Patola PB-085/3; topo = y0):
@@ -26,10 +26,10 @@ import pcbnew
 REPO = Path(__file__).resolve().parent.parent
 # --yd: variante para o modulo YD-RP2040 (mesma furacao, pinagem propria)
 VARIANT_YD = "--yd" in sys.argv
-PROJECT = "pong-retrosc-yd" if VARIANT_YD else "pong-retrosc"
+PROJECT = "retrosc-pong-yd" if VARIANT_YD else "retrosc-pong"
 NETLIST = REPO / "kicad" / f"{PROJECT}.net"
 OUT = REPO / "kicad" / f"{PROJECT}.kicad_pcb"
-FP_LOCAL = REPO / "kicad" / "pong-retrosc.pretty"
+FP_LOCAL = REPO / "kicad" / "retrosc-pong.pretty"
 FP_SYS = Path(sys.executable).parent.parent / "share" / "kicad" / "footprints"
 
 BOARD_W, BOARD_H = 80.0, 66.0             # cabe na caixa Patola PB-085/3

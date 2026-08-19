@@ -37,8 +37,8 @@ pong-rp2040/
 │   └── images/          <-- diagramas, renders da placa, capturas
 ├── kicad/               <-- PCB: 2 variantes, gerbers prontos p/ fábrica
 │   ├── README.md        <-- pipeline (esquemático -> placa -> gerbers)
-│   ├── pong-retrosc*.kicad_{sch,pcb,pro}
-│   ├── pong-retrosc.pretty/   <-- footprints próprios (RCA, PAM8403)
+│   ├── retrosc-pong*.kicad_{sch,pcb,pro}
+│   ├── retrosc-pong.pretty/   <-- footprints próprios (RCA, PAM8403)
 │   └── gerbers*/ + *-gerbers.zip
 ├── src/
 │   ├── main.c

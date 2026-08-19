@@ -36,9 +36,9 @@ def slug_github(h: str) -> str:
 
 def refs_do_projeto() -> set[str]:
     """Referencias validas: esquematico (inclui pecas de painel) + furos."""
-    sch = (REPO / "kicad" / "pong-retrosc.kicad_sch").read_text(encoding="utf-8")
+    sch = (REPO / "kicad" / "retrosc-pong.kicad_sch").read_text(encoding="utf-8")
     refs = set(re.findall(r'\(property "Reference" "([A-Z]+\d+)"', sch))
-    pcb = (REPO / "kicad" / "pong-retrosc.kicad_pcb").read_text(encoding="utf-8")
+    pcb = (REPO / "kicad" / "retrosc-pong.kicad_pcb").read_text(encoding="utf-8")
     refs |= set(re.findall(r'"reference" "(H\d+)"', pcb))
     refs |= set(re.findall(r'\(property "Reference" "(H\d+)"', pcb))
     return refs
@@ -70,7 +70,7 @@ def checa_links() -> list[str]:
 
 def checa_bom(validas: set[str]) -> list[str]:
     """Todo componente com footprint (= vai na placa) deve estar no BOM."""
-    net = (REPO / "kicad" / "pong-retrosc.net").read_text(encoding="utf-8")
+    net = (REPO / "kicad" / "retrosc-pong.net").read_text(encoding="utf-8")
     bloco = net[net.find("(components"):net.find("(libparts")]
     na_placa = set(re.findall(r'\(ref "([A-Z]+\d+)"\)', bloco))
 

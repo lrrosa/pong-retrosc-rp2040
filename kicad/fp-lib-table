@@ -1,4 +1,4 @@
 (fp_lib_table
   (version 7)
-  (lib (name "pong-retrosc")(type "KiCad")(uri "${KIPRJMOD}/pong-retrosc.pretty")(options "")(descr "Footprints proprios do RetroSC Pong (RCA de painel e modulo PAM8403)"))
+  (lib (name "retrosc-pong")(type "KiCad")(uri "${KIPRJMOD}/retrosc-pong.pretty")(options "")(descr "Footprints proprios do RetroSC Pong (RCA de painel e modulo PAM8403)"))
 )

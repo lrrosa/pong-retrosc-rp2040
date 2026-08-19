@@ -6,7 +6,7 @@ Desenha a placa DENTRO da caixa Patola PB-085/3, em escala, para conferir
 encaixe: folgas, coincidencia dos furos com os bossos da tampa e por onde
 cada conector atravessa a parede.
 
-Le a geometria da PRÓPRIA placa (kicad/pong-retrosc.kicad_pcb), entao o
+Le a geometria da PRÓPRIA placa (kicad/retrosc-pong.kicad_pcb), entao o
 desenho acompanha qualquer mudanca de layout.
 
 Uso (Python do KiCad):  python tools/fit_caixa.py
@@ -18,7 +18,7 @@ from pathlib import Path
 import pcbnew
 
 REPO = Path(__file__).resolve().parent.parent
-PCB = REPO / "kicad" / "pong-retrosc.kicad_pcb"
+PCB = REPO / "kicad" / "retrosc-pong.kicad_pcb"
 OUT = REPO / "docs" / "images" / "caixa-encaixe.svg"
 
 # ---- Patola PB-085/3, dos desenhos do fabricante (mm) ----

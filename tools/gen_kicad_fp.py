@@ -12,13 +12,13 @@ jeito mais facil de medir e CONTAR FUROS entre os pinos.
 
 Uso:
     python tools/gen_kicad_fp.py
-Saida: kicad/pong-retrosc.pretty/*.kicad_mod
+Saida: kicad/retrosc-pong.pretty/*.kicad_mod
 """
 
 import uuid as _uuid
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parent.parent / "kicad" / "pong-retrosc.pretty"
+OUT = Path(__file__).resolve().parent.parent / "kicad" / "retrosc-pong.pretty"
 VERSION = "20260206"
 G = 2.54                     # passo da perfboard (grade de 0,1")
 

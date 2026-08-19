@@ -25,8 +25,8 @@ as marcas GP17/GP18 no silk):
 
 | Variante | Módulo | Arquivos |
 | --- | --- | --- |
-| oficial | Raspberry Pi Pico **ou** YD-RP2040 de **3 botões** (pinagem ≈ Pico) | `pong-retrosc.*`, `gerbers/`, `pong-retrosc-gerbers.zip` |
-| YD | RP2040 **roxa de 1 botão** (USB-C, 16 MB) | `pong-retrosc-yd.*`, `gerbers-yd/`, `pong-retrosc-yd-gerbers.zip` |
+| oficial | Raspberry Pi Pico **ou** YD-RP2040 de **3 botões** (pinagem ≈ Pico) | `retrosc-pong.*`, `gerbers/`, `retrosc-pong-gerbers.zip` |
+| YD | RP2040 **roxa de 1 botão** (USB-C, 16 MB) | `retrosc-pong-yd.*`, `gerbers-yd/`, `retrosc-pong-yd-gerbers.zip` |
 
 > Atenção: existem clones parecidos com pinagens diferentes entre si. O que
 > define a variante é a **pinagem**, não a cor/marca — na dúvida, confira a
@@ -35,8 +35,8 @@ as marcas GP17/GP18 no silk):
 ## Como fabricar (é só isto)
 
 1. Escolha a variante pela tabela acima — **qual módulo RP2040 você tem**.
-2. Baixe o ZIP correspondente (`pong-retrosc-gerbers.zip` ou
-   `pong-retrosc-yd-gerbers.zip`) e envie **como está** para a fábrica
+2. Baixe o ZIP correspondente (`retrosc-pong-gerbers.zip` ou
+   `retrosc-pong-yd-gerbers.zip`) e envie **como está** para a fábrica
    (JLCPCB, PCBWay, Elecrow…).
 3. Parâmetros: **2 camadas, 1,6 mm, HASL**, 80 × 66 mm. Os defaults de
    qualquer fábrica servem — não há nada exótico na placa.
@@ -49,13 +49,13 @@ para **modificar** o projeto.
 
 | Arquivo | O quê |
 | --- | --- |
-| `pong-retrosc[-yd].kicad_sch` / `.kicad_pro` | esquemático e projeto |
-| `pong-retrosc[-yd].kicad_pcb` | **placa roteada** (DRC 0 erros) |
-| `pong-retrosc.pretty/` | footprints próprios (RCA de painel, PAM8403 HW-012) |
+| `retrosc-pong[-yd].kicad_sch` / `.kicad_pro` | esquemático e projeto |
+| `retrosc-pong[-yd].kicad_pcb` | **placa roteada** (DRC 0 erros) |
+| `retrosc-pong.pretty/` | footprints próprios (RCA de painel, PAM8403 HW-012) |
 | `fp-lib-table` | registra a lib de footprints do projeto |
 | `gerbers[-yd]/` | Gerbers + furação (Excellon) prontos para fábrica |
-| `pong-retrosc[-yd]-gerbers.zip` | os mesmos gerbers zipados — **baixe e envie direto à fábrica** |
-| `../docs/pong-retrosc[-yd]-esquematico.pdf` | esquemático completo em 1 folha (para montar/conferir) |
+| `retrosc-pong[-yd]-gerbers.zip` | os mesmos gerbers zipados — **baixe e envie direto à fábrica** |
+| `../docs/retrosc-pong[-yd]-esquematico.pdf` | esquemático completo em 1 folha (para montar/conferir) |
 
 Intermediários (`*-decoy.*`, `*.dsn`, `*.ses`, `*.net`) são **gitignored** —
 regeráveis pelo pipeline abaixo.
@@ -75,7 +75,7 @@ FR="$LOCALAPPDATA/freerouting/freerouting.exe"
 # 1. esquemático -> netlist  (roda no Python normal)
 python tools/gen_kicad_sch.py
 python tools/gen_kicad_fp.py
-"$CLI" sch export netlist -o kicad/pong-retrosc.net kicad/pong-retrosc.kicad_sch
+"$CLI" sch export netlist -o kicad/retrosc-pong.net kicad/retrosc-pong.kicad_sch
 
 # 2. placa (placement, contorno, zonas, regras)   [Python do KiCad]
 "$KPY" tools/gen_kicad_pcb.py
@@ -84,41 +84,41 @@ python tools/gen_kicad_fp.py
 "$KPY" tools/make_decoy.py
 
 # 4. roteamento automatico  (caminhos relativos: sem espacos)
-"$FR" -de kicad/pong-retrosc-decoy.dsn -do kicad/pong-retrosc-decoy.ses -mp 100 -da
+"$FR" -de kicad/retrosc-pong-decoy.dsn -do kicad/retrosc-pong-decoy.ses -mp 100 -da
 
 # 5. importar SES na placa real + remover trilhas de GND  [Python do KiCad]
 "$KPY" tools/import_ses.py
 
 # 6. preencher o plano e validar
 "$CLI" pcb drc --refill-zones --save-board --severity-error \
-       --exit-code-violations kicad/pong-retrosc.kicad_pcb
+       --exit-code-violations kicad/retrosc-pong.kicad_pcb
 
 # 7. gerbers + furacao + zip para a fabrica
 "$CLI" pcb export gerbers --layers "F.Cu,B.Cu,F.SilkS,B.SilkS,F.Mask,B.Mask,Edge.Cuts" \
-       --subtract-soldermask -o kicad/gerbers/ kicad/pong-retrosc.kicad_pcb
+       --subtract-soldermask -o kicad/gerbers/ kicad/retrosc-pong.kicad_pcb
 "$CLI" pcb export drill --format excellon --drill-origin absolute \
        --excellon-units mm --generate-map --map-format gerberx2 \
-       -o kicad/gerbers/ kicad/pong-retrosc.kicad_pcb
-powershell -c "Compress-Archive -Path kicad\gerbers\* -DestinationPath kicad\pong-retrosc-gerbers.zip -Force"
+       -o kicad/gerbers/ kicad/retrosc-pong.kicad_pcb
+powershell -c "Compress-Archive -Path kicad\gerbers\* -DestinationPath kicad\retrosc-pong-gerbers.zip -Force"
 
 # 8. imagens do README (montada, sem componentes, isometrica)
 "$KPY" tools/render_placa.py
 
 # 9. esquemático em PDF/SVG (o que se usa para montar e conferir)
-"$CLI" sch export pdf -o docs/pong-retrosc-esquematico.pdf kicad/pong-retrosc.kicad_sch
-"$CLI" sch export svg --no-background-color -o docs/images/kicad/ kicad/pong-retrosc.kicad_sch
+"$CLI" sch export pdf -o docs/retrosc-pong-esquematico.pdf kicad/retrosc-pong.kicad_sch
+"$CLI" sch export svg --no-background-color -o docs/images/kicad/ kicad/retrosc-pong.kicad_sch
 # 10. desenho de encaixe na caixa            [Python do KiCad]
 "$KPY" tools/fit_caixa.py
 ```
 
 **Variante YD-RP2040:** repita os passos com `--yd` nos scripts Python e o
-sufixo `-yd` nos nomes de arquivo (`pong-retrosc-yd.*`, `gerbers-yd/`). Entre
+sufixo `-yd` nos nomes de arquivo (`retrosc-pong-yd.*`, `gerbers-yd/`). Entre
 os passos 3 e 4, afine a trilha de sinal para 0,25 mm (com 0,30 mm o net
 START não fecha nessa variante) e peça **0,17 mm de isolamento** ao roteador
 — pedindo os 0,15 do projeto ele entrega 0,1478 e o DRC reprova:
 
 ```sh
-python tools/dsn_tweak.py kicad/pong-retrosc-yd-decoy.dsn 250 500 170
+python tools/dsn_tweak.py kicad/retrosc-pong-yd-decoy.dsn 250 500 170
 ```
 
 **Por que a isca (passo 3):** com as zonas presentes, o DSN as exporta como

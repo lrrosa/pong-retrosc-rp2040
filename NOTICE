@@ -27,7 +27,7 @@ Covers:
   docs/schematic.md, docs/bom.md, docs/pinout.md
   docs/images/sch_*.svg            diagramas dos blocos
   docs/images/kicad/**             render do esquematico
-  docs/pong-retrosc-esquematico.pdf
+  docs/retrosc-pong-esquematico.pdf
 
 ================================================================
 Marcas (nao cobertas pelas licencas acima)

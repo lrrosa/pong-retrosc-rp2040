@@ -9,9 +9,9 @@ aparecem na [lista de materiais](bom.md) e na serigrafia da placa.
 
 **Esquemático completo em uma folha** (gerado do KiCad, com todas as
 referências e valores):
-[PDF da variante oficial](pong-retrosc-esquematico.pdf) ·
-[PDF da variante roxa de 1 botão](pong-retrosc-yd-esquematico.pdf) ·
-[SVG](images/kicad/pong-retrosc.svg)
+[PDF da variante oficial](retrosc-pong-esquematico.pdf) ·
+[PDF da variante roxa de 1 botão](retrosc-pong-yd-esquematico.pdf) ·
+[SVG](images/kicad/retrosc-pong.svg)
 
 ![Mapa de pinos usados](images/sch_pinout.svg)
 

@@ -24,7 +24,7 @@ from pathlib import Path
 import pcbnew
 
 REPO = Path(__file__).resolve().parent.parent
-PROJECT = "pong-retrosc-yd" if "--yd" in sys.argv else "pong-retrosc"
+PROJECT = "retrosc-pong-yd" if "--yd" in sys.argv else "retrosc-pong"
 PCB = REPO / "kicad" / f"{PROJECT}.kicad_pcb"
 IMG = REPO / "docs" / "images"
 CLI = Path(sys.executable).parent / "kicad-cli.exe"

@@ -15,7 +15,7 @@ feito depois por: kicad-cli pcb drc --refill-zones --save-board ...
 
 Uso (Python do KiCad):
   python tools/import_ses.py [--yd]
---yd opera na variante YD-RP2040 (pong-retrosc-yd.*).
+--yd opera na variante YD-RP2040 (retrosc-pong-yd.*).
 """
 
 import sys
@@ -24,7 +24,7 @@ from pathlib import Path
 import pcbnew
 
 KICAD = Path(__file__).resolve().parent.parent / "kicad"
-PROJECT = "pong-retrosc-yd" if "--yd" in sys.argv else "pong-retrosc"
+PROJECT = "retrosc-pong-yd" if "--yd" in sys.argv else "retrosc-pong"
 PCB = KICAD / f"{PROJECT}.kicad_pcb"
 SES = KICAD / f"{PROJECT}-decoy.ses"
 

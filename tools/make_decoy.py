@@ -15,7 +15,7 @@ As zonas voltam na placa REAL, ao importar o SES.
 
 Uso (Python do KiCad):
   python tools/make_decoy.py [--yd]
---yd opera na variante YD-RP2040 (pong-retrosc-yd.*).
+--yd opera na variante YD-RP2040 (retrosc-pong-yd.*).
 Gera: kicad/<projeto>-decoy.kicad_pcb (+ .kicad_pro) e .dsn
 """
 
@@ -26,7 +26,7 @@ from pathlib import Path
 import pcbnew
 
 KICAD = Path(__file__).resolve().parent.parent / "kicad"
-PROJECT = "pong-retrosc-yd" if "--yd" in sys.argv else "pong-retrosc"
+PROJECT = "retrosc-pong-yd" if "--yd" in sys.argv else "retrosc-pong"
 REAL = KICAD / f"{PROJECT}.kicad_pcb"
 DECOY = KICAD / f"{PROJECT}-decoy.kicad_pcb"
 DSN = KICAD / f"{PROJECT}-decoy.dsn"

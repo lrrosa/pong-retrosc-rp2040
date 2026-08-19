@@ -6,9 +6,9 @@ repositório tem **duas placas** (ver [../kicad/README.md](../kicad/README.md)):
 
 | Módulo | Botões | Placa a fabricar |
 | --- | --- | --- |
-| Raspberry Pi Pico (oficial) | 1 (BOOTSEL) | **oficial** (`pong-retrosc`) |
-| YD-RP2040 / VCC-GND Studio (preta, USB-C) | 3 (BOOT/USR/RESET) | **oficial** (`pong-retrosc`) — pinagem ≈ Pico |
-| RP2040 "roxa" (USB-C, 16 MB) | 1 (BOOTSEL) | **variante YD** (`pong-retrosc-yd`) |
+| Raspberry Pi Pico (oficial) | 1 (BOOTSEL) | **oficial** (`retrosc-pong`) |
+| YD-RP2040 / VCC-GND Studio (preta, USB-C) | 3 (BOOT/USR/RESET) | **oficial** (`retrosc-pong`) — pinagem ≈ Pico |
+| RP2040 "roxa" (USB-C, 16 MB) | 1 (BOOTSEL) | **variante YD** (`retrosc-pong-yd`) |
 
 > **Confira antes de soldar:** cada placa tem marcas **GP17/GP18** no silk ao
 > lado dos furos correspondentes. Compare com os rótulos do seu módulo — se
