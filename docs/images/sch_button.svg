@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 240" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
-  <rect x="0.5" y="0.5" width="559" height="239" rx="10" fill="#ffffff" stroke="#d0d7de"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 262" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
+  <rect x="0.5" y="0.5" width="559" height="261" rx="10" fill="#ffffff" stroke="#d0d7de"/>
   <text x="20" y="30" font-size="14" font-weight="bold" fill="#16202a">Botão START — push-button NA (só 2 fios: GP22 e GND)</text>
 
   <!-- ===== interno ao RP2040 (pull-up) ===== -->
@@ -39,4 +39,5 @@
   </g>
 
   <text x="280" y="224" text-anchor="middle" fill="#5b6b7a" font-size="12">Aberto: GP22 = 3,3 V (pull-up interno)  ·  Pressionado: GP22 = GND (flanco de descida)</text>
+  <text x="280" y="244" text-anchor="middle" fill="#5b6b7a" font-size="12">Drena só ~55 µA: o GND pode ser o mesmo fio do vídeo (não precisa de fio próprio).</text>
 </svg>

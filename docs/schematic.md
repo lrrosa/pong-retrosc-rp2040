@@ -293,6 +293,11 @@ recebe 3,3 V. Quando aberto, GP22 fica em 3,3 V via **pull-up interno** ao
 RP2040 (habilitado por software com `gpio_pull_up()`); quando pressionado, GP22
 vai a GND e o firmware detecta o flanco de descida.
 
+O **GND do botão pode ser compartilhado** — por exemplo, o mesmo fio que vai
+até o shield do RCA de vídeo. Ele drena microamperes (ver
+[Aterramento em estrela](#alimentação)), ao contrário do retorno do amp, que
+precisa de fio próprio. Na PCB a questão nem se coloca: o GND é um plano.
+
 ## Alimentação
 
 - USB do Pico (5 V): suficiente para o RP2040 e os 2 potenciômetros.
@@ -309,7 +314,13 @@ vai a GND e o firmware detecta o flanco de descida.
   - potenciômetros → **AGND** (Pico **p33**; roxa **p29**) — só eles;
   - filtro e divisor (**C1** e **R5**) → junto do bloco de áudio, **p38**;
   - retorno do áudio de linha (shield dos RCAs no modo A) → junto do
-    bloco de áudio, **p38**.
+    bloco de áudio, **p38**;
+  - botão START → **qualquer GND, inclusive o mesmo fio do vídeo**. É a
+    exceção: com o pull-up interno (~60 kΩ) ele drena só **~55 µA** e apenas
+    enquanto pressionado — mais de 200× menos que o retorno do vídeo
+    (~13 mA) e uns 5000× menos que os picos do amp, ou seja, não move o
+    terra de ninguém. E, como entrada digital, tem mais de 1 V de margem
+    até o limiar (~1,6 V), então também não se incomoda com o vídeo.
 
   "Estrela" é a **topologia dos fios**, não um pino: o centro da estrela é o
   próprio módulo. Todos os pinos GND dele são a mesma rede internamente (no
