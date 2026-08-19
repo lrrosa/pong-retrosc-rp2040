@@ -116,8 +116,8 @@ Instale também:
 ### 2. Build
 
 ```bash
-git clone https://github.com/lrrosa/pong-retrosc-rp2040.git
-cd pong-retrosc-rp2040
+git clone https://github.com/lrrosa/retrosc-pong.git
+cd retrosc-pong
 mkdir build && cd build
 cmake -G "Ninja" ..   # ou simplesmente: cmake ..
 ninja                 # ou: make -j
