@@ -157,10 +157,13 @@ def main():
         "R7": ("1", 36.0, 36.0, 0),         # AUD_C -> AMP_R
         # ---- headers de painel na borda de baixo, em UMA fileira ----
         # (2 fileiras nao cabem: cada uma precisa de ~9 mm com os rotulos)
+        # J5+J6 sao um bloco (10,16 mm entre eles = 1 vaga -> femea 1x7 unica)
+        # e nao cabiam a esquerda junto do J4 sem ficarem colados: o START,
+        # que e independente, foi para a esquerda e o par para a direita.
         "J4": ("1", 2.0, 60.0, 90),         # chave de audio A/B (6 vias)
-        "J5": ("1", 18.5, 60.0, 90),        # pot P1
-        "J6": ("1", 28.66, 60.0, 90),       # pot P2 (1 vaga: femea 1x7 serve os 2)
-        "J7": ("1", 46.0, 60.0, 90),        # START (a direita do furo H2)
+        "J7": ("1", 26.0, 60.0, 90),        # START
+        "J5": ("1", 47.0, 60.0, 90),        # pot P1  (direita do furo H2)
+        "J6": ("1", 57.16, 60.0, 90),       # pot P2
     }
     # rotulos gerais (conectores de 2 pinos e o amp): 1 texto perto de cada
     # RCA: centro=sinal, corpo=GND (convencao universal) -> so o nome da funcao
@@ -168,15 +171,15 @@ def main():
     SILK = {
         "J1": ("VIDEO (J1)", 63.0, 33.0),
         "J8": ("AUDIO L (J8)", 62.0, 46.0),
-        "J9": ("AUDIO R (J9)", 62.0, 59.0),
+        "J9": ("AUDIO R (J9)", 61.0, 52.5),   # acima: o par J5/J6 ocupa y60
     }
     # NOME de cada header (o que o conector faz), abaixo dos pads
     # (o texto e CENTRADO na coordenada -> x = meio do header)
     HDR_NAME = {
         "J4": ("CHAVE AUDIO A/B (J4)", 8.4, 64.5),
-        "J5": ("POT P1 (J5)", 21.0, 64.5),
-        "J6": ("POT P2 (J6)", 31.2, 64.5),
-        "J7": ("START (J7)", 47.3, 64.5),
+        "J7": ("START (J7)", 27.3, 64.5),
+        "J5": ("POT P1 (J5)", 49.5, 64.5),
+        "J6": ("POT P2 (J6)", 59.7, 64.5),
     }
     # rotulo de FUNCAO por pino nos headers de painel (vertical, acima do pad)
     PIN_SILK = {

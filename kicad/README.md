@@ -151,7 +151,10 @@ redundantes).
   fica reservado — nenhum componente pode ocupá-lo.
 - **J5 + J6 (pots)** ficam na mesma fileira com **uma posição vaga** entre
   eles: um único conector fêmea 1×7 (2,54 mm) serve os dois, deixando o
-  contato do meio sem uso.
+  contato do meio sem uso. Por isso o par é indivisível — e, como não cabia
+  junto do J4 sem os rótulos se embaralharem, a ordem na borda de baixo é
+  **J4 · J7 · (J5 J6)**: o START, que é independente, ficou à esquerda e o
+  par dos pots à direita do furo de montagem.
 - **Encaixe na caixa** (desenho em escala abaixo): folga de **1,0 mm** nas
   laterais e **2,0 mm** em cima/embaixo; os 2 furos caem exatamente sobre os
   bossos da tampa. Recortes necessários na parede: **3 RCAs à direita**
