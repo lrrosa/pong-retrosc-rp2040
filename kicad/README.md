@@ -4,17 +4,20 @@ Placa de 2 camadas com plano de terra, gerada por scripts (reprodutível) e
 roteada com o Freerouting. Hardware sob **CERN-OHL-S-2.0** (ver
 [`../LICENSE-HARDWARE.txt`](../LICENSE-HARDWARE.txt)).
 
-| Vista 3D (frente) | Serigrafia (frente) |
+| Montada | Sem componentes (serigrafia à mostra) |
 | :---: | :---: |
-| ![Render 3D da placa, vista de cima](../docs/images/pcb_top.png) | ![Serigrafia da frente da placa](../docs/images/pcb_silk.png) |
+| ![Render 3D da placa montada, vista de cima](../docs/images/pcb_top.png) | ![Render 3D da placa sem componentes](../docs/images/pcb_silk3d.png) |
+
+![Vista isométrica da placa](../docs/images/pcb_iso.png)
 
 **80 × 66 mm**, imagens da variante oficial (a YD é idêntica por fora; muda só
 o roteamento). O logo RetroSC fica **embaixo do Pico** — por isso aparece na
 serigrafia e não no render 3D. Layout detalhado em [Estado](#estado).
 
-> No render 3D o **Pico é o único componente com modelo 3D**; os jacks RCA e o
-> módulo do amp são footprints próprios (sem modelo 3D) e aparecem só pelo
-> contorno da serigrafia. Ambas as imagens saem do passo 8 do pipeline.
+> O **Pico é o único componente com modelo 3D** (os footprints próprios do RCA
+> e do PAM8403 não têm) — e é justamente ele que cobre o logo. Por isso a
+> segunda vista é renderizada **sem componentes**: é nela que se confere a
+> serigrafia. As três saem do passo 8 do pipeline.
 
 **Duas variantes**, escolhidas pelo módulo RP2040 que você tem (mesma
 furação, pinagens diferentes — ver [../docs/pinout.md](../docs/pinout.md) e
@@ -98,14 +101,8 @@ python tools/gen_kicad_fp.py
        -o kicad/gerbers/ kicad/pong-retrosc.kicad_pcb
 powershell -c "Compress-Archive -Path kicad\gerbers\* -DestinationPath kicad\pong-retrosc-gerbers.zip -Force"
 
-# 8. imagens do README (render 3D + serigrafia)
-"$CLI" pcb render --side top --width 1100 --height 1700 --quality high \
-       --background opaque -o docs/images/pcb_top.png kicad/pong-retrosc.kicad_pcb
-"$CLI" pcb export svg --layers "F.SilkS,Edge.Cuts" --page-size-mode 2 \
-       --exclude-drawing-sheet --black-and-white -o /tmp/silk.svg \
-       kicad/pong-retrosc.kicad_pcb
-inkscape /tmp/silk.svg --export-type=png --export-width=800 \
-       --export-background=white --export-filename=docs/images/pcb_silk.png
+# 8. imagens do README (montada, sem componentes, isometrica)
+"$KPY" tools/render_placa.py
 
 # 9. esquemático em PDF/SVG (o que se usa para montar e conferir)
 "$CLI" sch export pdf -o docs/pong-retrosc-esquematico.pdf kicad/pong-retrosc.kicad_sch
