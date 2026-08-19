@@ -182,7 +182,9 @@ redundantes).
   variante.
 - **Serigrafia:** rótulos de função por pino, nome + referência em cada
   header (ex.: `POT P1 (J5)`), marcas GP17/GP18 **com linha de chamada** até
-  o pino exato, e nomes dos RCAs colados em cada jack. As referências que
+  o pino exato, e os nomes dos RCAs **na vertical**, encostados em cada jack
+  (assim acompanham a altura do conector e não invadem a faixa dos headers).
+  No meio da placa fica a assinatura `RetroSC Pong v1.0` + `LRRosa 2026`. As referências que
   caíam sobre pads (J*, H*) foram ocultadas — a informação está nos rótulos
   descritivos. O logo foi reescalado (0,19 mm/px) para caber **entre** as
   duas linhas verticais do footprint do Pico.

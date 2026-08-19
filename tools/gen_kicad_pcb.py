@@ -168,10 +168,12 @@ def main():
     # rotulos gerais (conectores de 2 pinos e o amp): 1 texto perto de cada
     # RCA: centro=sinal, corpo=GND (convencao universal) -> so o nome da funcao
     # (o corpo do U2 ja leva "PAM8403" desenhado no proprio footprint)
+    # VERTICAIS (rot 90), encostados na lateral de cada jack: o texto
+    # acompanha a altura do conector e nao invade a faixa dos headers.
     SILK = {
-        "J1": ("VIDEO (J1)", 63.0, 33.0),
-        "J8": ("AUDIO L (J8)", 62.0, 46.0),
-        "J9": ("AUDIO R (J9)", 61.0, 52.5),   # acima: o par J5/J6 ocupa y60
+        "J1": ("VIDEO (J1)", 67.5, 33.0, 90),
+        "J8": ("AUDIO L (J8)", 67.5, 46.0, 90),
+        "J9": ("AUDIO R (J9)", 67.5, 59.0, 90),
     }
     # NOME de cada header (o que o conector faz), abaixo dos pads
     # (o texto e CENTRADO na coordenada -> x = meio do header)
@@ -228,13 +230,15 @@ def main():
     show("J1", ("1", "2"))
 
     # ----- rotulos gerais de funcao na serigrafia -----
-    for ref, (txt, tx, ty) in SILK.items():
+    for ref, (txt, tx, ty, rot) in SILK.items():
         t = pcbnew.PCB_TEXT(board)
         t.SetText(txt)
         t.SetPosition(V(tx, ty))
         t.SetLayer(pcbnew.F_SilkS)
-        t.SetTextSize(pcbnew.VECTOR2I(mm(0.8), mm(0.8)))
-        t.SetTextThickness(mm(0.12))
+        if rot:
+            t.SetTextAngle(pcbnew.EDA_ANGLE(rot, pcbnew.DEGREES_T))
+        t.SetTextSize(pcbnew.VECTOR2I(mm(0.9), mm(0.9)))
+        t.SetTextThickness(mm(0.15))
         board.Add(t)
 
     # ----- NOME de cada header (funcao do conector) -----
@@ -438,13 +442,16 @@ def main():
     # ----- textos de silk -----
     print("stage: texto", flush=True)
     try:
-        t = pcbnew.PCB_TEXT(board)
-        t.SetText("RetroSC Pong v1.0 (roxo)" if VARIANT_YD
-                  else "RetroSC Pong v1.0")
-        t.SetPosition(V(56, 36))           # area livre entre o amp e os RCAs
-        t.SetLayer(pcbnew.F_SilkS)
-        t.SetTextSize(pcbnew.VECTOR2I(mm(1.0), mm(1.0)))
-        board.Add(t)
+        # assinatura na area vazia do meio da placa (x~32..56, y~40..54)
+        titulo = "RetroSC Pong v1.0" + (" (roxo)" if VARIANT_YD else "")
+        for txt, ty, size in ((titulo, 45.0, 1.6), ("LRRosa 2026", 49.5, 1.1)):
+            t = pcbnew.PCB_TEXT(board)
+            t.SetText(txt)
+            t.SetPosition(V(44, ty))
+            t.SetLayer(pcbnew.F_SilkS)
+            t.SetTextSize(pcbnew.VECTOR2I(mm(size), mm(size)))
+            t.SetTextThickness(mm(size / 6))
+            board.Add(t)
     except Exception as e:
         print("aviso: texto de silk:", e, flush=True)
 
