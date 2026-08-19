@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 352" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
-  <rect x="0.5" y="0.5" width="699" height="351" rx="10" fill="#ffffff" stroke="#d0d7de"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 372" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
+  <rect x="0.5" y="0.5" width="699" height="371" rx="10" fill="#ffffff" stroke="#d0d7de"/>
   <text x="20" y="30" font-size="14" font-weight="bold" fill="#16202a">Áudio — sinal: filtro, divisor de linha e entradas do PAM8403</text>
 
   <!-- pin -->
@@ -44,12 +44,14 @@
     <line x1="276" y1="173" x2="284" y2="173"/>
   </g>
   <text x="254" y="147" text-anchor="end" fill="#5b6b7a" font-size="12">C1 100 nF</text>
+  <text x="298" y="172" fill="#5b6b7a" font-size="11">p38</text>
 
   <!-- C2 series -->
-  <g stroke="#16202a" stroke-width="2">
+  <g stroke="#16202a" stroke-width="2" fill="none">
     <line x1="306" y1="96" x2="306" y2="124"/>
-    <line x1="314" y1="96" x2="314" y2="124"/>
+    <path d="M 314 96 Q 322 110 314 124"/>
   </g>
+  <text x="302" y="105" text-anchor="end" fill="#16202a" font-size="13" font-weight="bold">+</text>
   <text x="310" y="87" text-anchor="middle" fill="#5b6b7a" font-size="12">C2 1 µF</text>
 
   <!-- line divider (always connected) -->
@@ -62,6 +64,7 @@
     <line x1="512" y1="131" x2="528" y2="131"/>
     <line x1="516" y1="136" x2="524" y2="136"/>
   </g>
+  <text x="538" y="135" fill="#5b6b7a" font-size="11">p38</text>
   <polygon points="560,59 573,65 560,71" fill="#2563eb"/>
   <text x="582" y="62" fill="#2563eb">LINHA</text>
   <text x="582" y="78" fill="#5b6b7a" font-size="11">= junção R4/R5</text>
@@ -86,4 +89,5 @@
   <text x="350" y="300" text-anchor="middle" fill="#5b6b7a" font-size="12">Sem chave no sinal: divisor (~0,2 Vpp de linha) e amp ficam SEMPRE conectados.</text>
   <text x="350" y="318" text-anchor="middle" fill="#5b6b7a" font-size="12">A seleção A/B é feita na SAÍDA, pela chave dos RCAs (diagrama abaixo).</text>
   <text x="350" y="336" text-anchor="middle" fill="#5b6b7a" font-size="12">LINHA é a junção R4/R5 — na PCB ela já sai no header J4, pino 3.</text>
+  <text x="350" y="354" text-anchor="middle" fill="#5b6b7a" font-size="12">C1, R5 e o power−/G do amp voltam ao mesmo GND do áudio  ·  C2 é eletrolítico: + para o lado do GP18.</text>
 </svg>

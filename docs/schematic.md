@@ -81,8 +81,11 @@ corrente". Dois números úteis dele para este DAC:
 ![Áudio: filtro RC, divisor de linha e entradas do PAM8403](images/sch_audio.svg)
 
 - **R3 = 1 kΩ + C1 = 100 nF**: filtro RC passa-baixa (fc ≈ 1,6 kHz). Remove
-  componentes do PWM, deixando passar os beeps do Pong (até ~500 Hz).
-- **C2 = 1 µF**: acoplamento DC. **Não é opcional** se o módulo tiver chave
+  componentes do PWM, deixando passar os beeps do Pong (até ~500 Hz). O pé do
+  **C1 vai ao GND do áudio (p38)** — o mesmo terra do R5 e do power−/G do amp.
+- **C2 = 1 µF (eletrolítico, polarizado)**: acoplamento DC. O **+ fica do lado
+  do GP18** (saída do filtro R3/C1) — é o lado com ~1,65 V DC do PWM, enquanto
+  o outro é puxado a ~0 V pelo R5. **Não é opcional** se o módulo tiver chave
   liga/desliga no pot de volume: com o amp desligado e sem o C2, o PWM do GP18
   injeta corrente pelo diodo de proteção da entrada do chip ("back-powering")
   e o ruído resultante no terra chega a disparar a detecção de movimento dos
@@ -304,8 +307,9 @@ vai a GND e o firmware detecta o flanco de descida.
   - PAM8403 power − (retorno do alto-falante) → **GND p38** (é GND nas três);
   - G da entrada de áudio → junto do power − (no módulo é o mesmo plano);
   - potenciômetros → **AGND** (Pico **p33**; roxa **p29**) — só eles;
+  - filtro e divisor (**C1** e **R5**) → junto do bloco de áudio, **p38**;
   - retorno do áudio de linha (shield dos RCAs no modo A) → junto do
-    bloco de áudio, **pino 38**.
+    bloco de áudio, **p38**.
 
   "Estrela" é a **topologia dos fios**, não um pino: o centro da estrela é o
   próprio módulo. Todos os pinos GND dele são a mesma rede internamente (no
