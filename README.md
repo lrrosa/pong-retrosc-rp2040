@@ -30,10 +30,15 @@ pong-rp2040/
 ├── README.md
 ├── LICENSE
 ├── docs/
-│   ├── schematic.md     <-- esquemático ASCII completo
-│   ├── pinout.md        <-- pinout do Pico
-│   ├── bom.md           <-- lista de materiais
-│   └── images/          <-- logo, fotos do gabinete
+│   ├── schematic.md     <-- esquemático por blocos (diagramas SVG)
+│   ├── pinout.md        <-- pinagem dos 3 módulos RP2040 suportados
+│   ├── bom.md           <-- lista de materiais (por referência: R1, C2, J4…)
+│   └── images/          <-- diagramas, renders da placa, capturas
+├── kicad/               <-- PCB: 2 variantes, gerbers prontos p/ fábrica
+│   ├── README.md        <-- pipeline (esquemático -> placa -> gerbers)
+│   ├── pong-retrosc*.kicad_{sch,pcb,pro}
+│   ├── pong-retrosc.pretty/   <-- footprints próprios (RCA, PAM8403)
+│   └── gerbers*/ + *-gerbers.zip
 ├── src/
 │   ├── main.c
 │   ├── config.h         <-- constantes do projeto (pinos, dimensões, etc.)
@@ -46,7 +51,15 @@ pong-rp2040/
 │   ├── game.{c,h}       <-- máquina de estados e física
 │   └── assets.{c,h}     <-- bitmaps embutidos
 └── tools/
-    └── png_to_c.py      <-- conversor PNG → C array
+    ├── png_to_c.py      <-- conversor PNG → C array
+    ├── sim.py           <-- simulador do jogo (pygame)
+    ├── crt_preview.py   <-- efeito de tubo nas capturas
+    ├── gen_kicad_sch.py <-- gera o esquemático  (--yd p/ a variante)
+    ├── gen_kicad_fp.py  <-- gera os footprints próprios
+    ├── gen_kicad_pcb.py <-- gera a placa (placement, zonas, silk, logo)
+    ├── make_decoy.py    <-- placa-isca p/ o Freerouting + DSN
+    ├── import_ses.py    <-- traz o roteamento de volta
+    └── dsn_tweak.py     <-- ajusta larguras/isolamento no DSN
 ```
 
 ## Hardware
@@ -63,13 +76,16 @@ Veja os arquivos em [docs/](docs/) para detalhes:
 
 Resumo do hardware:
 
-| Bloco                  | Pinos do Pico  | Componentes externos                 |
-| ---------------------- | -------------- | ------------------------------------ |
-| Vídeo composto (RCA)   | GP16 (sync), GP17 (video) | 1× 470 Ω, 1× 270 Ω          |
-| Áudio (alto-falante)   | GP18 (PWM)     | 1 kΩ + 100 nF (filtro RC) + amp PAM8403 |
-| Botão START            | GP22           | push button para GND                 |
-| Potenciômetro P1       | GP26 (ADC0)    | pot 10 kΩ linear + 100 nF para GND   |
-| Potenciômetro P2       | GP27 (ADC1)    | pot 10 kΩ linear + 100 nF para GND   |
+| Bloco | GPIO | Componentes (referências do BOM) |
+| ----- | ---- | -------------------------------- |
+| Vídeo composto | GP16 (sync), GP17 (video) | R1 470 Ω + R2 270 Ω → jack J1 |
+| Áudio | GP18 (PWM) | filtro R3 + C1, acoplamento C2, divisor R4/R5, entradas R6/R7 → amp U2 → jacks J8/J9 |
+| Botão START | GP22 | SW1 (para GND) via header J7 |
+| Potenciômetro P1 | GP26 (ADC0) | RV1 10 kΩ linear + C3 → header J5 |
+| Potenciômetro P2 | GP27 (ADC1) | RV2 10 kΩ linear + C4 → header J6 |
+
+Os GPIOs acima são os mesmos nos três módulos suportados; o que muda entre
+eles é **em qual furo** cada GPIO aparece (ver [pinout.md](docs/pinout.md)).
 
 ## Como compilar
 

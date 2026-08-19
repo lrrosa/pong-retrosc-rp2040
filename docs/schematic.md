@@ -1,8 +1,17 @@
 # Esquemático
 
-Diagramas por **bloco funcional** (SVG). Cada bloco é independente; o mapa
-abaixo mostra apenas quais pinos do Pico vão para cada um. Para uma PCB,
-reconstrua em KiCad/EasyEDA a partir destes valores.
+Diagramas por **bloco funcional** (SVG), com as referências (R1, C2, J4…) que
+aparecem na [lista de materiais](bom.md) e na serigrafia da placa.
+
+> **Só quer montar?** A **PCB já está pronta** em [kicad/](../kicad/README.md)
+> — baixe o ZIP de gerbers e mande fabricar. Este documento serve para
+> entender cada bloco, montar em placa universal, ou modificar o projeto.
+
+**Esquemático completo em uma folha** (gerado do KiCad, com todas as
+referências e valores):
+[PDF da variante oficial](pong-retrosc-esquematico.pdf) ·
+[PDF da variante roxa de 1 botão](pong-retrosc-yd-esquematico.pdf) ·
+[SVG](images/kicad/pong-retrosc.svg)
 
 ![Mapa de pinos usados](images/sch_pinout.svg)
 

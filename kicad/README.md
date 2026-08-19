@@ -29,6 +29,19 @@ as marcas GP17/GP18 no silk):
 > define a variante é a **pinagem**, não a cor/marca — na dúvida, confira a
 > tabela completa em `docs/pinout.md` e as marcas GP17/GP18.
 
+## Como fabricar (é só isto)
+
+1. Escolha a variante pela tabela acima — **qual módulo RP2040 você tem**.
+2. Baixe o ZIP correspondente (`pong-retrosc-gerbers.zip` ou
+   `pong-retrosc-yd-gerbers.zip`) e envie **como está** para a fábrica
+   (JLCPCB, PCBWay, Elecrow…).
+3. Parâmetros: **2 camadas, 1,6 mm, HASL**, 55 × 88 mm. Os defaults de
+   qualquer fábrica servem — não há nada exótico na placa.
+4. Peças e montagem: [../docs/bom.md](../docs/bom.md).
+
+Não é preciso instalar KiCad nem rodar nada. O pipeline abaixo só interessa
+para **modificar** o projeto.
+
 ## Arquivos versionados
 
 | Arquivo | O quê |
@@ -39,13 +52,16 @@ as marcas GP17/GP18 no silk):
 | `fp-lib-table` | registra a lib de footprints do projeto |
 | `gerbers[-yd]/` | Gerbers + furação (Excellon) prontos para fábrica |
 | `pong-retrosc[-yd]-gerbers.zip` | os mesmos gerbers zipados — **baixe e envie direto à fábrica** |
+| `../docs/pong-retrosc[-yd]-esquematico.pdf` | esquemático completo em 1 folha (para montar/conferir) |
 
 Intermediários (`*-decoy.*`, `*.dsn`, `*.ses`, `*.net`) são **gitignored** —
 regeráveis pelo pipeline abaixo.
 
-## Pipeline (do zero à placa roteada)
+## Pipeline (do zero à placa roteada) — só para modificar
 
-Requer o **Python do KiCad** (`.../KiCad/10.0/bin/python.exe`, módulo `pcbnew`),
+Esta seção é para quem vai **alterar** a placa: tudo é gerado por script, então
+não se edita o `.kicad_pcb` à mão — muda-se o gerador e roda-se o pipeline de
+novo. Requer o **Python do KiCad** (`.../KiCad/10.0/bin/python.exe`, módulo `pcbnew`),
 `kicad-cli` e o **Freerouting** instalado.
 
 ```sh
@@ -90,6 +106,10 @@ powershell -c "Compress-Archive -Path kicad\gerbers\* -DestinationPath kicad\pon
        kicad/pong-retrosc.kicad_pcb
 inkscape /tmp/silk.svg --export-type=png --export-width=800 \
        --export-background=white --export-filename=docs/images/pcb_silk.png
+
+# 9. esquemático em PDF/SVG (o que se usa para montar e conferir)
+"$CLI" sch export pdf -o docs/pong-retrosc-esquematico.pdf kicad/pong-retrosc.kicad_sch
+"$CLI" sch export svg --no-background-color -o docs/images/kicad/ kicad/pong-retrosc.kicad_sch
 ```
 
 **Variante YD-RP2040:** repita os passos com `--yd` nos scripts Python e o
@@ -140,7 +160,7 @@ redundantes).
 ## ATENÇÃO antes de fabricar
 
 - **Footprints do RCA e do PAM8403 foram feitos à mão** a partir de medidas das
-  peças. Confira o encaixe (imprima o PDF de fabricação em 1:1 e sobreponha as
-  peças) antes de enviar para produção.
+  peças. Confira o encaixe (imprima o **desenho de fabricação** em 1:1 e
+  sobreponha as peças) antes de enviar para produção.
 - Peças de **painel** (pots, botão, chave A/B) saem por headers (J4–J7); os RCAs
   e o amp ficam **na placa**, como no protótipo.
