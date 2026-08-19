@@ -33,6 +33,7 @@ FP_LOCAL = REPO / "kicad" / "pong-retrosc.pretty"
 FP_SYS = Path(sys.executable).parent.parent / "share" / "kicad" / "footprints"
 
 BOARD_W, BOARD_H = 80.0, 66.0             # cabe na caixa Patola PB-085/3
+KEEPOUT_R = 3.6                           # raio sem trilha/via nos furos
 BX, BY = 20.0, 20.0                       # canto da placa na folha
 
 mm = pcbnew.FromMM
@@ -163,19 +164,19 @@ def main():
     }
     # rotulos gerais (conectores de 2 pinos e o amp): 1 texto perto de cada
     # RCA: centro=sinal, corpo=GND (convencao universal) -> so o nome da funcao
+    # (o corpo do U2 ja leva "PAM8403" desenhado no proprio footprint)
     SILK = {
-        "J1": ("VIDEO", 56.0, 30.0),
-        "J8": ("AUDIO L", 54.0, 43.0),
-        "J9": ("AUDIO R", 54.0, 56.0),
-        "U2": ("PAM8403", 46.0, 26.0),
+        "J1": ("VIDEO (J1)", 63.0, 33.0),
+        "J8": ("AUDIO L (J8)", 62.0, 46.0),
+        "J9": ("AUDIO R (J9)", 62.0, 59.0),
     }
     # NOME de cada header (o que o conector faz), abaixo dos pads
     # (o texto e CENTRADO na coordenada -> x = meio do header)
     HDR_NAME = {
-        "J4": ("CHAVE AUDIO A/B", 8.4, 64.5),
-        "J5": ("POT P1", 21.0, 64.5),
-        "J6": ("POT P2", 31.2, 64.5),
-        "J7": ("START", 47.3, 64.5),
+        "J4": ("CHAVE AUDIO A/B (J4)", 8.4, 64.5),
+        "J5": ("POT P1 (J5)", 21.0, 64.5),
+        "J6": ("POT P2 (J6)", 31.2, 64.5),
+        "J7": ("START (J7)", 47.3, 64.5),
     }
     # rotulo de FUNCAO por pino nos headers de painel (vertical, acima do pad)
     PIN_SILK = {
@@ -248,24 +249,38 @@ def main():
     # Pico oficial GP17/GP18 ficam na coluna DIREITA (posicoes 22/24); no
     # YD-RP2040 ficam na BASE (GP17 = canto esq, pos 20; GP18 = canto dir,
     # pos 21). Quem montar confere o rotulo contra o silk do proprio modulo.
+    # O rotulo sozinho, ao lado de uma fileira de 20 pinos iguais, nao diz
+    # QUAL pino e: cada marca leva uma linha de chamada ate o pad. A linha
+    # comeca FORA do contorno do modulo (senao cruza a silk dele).
     if VARIANT_YD:
-        GP_MARKS = [("GP17", "20", 2.8, 0.0, 0),    # a direita do pad 20
-                    ("GP18", "21", -2.8, 0.0, 0)]   # a esquerda do pad 21
+        # na roxa os dois caem na fileira de baixo -> chamada para BAIXO
+        GP_MARKS = [("GP17", "20", 0, +1), ("GP18", "21", 0, +1)]
     else:
-        GP_MARKS = [("GP17", "22", 2.6, 0.0, 90),   # fresta entre U1 e U2
-                    ("GP18", "24", 2.6, 0.0, 90)]
-    for txt, padnum, dx, dy, rot in GP_MARKS:
+        GP_MARKS = [("GP17", "22", +1, 0), ("GP18", "24", +1, 0)]
+    # horizontal: sai por fora do contorno do modulo (x22.6);
+    # vertical: curta, para nao invadir os rotulos dos headers (y~54.6)
+    DIST = {(1, 0): (2.2, 3.4), (0, 1): (1.6, 2.4)}
+    for txt, padnum, dx, dy in GP_MARKS:
         pad = next((p for p in footprints["U1"].Pads()
                     if p.GetNumber() == padnum), None)
         if pad is None:
             continue
+        px = pcbnew.ToMM(pad.GetPosition().x) - BX
+        py = pcbnew.ToMM(pad.GetPosition().y) - BY
+        seg = pcbnew.PCB_SHAPE(board)
+        seg.SetShape(pcbnew.SHAPE_T_SEGMENT)
+        D0, D1 = DIST[(abs(dx), abs(dy))]
+        seg.SetStart(V(px + dx * D0, py + dy * D0))
+        seg.SetEnd(V(px + dx * D1, py + dy * D1))
+        seg.SetLayer(pcbnew.F_SilkS)
+        seg.SetWidth(mm(0.12))
+        board.Add(seg)
+        meia = len(txt) * 0.32          # meia largura do texto (centrado)
         t = pcbnew.PCB_TEXT(board)
         t.SetText(txt)
-        t.SetPosition(pcbnew.VECTOR2I(pad.GetPosition().x + mm(dx),
-                                      pad.GetPosition().y + mm(dy)))
+        t.SetPosition(V(px + dx * (D1 + 0.3 + meia),
+                        py + dy * (D1 + 0.8)))
         t.SetLayer(pcbnew.F_SilkS)
-        if rot:
-            t.SetTextAngle(pcbnew.EDA_ANGLE(rot, pcbnew.DEGREES_T))
         t.SetTextSize(pcbnew.VECTOR2I(mm(0.8), mm(0.8)))
         t.SetTextThickness(mm(0.15))
         board.Add(t)
@@ -290,6 +305,16 @@ def main():
             t.SetTextSize(pcbnew.VECTOR2I(mm(0.8), mm(0.8)))
             t.SetTextThickness(mm(0.15))
             board.Add(t)
+
+    # As referencias destes ja aparecem nos rotulos descritivos (ou sao
+    # desnecessarias, no caso dos furos) e caiam sobre pads -> ocultar.
+    for ref in ("J1", "J4", "J5", "J6", "J7", "J8", "J9"):
+        fp = footprints.get(ref)
+        if fp is not None:
+            fp.Reference().SetVisible(False)
+    # a ref do U2 cai em cima do pad 1: joga para a faixa livre abaixo
+    if "U2" in footprints:
+        footprints["U2"].Reference().SetPosition(V(52.0, 25.0))
 
     # ----- nets -----
     netinfo = {}
@@ -325,8 +350,30 @@ def main():
     print("stage: furos", flush=True)
     for i, (hx, hy) in enumerate([(BOARD_W / 2, (BOARD_H - 58.0) / 2),
                                   (BOARD_W / 2, (BOARD_H + 58.0) / 2)]):
+        # area de exclusao: nada de trilha/via sob a cabeca do parafuso
+        # (o plano de GND pode entrar: o parafuso encosta em GND, sem risco)
+        ka = pcbnew.ZONE(board)
+        ka.SetIsRuleArea(True)
+        ka.SetDoNotAllowTracks(True)
+        ka.SetDoNotAllowVias(True)
+        ka.SetDoNotAllowPads(False)   # o furo (NPTH) fica dentro dela
+        ka.SetDoNotAllowZoneFills(False)
+        lset = pcbnew.LSET()            # este build so aceita AddLayer
+        lset.AddLayer(pcbnew.F_Cu)
+        lset.AddLayer(pcbnew.B_Cu)
+        ka.SetLayerSet(lset)
+        out = ka.Outline()
+        out.NewOutline()
+        import math as _m
+        for k in range(16):                 # circulo de raio KEEPOUT_R
+            a = 2 * _m.pi * k / 16
+            out.Append(mm(BX + hx + KEEPOUT_R * _m.cos(a)),
+                       mm(BY + hy + KEEPOUT_R * _m.sin(a)))
+        board.Add(ka)
+
         fp = load_fp("MountingHole:MountingHole_3.2mm_M3")
         fp.SetReference(f"H{i+1}")
+        fp.Reference().SetVisible(False)    # so atrapalha (fica na borda)
         board.Add(fp)
         fp.SetPosition(V(hx, hy))
 
@@ -389,12 +436,9 @@ def main():
     print("stage: texto", flush=True)
     try:
         t = pcbnew.PCB_TEXT(board)
-        if VARIANT_YD:
-            t.SetText("RetroSC Pong v1.0 (RP2040 roxo 1 botao)")
-            t.SetPosition(V(61, 64.5))      # rodape, entre o START e o RCA
-        else:
-            t.SetText("RetroSC Pong v1.0")
-            t.SetPosition(V(61, 64.5))      # rodape, entre o START e o RCA
+        t.SetText("RetroSC Pong v1.0 (roxo)" if VARIANT_YD
+                  else "RetroSC Pong v1.0")
+        t.SetPosition(V(56, 36))           # area livre entre o amp e os RCAs
         t.SetLayer(pcbnew.F_SilkS)
         t.SetTextSize(pcbnew.VECTOR2I(mm(1.0), mm(1.0)))
         board.Add(t)
@@ -415,10 +459,13 @@ def main():
                              "logo_retrosc_1bit.png")).convert("1")
         LW, LH = img.size
         lpx = img.load()
-        S = 0.22                            # mm por pixel do logo
+        # 0.19 mm/px: o logo tem que caber ENTRE as duas linhas verticais
+        # do footprint do Pico (x=4.5 e x=19.5), senao cruza as duas e gera
+        # dezenas de avisos de silk sobreposto. Traco de 1 px = 0.19 mm,
+        # ainda acima do minimo de fabrica (0.15).
+        S = 0.19                            # mm por pixel do logo
         BLEED = 0.01                        # funde runs vizinhos na tinta
-        LX, LY = 4.4, 1.0                   # canto do logo (deixa a base do
-                                            # modulo livre p/ marcas GP17/18)
+        LX, LY = 5.45, 7.0                  # centrado na faixa limpa do Pico
         # um PCB_SHAPE poly do arquivo so guarda 1 contorno -> um RECT
         # preenchido por run de pixels
         nruns = 0

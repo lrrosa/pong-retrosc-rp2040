@@ -149,7 +149,13 @@ def rca_jack():
               (RCA_GND_PAD_L, RCA_GND_PAD_W), "oval")
     # contorno do corpo (barril para -Y, alem da borda da placa)
     bw, bd = RCA_BODY_W / 2, RCA_BODY_D
-    s += _rect(-bw, -RCA_GND_FRONT - 2.0, bw, -RCA_GND_FRONT + 8.0)
+    # contorno do corpo: as laterais sao QUEBRADAS na altura das abas de
+    # terra (senao a linha passa por cima do proprio pad -> silk sobre cobre)
+    y_top, y_bot = -RCA_GND_FRONT - 2.0, -RCA_GND_FRONT + 8.0
+    gap = RCA_GND_PAD_W / 2 + 0.4          # meia altura da aba + folga
+    s += _line(-bw, y_top, bw, y_top) + _line(-bw, y_bot, bw, y_bot)
+    for x in (-bw, bw):
+        s += _line(x, y_top, x, -gap) + _line(x, gap, x, y_bot)
     s += _line(-RCA_BARREL_D / 2, -RCA_GND_FRONT - 2.0,
                -RCA_BARREL_D / 2, -bd + 2)
     s += _line(RCA_BARREL_D / 2, -RCA_GND_FRONT - 2.0,

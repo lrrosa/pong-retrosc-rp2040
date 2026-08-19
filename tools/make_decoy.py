@@ -41,10 +41,13 @@ if src_pro.exists():
 board = pcbnew.LoadBoard(str(REAL))
 
 # 1. remove todas as zonas
-zones = [board.GetArea(i) for i in range(board.GetAreaCount())]
+# so os PREENCHIMENTOS (planos de GND) saem; as areas de exclusao (rule
+# areas) FICAM, senao o roteador passaria trilha por baixo dos parafusos.
+zones = [z for z in (board.GetArea(i) for i in range(board.GetAreaCount()))
+         if not z.GetIsRuleArea()]
 for z in zones:
     board.Remove(z)
-print(f"zonas removidas: {len(zones)}")
+print(f"zonas removidas: {len(zones)} (areas de exclusao preservadas)")
 
 # 2. recua o contorno: acha o bbox das segmentos de Edge.Cuts e redesenha
 edges = [d for d in board.GetDrawings()

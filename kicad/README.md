@@ -116,11 +116,12 @@ inkscape /tmp/silk.svg --export-type=png --export-width=800 \
 
 **Variante YD-RP2040:** repita os passos com `--yd` nos scripts Python e o
 sufixo `-yd` nos nomes de arquivo (`pong-retrosc-yd.*`, `gerbers-yd/`). Entre
-os passos 3 e 4, afine a trilha de sinal para 0,25 mm — com 0,30 mm o net
-START não fecha nessa variante:
+os passos 3 e 4, afine a trilha de sinal para 0,25 mm (com 0,30 mm o net
+START não fecha nessa variante) e peça **0,17 mm de isolamento** ao roteador
+— pedindo os 0,15 do projeto ele entrega 0,1478 e o DRC reprova:
 
 ```sh
-python tools/dsn_tweak.py kicad/pong-retrosc-yd-decoy.dsn 250 500 150
+python tools/dsn_tweak.py kicad/pong-retrosc-yd-decoy.dsn 250 500 170
 ```
 
 **Por que a isca (passo 3):** com as zonas presentes, o DSN as exporta como
@@ -137,6 +138,12 @@ redundantes).
   mesma borda; os 3 RCAs na borda direita com o **barril protraindo ~10 mm**
   (atravessa a parede da caixa); headers de painel em **uma fileira** na borda
   de baixo, cada pino com a função na serigrafia.
+- **Nada de trilha sob os parafusos:** cada furo leva uma **área de exclusão
+  de raio 3,6 mm** (rule area nas 2 faces) que barra trilhas e vias — sem
+  ela o roteador passava sinal a 2 mm do centro, ou seja, 0,4 mm da borda do
+  furo, bem debaixo da cabeça do parafuso. O plano de GND continua entrando
+  (encostar em GND é inofensivo). `make_decoy.py` **preserva** essas áreas ao
+  montar a isca, senão o roteador não as enxergaria.
 - **Furos de montagem: 2, a 58 mm entre centros**, na linha de centro da
   largura — H1 (40, 4) e H2 (40, 62). É a furação dos **bossos da tampa** da
   PB-085/3 (2 bossos com furo-guia ø2,5, a 58 mm, no centro do lado de
@@ -170,8 +177,15 @@ redundantes).
   posições 20/21). Antes de soldar, confira se elas batem com os rótulos do
   seu módulo — é o jeito rápido de ver se a placa e o módulo são da mesma
   variante.
-- **DRC: 0 erros.** Restam avisos de silk (desenho do barril/USB atravessa a
-  borda; referências sobre furos) — cosméticos, não bloqueiam a fabricação.
+- **Serigrafia:** rótulos de função por pino, nome + referência em cada
+  header (ex.: `POT P1 (J5)`), marcas GP17/GP18 **com linha de chamada** até
+  o pino exato, e nomes dos RCAs colados em cada jack. As referências que
+  caíam sobre pads (J*, H*) foram ocultadas — a informação está nos rótulos
+  descritivos. O logo foi reescalado (0,19 mm/px) para caber **entre** as
+  duas linhas verticais do footprint do Pico.
+- **DRC: 0 erros**, 0 silk sobre cobre e 0 sobreposições. Restam 12 avisos
+  de `silk_edge_clearance`: são o desenho do USB e dos barris dos RCAs
+  cruzando a borda — intencional, é por ali que eles saem da caixa.
 - Regras: trilha de sinal 0,3 mm, isolamento 0,15 mm, via 0,7/0,35 mm (JLCPCB
   2 camadas).
 
