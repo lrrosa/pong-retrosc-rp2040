@@ -110,6 +110,8 @@ inkscape /tmp/silk.svg --export-type=png --export-width=800 \
 # 9. esquemático em PDF/SVG (o que se usa para montar e conferir)
 "$CLI" sch export pdf -o docs/pong-retrosc-esquematico.pdf kicad/pong-retrosc.kicad_sch
 "$CLI" sch export svg --no-background-color -o docs/images/kicad/ kicad/pong-retrosc.kicad_sch
+# 10. desenho de encaixe na caixa            [Python do KiCad]
+"$KPY" tools/fit_caixa.py
 ```
 
 **Variante YD-RP2040:** repita os passos com `--yd` nos scripts Python e o
@@ -143,10 +145,20 @@ redundantes).
 - **J5 + J6 (pots)** ficam na mesma fileira com **uma posição vaga** entre
   eles: um único conector fêmea 1×7 (2,54 mm) serve os dois, deixando o
   contato do meio sem uso.
-- **Encaixe na caixa:** a placa deixa ~1 mm de folga por lado no sentido de
-  80 mm e ~2 mm no de 66 mm. Os RCAs, o pot do amp e o USB **atravessam as
-  paredes** — a caixa precisa dos recortes correspondentes, e a altura deles
-  em relação à placa deve ser conferida na peça real antes de furar.
+- **Encaixe na caixa** (desenho em escala abaixo): folga de **1,0 mm** nas
+  laterais e **2,0 mm** em cima/embaixo; os 2 furos caem exatamente sobre os
+  bossos da tampa. Recortes necessários na parede: **3 RCAs à direita**
+  (barril passa 8,3 mm da face externa), **pot do amp em cima** (11,6 mm) e
+  **USB em cima** — este último *não* protrai: a face do conector fica 1,2 mm
+  para dentro, então o recorte precisa deixar o plugue entrar.
+
+![Placa dentro da caixa Patola PB-085/3, em escala](../docs/images/caixa-encaixe.svg)
+
+  > O desenho sai de `tools/fit_caixa.py`, que lê a geometria da própria
+  > placa — refaça-o a cada mudança de layout. **A altura** (26 mm internos)
+  > não está no desenho: confira na peça real, principalmente o eixo do pot e
+  > os barris dos RCAs, cuja altura depende de quanto o parafuso afasta a
+  > placa dos bossos.
 - **Logo RetroSC no silk da frente**, dentro do espaço do Pico (48,4 ×
   15,2 mm a 0,22 mm/pixel, entre as duas fileiras de pinos — fica visível
   antes da montagem ou com o Pico socketado). Gerado de
