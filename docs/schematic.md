@@ -289,7 +289,7 @@ cada **coluna é um polo** e a **fileira do meio (5–8) são os comuns**):
   premium: Sakae FCP22E (~10⁷ ciclos, eixo 6,35 mm, bushing M10). Em ambos o
   **stopper é obrigatório**: sem ele o eixo gira sem batente e o jogador
   encontra uma "zona morta" de 40° acima/abaixo do curso elétrico (que é
-  320°). Veja [docs/bom.md](bom.md).
+  320°). Veja [pecas-do-gabinete.md](pecas-do-gabinete.md).
 - Furação do painel: **10,5 mm** (ambos os bushings — M9 do CR22E e M10 do
   FCP22E — pedem furo de Φ10,32 mm).
 

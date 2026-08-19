@@ -21,8 +21,8 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-DOCS = ["README.md", "docs/bom.md", "docs/pinout.md", "docs/schematic.md",
-        "kicad/README.md"]
+DOCS = ["README.md", "docs/bom.md", "docs/pecas-do-gabinete.md",
+        "docs/pinout.md", "docs/schematic.md", "kicad/README.md"]
 PREFIXOS = ("RV", "SW", "R", "C", "J", "U", "H")
 # modelos de peca citados em prosa que "parecem" designador
 IGNORAR = {"RV16", "CR22E", "FCP22E", "SW1x"}

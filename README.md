@@ -33,6 +33,7 @@ pong-rp2040/
 │   ├── schematic.md     <-- esquemático por blocos (diagramas SVG)
 │   ├── pinout.md        <-- pinagem dos 3 módulos RP2040 suportados
 │   ├── bom.md           <-- lista de materiais (por referência: R1, C2, J4…)
+│   ├── pecas-do-gabinete.md  <-- pots, knobs e itens da caixa: qual comprar
 │   └── images/          <-- diagramas, renders da placa, capturas
 ├── kicad/               <-- PCB: 2 variantes, gerbers prontos p/ fábrica
 │   ├── README.md        <-- pipeline (esquemático -> placa -> gerbers)
@@ -71,6 +72,8 @@ Veja os arquivos em [docs/](docs/) para detalhes:
   suportados** (Pico oficial, YD-RP2040 de 3 botões e "roxa" de 1 botão) e
   qual variante de PCB usar com cada um
 - [docs/bom.md](docs/bom.md) — lista de materiais e custo
+- [docs/pecas-do-gabinete.md](docs/pecas-do-gabinete.md) — potenciômetros,
+  manoplas e peças da caixa: **qual modelo comprar** e por quê
 - [kicad/README.md](kicad/README.md) — as **duas variantes de PCB** prontas
   para fabricar (gerbers zipados)
 
