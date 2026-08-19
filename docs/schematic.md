@@ -87,8 +87,16 @@ corrente". Dois números úteis dele para este DAC:
   injeta corrente pelo diodo de proteção da entrada do chip ("back-powering")
   e o ruído resultante no terra chega a disparar a detecção de movimento dos
   potenciômetros (sintoma real: o jogo "pulava" a tela de attract sozinho).
-- **2× 1 kΩ depois do C2, um para cada entrada (L e R)**: alimenta os dois
-  canais do PAM8403 com o sinal mono e isola uma entrada da outra. A carga
+- **R4 = 10 kΩ + R5 = 1 kΩ: o "divisor de linha"** — é o que gera a saída
+  **LINHA** para a TV. Depois do C2 o sinal tem ~2 Vpp (forte demais para uma
+  entrada de áudio, que espera ~0,2–0,5 Vpp), então R4 vai em **série** e R5
+  do nó para o **GND**: o sinal cai para ~0,2 Vpp (2 V × 1/(10+1)).
+  **A saída LINHA é a junção dos dois** (fim do R4 = topo do R5) — é esse nó
+  que vai para o pino 1 da chave A/B. **Na PCB ele já está roteado até o
+  header J4, pino 3** (marcado `LINHA` na serigrafia): não é preciso soldar
+  nada nos resistores, basta ligar o fio da chave nesse pino do J4.
+- **2× 1 kΩ (R6 e R7) depois do C2, um para cada entrada (L e R)**: alimenta
+  os dois canais do PAM8403 com o sinal mono e isola uma entrada da outra. A carga
   resultante (~5,5 kΩ) causa perda de ~15% no nível — irrelevante. Nenhuma
   entrada fica aberta (entrada flutuando = chiado no canal sem uso).
 
@@ -151,14 +159,18 @@ paralelo** e comute-os juntos.
 Numeração típica da DPDT de 6 pinos (vista de baixo, 2 fileiras de 3 — a
 **fileira do meio são os comuns**):
 
-| Pino          | Liga em                             | Quando        |
-| :-----------: | ----------------------------------- | ------------- |
-| **3** (comum) | **centros** dos RCAs (L e R juntos) | sempre        |
-| 1             | LINHA (saída do divisor)            | posição **A** |
-| 5             | Lout+ do PAM8403                    | posição **B** |
-| **4** (comum) | **shields** dos RCAs (L e R juntos) | sempre        |
-| 2             | GND do áudio (pino 38)               | posição **A** |
-| 6             | Lout− do PAM8403                    | posição **B** |
+| Pino da chave | Liga em (fiação manual)             | Na PCB    | Quando        |
+| :-----------: | ----------------------------------- | :-------: | ------------- |
+| **3** (comum) | **centros** dos RCAs (L e R juntos) | J4 **p1** | sempre        |
+| 1             | LINHA (junção R4/R5)                | J4 **p3** | posição **A** |
+| 5             | Lout+ do PAM8403                    | J4 **p5** | posição **B** |
+| **4** (comum) | **shields** dos RCAs (L e R juntos) | J4 **p2** | sempre        |
+| 2             | GND do áudio (p38)                  | J4 **p4** | posição **A** |
+| 6             | Lout− do PAM8403                    | J4 **p6** | posição **B** |
+
+> **Na PCB é só ligar 6 fios da chave ao header J4** — a serigrafia traz a
+> função de cada pino (RCA_C, RCA_S, LINHA, GND, LOUT+, LOUT−). Os RCAs, o
+> divisor e o amp já estão ligados no cobre.
 
 > **Que GND é esse?** "Estrela" é o **jeito de passar os fios**, não um pino:
 > cada bloco leva o seu próprio fio até um pino GND do Pico (ver
@@ -195,6 +207,10 @@ Numeração típica da DPDT de 6 pinos (vista de baixo, 2 fileiras de 3 — a
 
 ![Chave 4PDT de 4 polos nos RCAs: vista de baixo e ligações](images/sch_audio_ab.svg)
 
+> ⚠️ **A PCB do repositório implementa só a variante mono (DPDT)**: os dois
+> RCAs de áudio estão em paralelo no cobre e o header J4 tem 6 vias. A 4PDT
+> abaixo é para montagem **manual**, com os RCAs cabeados separadamente.
+
 Só vale a pena se você quiser os **dois jacks RCA independentes** — por
 exemplo, duas caixas passivas distintas no modo B. Com 4 polos, centro e
 shield de cada RCA são comutados separadamente e os dois canais do amp são
@@ -206,13 +222,13 @@ cada **coluna é um polo** e a **fileira do meio (5–8) são os comuns**):
 | Pino          | Liga em                  | Quando        |
 | :-----------: | ------------------------ | ------------- |
 | **5** (comum) | centro do **RCA-L**      | sempre        |
-| 1             | LINHA (saída do divisor) | posição **A** |
+| 1             | LINHA — junção R4/R5 (J4 p3) | posição **A** |
 | 9             | Lout+ do PAM8403         | posição **B** |
 | **6** (comum) | shield do **RCA-L**      | sempre        |
 | 2             | GND do áudio (pino 38)    | posição **A** |
 | 10            | Lout− do PAM8403         | posição **B** |
 | **7** (comum) | centro do **RCA-R**      | sempre        |
-| 3             | LINHA (saída do divisor) | posição **A** |
+| 3             | LINHA — junção R4/R5 (J4 p3) | posição **A** |
 | 11            | Rout+ do PAM8403         | posição **B** |
 | **8** (comum) | shield do **RCA-R**      | sempre        |
 | 4             | GND do áudio (pino 38)    | posição **A** |

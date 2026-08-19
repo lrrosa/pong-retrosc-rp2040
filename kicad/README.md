@@ -4,6 +4,18 @@ Placa de 2 camadas com plano de terra, gerada por scripts (reprodutível) e
 roteada com o Freerouting. Hardware sob **CERN-OHL-S-2.0** (ver
 [`../LICENSE-HARDWARE.txt`](../LICENSE-HARDWARE.txt)).
 
+| Vista 3D (frente) | Serigrafia (frente) |
+| :---: | :---: |
+| ![Render 3D da placa, vista de cima](../docs/images/pcb_top.png) | ![Serigrafia da frente da placa](../docs/images/pcb_silk.png) |
+
+**55 × 88 mm**, imagens da variante oficial (a YD é idêntica por fora; muda só
+o roteamento). O logo RetroSC fica **embaixo do Pico** — por isso aparece na
+serigrafia e não no render 3D. Layout detalhado em [Estado](#estado).
+
+> No render 3D o **Pico é o único componente com modelo 3D**; os jacks RCA e o
+> módulo do amp são footprints próprios (sem modelo 3D) e aparecem só pelo
+> contorno da serigrafia. Ambas as imagens saem do passo 8 do pipeline.
+
 **Duas variantes**, escolhidas pelo módulo RP2040 que você tem (mesma
 furação, pinagens diferentes — ver [../docs/pinout.md](../docs/pinout.md) e
 as marcas GP17/GP18 no silk):
@@ -69,6 +81,15 @@ python tools/gen_kicad_fp.py
        --excellon-units mm --generate-map --map-format gerberx2 \
        -o kicad/gerbers/ kicad/pong-retrosc.kicad_pcb
 powershell -c "Compress-Archive -Path kicad\gerbers\* -DestinationPath kicad\pong-retrosc-gerbers.zip -Force"
+
+# 8. imagens do README (render 3D + serigrafia)
+"$CLI" pcb render --side top --width 1100 --height 1700 --quality high \
+       --background opaque -o docs/images/pcb_top.png kicad/pong-retrosc.kicad_pcb
+"$CLI" pcb export svg --layers "F.SilkS,Edge.Cuts" --page-size-mode 2 \
+       --exclude-drawing-sheet --black-and-white -o /tmp/silk.svg \
+       kicad/pong-retrosc.kicad_pcb
+inkscape /tmp/silk.svg --export-type=png --export-width=800 \
+       --export-background=white --export-filename=docs/images/pcb_silk.png
 ```
 
 **Variante YD-RP2040:** repita os passos com `--yd` nos scripts Python e o
