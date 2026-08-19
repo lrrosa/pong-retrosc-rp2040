@@ -60,8 +60,9 @@ J4–J7. A função de cada pino está na serigrafia.
 
 | Qtd | Item | Especificação | Observação |
 | --: | ---- | ------------- | ---------- |
-| 1 | **PCB** | 2 camadas, 55 × 88 mm, HASL | envie o ZIP de gerbers da variante certa |
-| 4 | Parafuso M3 + espaçador | furos H1–H4 | H2/H3 e H1/H4 têm 45 mm entre centros |
+| 1 | **PCB** | 2 camadas, 80 × 66 mm, HASL | envie o ZIP de gerbers da variante certa |
+| 1 | **Caixa Patola PB-085/3** | 85 × 73 × 32 mm | a placa foi dimensionada para ela; furos H1/H2 caem nos bossos da tampa |
+| 2 | Parafuso auto-atarraxante | ~ø2,9 × 6 mm | prende a placa nos bossos da tampa (furo-guia ø2,5) |
 | 1 | Conector fêmea 1×6 | passo 2,54 mm | cabo da chave A/B (J4) |
 | 1 | Conector fêmea 1×7 | passo 2,54 mm | **serve os dois pots de uma vez** (J5+J6, com o contato do meio vago) |
 | 1 | Conector fêmea 1×2 | passo 2,54 mm | cabo do botão (J7) |

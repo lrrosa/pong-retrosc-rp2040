@@ -8,7 +8,7 @@ roteada com o Freerouting. Hardware sob **CERN-OHL-S-2.0** (ver
 | :---: | :---: |
 | ![Render 3D da placa, vista de cima](../docs/images/pcb_top.png) | ![Serigrafia da frente da placa](../docs/images/pcb_silk.png) |
 
-**55 × 88 mm**, imagens da variante oficial (a YD é idêntica por fora; muda só
+**80 × 66 mm**, imagens da variante oficial (a YD é idêntica por fora; muda só
 o roteamento). O logo RetroSC fica **embaixo do Pico** — por isso aparece na
 serigrafia e não no render 3D. Layout detalhado em [Estado](#estado).
 
@@ -35,7 +35,7 @@ as marcas GP17/GP18 no silk):
 2. Baixe o ZIP correspondente (`pong-retrosc-gerbers.zip` ou
    `pong-retrosc-yd-gerbers.zip`) e envie **como está** para a fábrica
    (JLCPCB, PCBWay, Elecrow…).
-3. Parâmetros: **2 camadas, 1,6 mm, HASL**, 55 × 88 mm. Os defaults de
+3. Parâmetros: **2 camadas, 1,6 mm, HASL**, 80 × 66 mm. Os defaults de
    qualquer fábrica servem — não há nada exótico na placa.
 4. Peças e montagem: [../docs/bom.md](../docs/bom.md).
 
@@ -129,18 +129,24 @@ redundantes).
 
 ## Estado
 
-- **Placa 55 × 88 mm**, retrato: Pico com USB na borda superior; PAM8403 ao
-  lado, corpo na placa e pot de volume saindo pela mesma borda; RCAs na borda
-  direita com o **barril protraindo ~8,5 mm para fora** (o cabo pluga de fora);
-  headers de painel empilhados à esquerda, cada um com o nome e a função de
-  cada pino na serigrafia.
-- **Furos de montagem M3** com passo de **45 mm**: base em y84 com H2 (5, 84),
-  H4 (27,5, 84) e H3 (50, 84) — H2↔H3 = 45 mm, H4 no centro — e H1 (27,5, 39)
-  no eixo X, 45 mm acima de H4. Um retângulo de 4 furos nos cantos não fecha
-  nesta placa (os cantos superiores são do Pico e do RCA de vídeo).
+- **Placa 80 × 66 mm**, dimensionada para a caixa **Patola PB-085/3**
+  (85 × 73 × 32 mm; interno ~82 × 70). Pico à esquerda com o USB na borda de
+  cima; PAM8403 no topo à direita, corpo na placa e pot de volume saindo pela
+  mesma borda; os 3 RCAs na borda direita com o **barril protraindo ~10 mm**
+  (atravessa a parede da caixa); headers de painel em **uma fileira** na borda
+  de baixo, cada pino com a função na serigrafia.
+- **Furos de montagem: 2, a 58 mm entre centros**, na linha de centro da
+  largura — H1 (40, 4) e H2 (40, 62). É a furação dos **bossos da tampa** da
+  PB-085/3 (2 bossos com furo-guia ø2,5, a 58 mm, no centro do lado de
+  85 mm). Em troca, o miolo das bordas de cima e de baixo (x 36,5..43,5)
+  fica reservado — nenhum componente pode ocupá-lo.
 - **J5 + J6 (pots)** ficam na mesma fileira com **uma posição vaga** entre
   eles: um único conector fêmea 1×7 (2,54 mm) serve os dois, deixando o
   contato do meio sem uso.
+- **Encaixe na caixa:** a placa deixa ~1 mm de folga por lado no sentido de
+  80 mm e ~2 mm no de 66 mm. Os RCAs, o pot do amp e o USB **atravessam as
+  paredes** — a caixa precisa dos recortes correspondentes, e a altura deles
+  em relação à placa deve ser conferida na peça real antes de furar.
 - **Logo RetroSC no silk da frente**, dentro do espaço do Pico (48,4 ×
   15,2 mm a 0,22 mm/pixel, entre as duas fileiras de pinos — fica visível
   antes da montagem ou com o Pico socketado). Gerado de

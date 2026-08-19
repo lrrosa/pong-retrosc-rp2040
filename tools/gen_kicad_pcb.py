@@ -8,7 +8,7 @@ Requer o Python DO KICAD (modulo pcbnew):
   1. kicad-cli sch export netlist -o kicad/pong-retrosc.net kicad/pong-retrosc.kicad_sch
   2. "C:/Program Files/KiCad/10.0/bin/python.exe" tools/gen_kicad_pcb.py
 
-Placement (placa retrato 55 x 88; topo = y0):
+Placement (placa 80 x 66, para a caixa Patola PB-085/3; topo = y0):
   - Pico na coluna esquerda, USB colado na borda de cima;
   - PAM8403 ao lado do Pico, corpo na placa, pot saindo pela borda de cima;
   - RCAs na borda direita (barril para fora);
@@ -32,7 +32,7 @@ OUT = REPO / "kicad" / f"{PROJECT}.kicad_pcb"
 FP_LOCAL = REPO / "kicad" / "pong-retrosc.pretty"
 FP_SYS = Path(sys.executable).parent.parent / "share" / "kicad" / "footprints"
 
-BOARD_W, BOARD_H = 55.0, 88.0             # retrato: o Pico (51 mm) corre em Y
+BOARD_W, BOARD_H = 80.0, 66.0             # cabe na caixa Patola PB-085/3
 BX, BY = 20.0, 20.0                       # canto da placa na folha
 
 mm = pcbnew.FromMM
@@ -122,7 +122,7 @@ def main():
     # ----- placement: ref -> (pad_ancora, x, y, rot) -----
     # pad_ancora = pad que cai exatamente em (x, y). rot em graus.
     #
-    # Floorplan (placa retrato 55 x 88, topo = y0):
+    # Floorplan (placa 80 x 66 = interno da Patola PB-085/3; topo = y0):
     #   Pico (rot 0)   -> coluna ESQUERDA, USB colado na borda de cima;
     #                     pino 1 = (3.1, 2.0); coluna direita (21..40 =
     #                     GP16..VBUS) em x20.9 e a favor da faixa central.
@@ -135,52 +135,47 @@ def main():
     # Pico: corpo x1.5..22.5 / y0.6..51.7, keepout de cobre na base
     # (x~5..19 / y~45..52). Resistores VERTICAIS (~2.5 mm).
     PLACE = {
-        # ---- topo: Pico (USB p/ fora) + PAM ao lado (pot p/ fora) ----
-        "U1": ("1", 3.1, 2.0, 0),           # PCB x1.5..22.5 / y0.6..51.7
-        "U2": ("1", 26.3, 22.0, 0),         # corpo x24.5..53.5 / y0.2..20.2
-        # ---- RCAs na borda direita (rot 270: barril para +X) ----
-        # Sinal a 7.5 mm da borda: a frente do corpo fica rente a borda
-        # (x54.5) e o BARRIL protrai ~8.5 mm PARA FORA (ate x63.5), onde o
-        # cabo e plugado. Abas frontais em x52.5 (folga cobre-borda 0.8).
-        "J1": ("1", 47.5, 31.5, 270),       # video
-        "J8": ("1", 47.5, 47.5, 270),       # audio L
-        "J9": ("1", 47.5, 63.5, 270),       # audio R
-        # ---- coluna central (x35, entre o furo H1 e a traseira dos RCAs) --
-        "C3": ("1", 35.0, 28.0, 0),         # filtro ADC
-        "C4": ("1", 35.0, 35.0, 0),         # filtro ADC
-        "R1": ("1", 35.0, 42.0, 0),         # SYNC -> COMPOSITE
-        "R2": ("1", 35.0, 48.0, 0),         # VIDEO -> COMPOSITE
-        "R3": ("1", 35.0, 54.0, 0),         # AUDIO_PWM -> AUD_F
-        "C1": ("1", 35.0, 61.0, 0),         # AUD_F -> GND (shunt)
-        "C2": ("1", 32.5, 69.0, 0),         # AUD_F -> AUD_C (eletrolitico)
-        "R6": ("1", 35.0, 76.0, 0),         # AUD_C -> AMP_L
-        "R7": ("1", 35.0, 82.0, 0),         # AUD_C -> AMP_R
-        # ---- abaixo do RCA de baixo ----
-        "R4": ("1", 41.0, 76.0, 0),         # AUD_C -> LINHA
-        "R5": ("1", 47.0, 76.0, 0),         # LINHA -> GND (shunt)
-        # ---- headers EMPILHADOS abaixo do Pico (rot 90: pinos para +X) ----
-        # J5/J6 na mesma fileira com UMA posicao vaga entre eles (x11.62):
-        # um unico conector femea 1x7 serve os dois. Linha centrada entre
-        # J4 (y58) e J7 (y82).
-        "J4": ("1", 4.0, 58.0, 90),         # chave de audio A/B (6 vias)
-        "J5": ("1", 4.0, 70.0, 90),         # pot P1 (pads x4..9.08)
-        "J6": ("1", 14.16, 70.0, 90),       # pot P2 (pads x14.16..19.24)
-        "J7": ("1", 13.5, 82.0, 90),        # START
+        # ---- borda de cima: USB do Pico (esq.) e pot do amp (dir.) ----
+        "U1": ("1", 3.1, 2.0, 0),           # x1.5..22.5 / y0.6..51.7
+        "U2": ("1", 47.0, 22.0, 0),         # corpo x44.9..74.5 / y0.2..20.2
+        # ---- RCAs na borda direita, abaixo do amp (rot 270: barril +X) ----
+        "J1": ("1", 72.5, 33.0, 270),       # video
+        "J8": ("1", 72.5, 46.0, 270),       # audio L
+        "J9": ("1", 72.5, 59.0, 270),       # audio R
+        # ---- passivos no miolo, em 2 colunas ----
+        "C3": ("1", 26.0, 10.0, 0),         # filtro ADC P1
+        "C4": ("1", 26.0, 16.0, 0),         # filtro ADC P2
+        "R1": ("1", 26.0, 22.0, 0),         # SYNC -> COMPOSITE
+        "R2": ("1", 26.0, 28.0, 0),         # VIDEO -> COMPOSITE
+        "R3": ("1", 26.0, 34.0, 0),         # AUDIO_PWM -> AUD_F
+        "C1": ("1", 26.0, 40.0, 0),         # AUD_F -> GND (shunt)
+        "C2": ("1", 36.0, 11.0, 0),         # AUD_F -> AUD_C (eletrolitico)
+        "R4": ("1", 36.0, 18.0, 0),         # AUD_C -> LINHA
+        "R5": ("1", 36.0, 24.0, 0),         # LINHA -> GND (shunt)
+        "R6": ("1", 36.0, 30.0, 0),         # AUD_C -> AMP_L
+        "R7": ("1", 36.0, 36.0, 0),         # AUD_C -> AMP_R
+        # ---- headers de painel na borda de baixo, em UMA fileira ----
+        # (2 fileiras nao cabem: cada uma precisa de ~9 mm com os rotulos)
+        "J4": ("1", 2.0, 60.0, 90),         # chave de audio A/B (6 vias)
+        "J5": ("1", 18.5, 60.0, 90),        # pot P1
+        "J6": ("1", 28.66, 60.0, 90),       # pot P2 (1 vaga: femea 1x7 serve os 2)
+        "J7": ("1", 46.0, 60.0, 90),        # START (a direita do furo H2)
     }
     # rotulos gerais (conectores de 2 pinos e o amp): 1 texto perto de cada
     # RCA: centro=sinal, corpo=GND (convencao universal) -> so o nome da funcao
     SILK = {
-        "J1": ("VIDEO", 46.0, 39.4),
-        "J8": ("AUDIO L", 46.0, 55.4),
-        "J9": ("AUDIO R", 46.0, 71.4),
-        "U2": ("PAM8403", 30.0, 25.0),
+        "J1": ("VIDEO", 56.0, 30.0),
+        "J8": ("AUDIO L", 54.0, 43.0),
+        "J9": ("AUDIO R", 54.0, 56.0),
+        "U2": ("PAM8403", 46.0, 26.0),
     }
     # NOME de cada header (o que o conector faz), abaixo dos pads
+    # (o texto e CENTRADO na coordenada -> x = meio do header)
     HDR_NAME = {
-        "J4": ("CHAVE AUDIO A/B", 12.0, 61.5),
-        "J5": ("POT P1", 6.5, 73.5),
-        "J6": ("POT P2", 16.7, 73.5),
-        "J7": ("START", 15.0, 85.5),
+        "J4": ("CHAVE AUDIO A/B", 8.4, 64.5),
+        "J5": ("POT P1", 21.0, 64.5),
+        "J6": ("POT P2", 31.2, 64.5),
+        "J7": ("START", 47.3, 64.5),
     }
     # rotulo de FUNCAO por pino nos headers de painel (vertical, acima do pad)
     PIN_SILK = {
@@ -322,16 +317,14 @@ def main():
         seg.SetWidth(mm(0.1))
         board.Add(seg)
 
-    # ----- furos de montagem M3: losango com passo de 45 mm -----
-    # Regra: base em y84 com H2/H3 a 45 mm entre centros (simetricos no eixo
-    # X) e H4 no centro; H1 no eixo X, 45 mm acima da base -> H1-H4 = 45 mm.
-    # Retangulo de 4 furos nos cantos nao fecha nesta placa: os cantos de
-    # cima sao do Pico (esq.) e do RCA de video (dir.).
+    # ----- furos de montagem: bossos da caixa Patola PB-085/3 -----
+    # A tampa tem 2 bossos (furo-guia o2,5) a 58 mm entre centros, na linha
+    # de centro do lado de 85 mm. A placa se prende neles: 2 furos, no meio
+    # da largura, 58 mm entre si -> deixa livre o miolo das bordas de cima e
+    # de baixo (x 36,5..43,5), onde nao pode haver componente.
     print("stage: furos", flush=True)
-    for i, (hx, hy) in enumerate([(BOARD_W / 2, 39.0),
-                                  (BOARD_W / 2 - 22.5, 84.0),
-                                  (BOARD_W / 2 + 22.5, 84.0),
-                                  (BOARD_W / 2, 84.0)]):
+    for i, (hx, hy) in enumerate([(BOARD_W / 2, (BOARD_H - 58.0) / 2),
+                                  (BOARD_W / 2, (BOARD_H + 58.0) / 2)]):
         fp = load_fp("MountingHole:MountingHole_3.2mm_M3")
         fp.SetReference(f"H{i+1}")
         board.Add(fp)
@@ -398,10 +391,10 @@ def main():
         t = pcbnew.PCB_TEXT(board)
         if VARIANT_YD:
             t.SetText("RetroSC Pong v1.0 (RP2040 roxo 1 botao)")
-            t.SetPosition(V(28, 87))        # rodape (texto mais longo)
+            t.SetPosition(V(61, 64.5))      # rodape, entre o START e o RCA
         else:
             t.SetText("RetroSC Pong v1.0")
-            t.SetPosition(V(41, 87))        # rodape, entre H4 e H3
+            t.SetPosition(V(61, 64.5))      # rodape, entre o START e o RCA
         t.SetLayer(pcbnew.F_SilkS)
         t.SetTextSize(pcbnew.VECTOR2I(mm(1.0), mm(1.0)))
         board.Add(t)
