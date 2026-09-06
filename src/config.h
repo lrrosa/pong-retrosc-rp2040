@@ -70,6 +70,11 @@
 #define BALL_SPEED_STEP_Q 0x020              // incremento por rebatida
 #define ATTRACT_TIMEOUT_S 20                 // segundos antes de voltar a attract
 #define MENU_TIMEOUT_S    15                 // menu sem input volta pro attract
+// Nenhuma tela de espera pode ficar parada para sempre num arcade: passados
+// esses segundos, a de iniciais grava o que foi digitado e a pausa aplica a
+// opcao destacada.
+#define INITIALS_TIMEOUT_S 30
+#define PAUSE_TIMEOUT_S    30
 // Na pausa a escolha anda pelo MOVIMENTO do pot, nao pela posicao dele: o item
 // inicial tem que ser sempre CONTINUAR, senao um pot parado embaixo abriria a
 // pausa ja com SAIR DO JOGO destacado.
@@ -91,30 +96,34 @@
 #define TRIPLE_SEG_H      (PADDLE_H / 3)          // 8 px por pedaco
 #define TRIPLE_GAP        8                       // vao entre os pedacos
 
-// NAVE: nao e uma fase, e um bonus que aparece de tempos em tempos nas fases
-// marcadas com PF_TEM_NAVE. Ela cruza a quadra na diagonal (as vezes de cima
-// para baixo, as vezes de baixo para cima) com a palavra BONUS piscando junto;
-// acerta-la da SHIP_BONUS ponto(s) a quem rebateu a bola por ultimo.
-#define SHIP_W            13
-#define SHIP_H            8
-#define SHIP_VY_Q         0x0C0                   // 0,75 px/frame na vertical
-#define SHIP_VX_MIN_Q     0x040                   // inclinacao minima (0,25 px/frame)
-#define SHIP_VX_MAX_Q     0x0C0                   // inclinacao maxima (0,75 px/frame)
-#define SHIP_X_MIN        40                      // faixa horizontal onde ela anda
-#define SHIP_X_MAX        (FB_WIDTH - 40 - SHIP_W)
-#define SHIP_WAIT_MIN     (4 * 60)                // 4 s de intervalo, no minimo
-#define SHIP_WAIT_RANGE   (8 * 60)                // ate +8 s sorteados
-#define SHIP_PASSES_MAX   2                       // aparicoes por fase
-#define SHIP_BONUS        3                       // pontos, so no total geral
+// BONUS: o mascote da RetroSC (16x16) cruza a quadra na diagonal de tempos em
+// tempos nas fases marcadas com PF_TEM_BONUS -- as vezes de cima para baixo, as
+// vezes de baixo para cima -- com a palavra BONUS piscando junto. Acerta-lo da
+// BONUS_POINTS pontos, so no total geral, a quem rebateu a bola por ultimo.
+#define BONUS_W            16                     // = RETROSC_MASCOTE_W
+#define BONUS_H            16
+#define BONUS_VY_Q         0x0C0                   // 0,75 px/frame na vertical
+#define BONUS_VX_MIN_Q     0x040                   // inclinacao minima (0,25 px/frame)
+#define BONUS_VX_MAX_Q     0x0C0                   // inclinacao maxima (0,75 px/frame)
+#define BONUS_X_MIN        40                      // faixa horizontal onde ela anda
+#define BONUS_X_MAX        (FB_WIDTH - 40 - BONUS_W)
+#define BONUS_WAIT_MIN     (4 * 60)                // 4 s de intervalo, no minimo
+#define BONUS_WAIT_RANGE   (8 * 60)                // ate +8 s sorteados
+#define BONUS_PASSES_MAX   2                       // aparicoes por fase
+#define BONUS_POINTS        3                       // pontos, so no total geral
 #define TOTAL_FLASH_FRAMES 90                     // total piscando apos o bonus
 
-// Fase FANTASMA: o mascote sobe e desce atirando; o tiro que pega a raquete
-// deixa ela pela metade por SHRINK_FRAMES. A bola tambem rebate nele, entao
-// ele e obstaculo movel e atirador ao mesmo tempo.
-#define GHOST_X           (FB_WIDTH / 2 - 8)      // mascote e 16x16
-#define GHOST_SPEED       1
-#define GHOST_SHOT_PERIOD 100                     // frames entre tiros
-#define GHOST_SHOT_MAX    4                       // tiros simultaneos
+// Fase NAVE: a nave sobe e desce no meio da quadra atirando; o tiro que pega a
+// raquete deixa ela pela metade por SHRINK_FRAMES. A bola tambem rebate nela,
+// entao e obstaculo movel e atirador ao mesmo tempo. O desenho e o mesmo
+// sprite do bonus antigo, em dobro, para virar um alvo de verdade.
+#define NAVE_SCALE       2
+#define NAVE_W           (13 * NAVE_SCALE)
+#define NAVE_H           (8 * NAVE_SCALE)
+#define NAVE_X           (FB_WIDTH / 2 - NAVE_W / 2)
+#define NAVE_SPEED       1
+#define NAVE_SHOT_PERIOD 100                     // frames entre tiros
+#define NAVE_SHOT_MAX    4                       // tiros simultaneos
 #define SHOT_W            4
 #define SHOT_H            2
 #define SHOT_SPEED        3

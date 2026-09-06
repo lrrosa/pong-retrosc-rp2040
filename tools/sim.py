@@ -49,6 +49,8 @@ BALL_SPEED_MAX_Q  = 0x500
 BALL_SPEED_STEP_Q = 0x020
 ATTRACT_TIMEOUT_S = 20
 MENU_TIMEOUT_S    = 15
+INITIALS_TIMEOUT_S = 30
+PAUSE_TIMEOUT_S   = 30
 PAUSE_POT_STEP    = 400
 PADDLE_TAKEOVER_TOL = 6
 HISCORE_COUNT     = 5
@@ -62,22 +64,25 @@ BRICK_ROWS        = FB_H // BRICK_H
 TRIPLE_SEG_H      = PADDLE_H // 3
 TRIPLE_GAP        = 8
 
-SHIP_W, SHIP_H    = 13, 8
-SHIP_VY_Q         = 0x0C0
-SHIP_VX_MIN_Q     = 0x040
-SHIP_VX_MAX_Q     = 0x0C0
-SHIP_X_MIN        = 40
-SHIP_X_MAX        = FB_W - 40 - SHIP_W
-SHIP_WAIT_MIN     = 4 * 60
-SHIP_WAIT_RANGE   = 8 * 60
-SHIP_PASSES_MAX   = 2
-SHIP_BONUS        = 3
+BONUS_W, BONUS_H    = 16, 16      # o mascote
+BONUS_VY_Q         = 0x0C0
+BONUS_VX_MIN_Q     = 0x040
+BONUS_VX_MAX_Q     = 0x0C0
+BONUS_X_MIN        = 40
+BONUS_X_MAX        = FB_W - 40 - BONUS_W
+BONUS_WAIT_MIN     = 4 * 60
+BONUS_WAIT_RANGE   = 8 * 60
+BONUS_PASSES_MAX   = 2
+BONUS_POINTS        = 3
 TOTAL_FLASH_FRAMES = 90
 
-GHOST_X           = FB_W // 2 - 8
-GHOST_SPEED       = 1
-GHOST_SHOT_PERIOD = 100
-GHOST_SHOT_MAX    = 4
+NAVE_SCALE       = 2
+NAVE_W           = 13 * NAVE_SCALE
+NAVE_H           = 8 * NAVE_SCALE
+NAVE_X           = FB_W // 2 - NAVE_W // 2
+NAVE_SPEED       = 1
+NAVE_SHOT_PERIOD = 100
+NAVE_SHOT_MAX    = 4
 SHOT_W, SHOT_H    = 4, 2
 SHOT_SPEED        = 3
 SHRINK_FRAMES     = 300
@@ -120,12 +125,12 @@ MODE_COUNT = 2
 # ============================================================
 # Fases (espelham src/phases.c)
 # ============================================================
-(PHASE_CLASSICO, PHASE_TRIPLO, PHASE_FANTASMA, PHASE_BARREIRA1, PHASE_PINBALL,
+(PHASE_CLASSICO, PHASE_TRIPLO, PHASE_NAVE, PHASE_BARREIRA1, PHASE_PINBALL,
  PHASE_BARREIRA2, PHASE_COLUNA, PHASE_MURALHA, PHASE_REBOUND,
  PHASE_BARREIRA3) = range(10)
 PHASE_COUNT = 10
 
-PHASE_NAMES = ["PONG CLASSICO", "TRIPLO", "FANTASMA", "BARREIRA I", "PINBALL",
+PHASE_NAMES = ["PONG CLASSICO", "TRIPLO", "NAVE", "BARREIRA I", "PINBALL",
                "BARREIRA II", "COLUNA", "MURALHA", "REBOUND", "BARREIRA III"]
 PHASE_HINTS = ["O PONG DE SEMPRE", "TRES RAQUETES COM VAOS",
                "OS TIROS ENCOLHEM A RAQUETE", "DOIS MUROS NO MEIO",
@@ -138,7 +143,20 @@ PF_GRAVITY        = 1 << 1
 PF_FLOOR_SCORES   = 1 << 2
 PF_SIDE_WALLS     = 1 << 3
 PF_PADDLE_HORIZ   = 1 << 4
-PF_TEM_NAVE       = 1 << 5
+PF_TEM_BONUS       = 1 << 5
+
+
+def phase_tem_bonus(idx):
+    return idx in (PHASE_CLASSICO, PHASE_TRIPLO, PHASE_BARREIRA1, PHASE_MURALHA)
+
+
+def pontos_em_disputa(idx):
+    total = 0
+    for i in range(idx + 1, PHASE_COUNT):
+        total += PHASE_WIN_SCORE
+        if phase_tem_bonus(i):
+            total += BONUS_PASSES_MAX * BONUS_POINTS
+    return total
 
 
 class Phase:
@@ -156,20 +174,20 @@ class Phase:
         self.solids = []
         self.rebuild_round = False
         self.frame_ctr = 0
-        self.ship_on = False
-        self.ship_x_q = self.ship_y_q = 0
-        self.ship_vx_q = self.ship_vy_q = 0
-        self.ghost_reset()
+        self.bonus_on = False
+        self.bonus_x_q = self.bonus_y_q = 0
+        self.bonus_vx_q = self.bonus_vy_q = 0
+        self.nave_reset()
         self.shots = []
         self.shrink = [0, 0]
-        self.ship_left = SHIP_PASSES_MAX
-        self.ship_sleep()
+        self.bonus_left = BONUS_PASSES_MAX
+        self.bonus_sleep()
 
-        if idx in (PHASE_CLASSICO, PHASE_TRIPLO):
-            self.flags |= PF_TEM_NAVE
-        elif idx == PHASE_BARREIRA1:
+        if phase_tem_bonus(idx):
+            self.flags |= PF_TEM_BONUS
+
+        if idx == PHASE_BARREIRA1:
             self._barreira(2, 1, None)
-            self.flags |= PF_TEM_NAVE
         elif idx == PHASE_BARREIRA2:
             self._barreira(3, 16, None)
         elif idx == PHASE_BARREIRA3:
@@ -184,15 +202,15 @@ class Phase:
             self._rebound()
         self.alive = list(self.start)
 
-    def ship_sleep(self):
-        self.ship_on = False
-        self.ship_wait = SHIP_WAIT_MIN + random.randrange(SHIP_WAIT_RANGE)
+    def bonus_sleep(self):
+        self.bonus_on = False
+        self.bonus_wait = BONUS_WAIT_MIN + random.randrange(BONUS_WAIT_RANGE)
 
-    def ghost_reset(self):
-        # pode ficar no meio: a contagem regressiva agora tem fundo preto
-        self.ghost_y = (FB_H - 16) // 2
-        self.ghost_dir = 1
-        self.ghost_cool = GHOST_SHOT_PERIOD
+    def nave_reset(self):
+        # pode ficar no meio: a contagem regressiva tem fundo preto
+        self.nave_y = (FB_H - NAVE_H) // 2
+        self.nave_dir = 1
+        self.nave_cool = NAVE_SHOT_PERIOD
 
     def _barreira(self, cols, gap, blocos):
         step = BRICK_W + gap
@@ -222,14 +240,12 @@ class Phase:
                 mask |= (1 << r)
         self.start = [mask, mask]
         self.rebuild_round = True
-        self.flags |= PF_TEM_NAVE
 
     def _pinball(self):
         cx, cy = FB_W // 2 - BUMPER_W // 2, FB_H // 2 - BUMPER_H // 2
         self.solids = [(cx + dx, cy + dy, BUMPER_W, BUMPER_H) for (dx, dy) in (
             (0, 0), (0, -72), (0, 72),
-            (-32, -30), (32, -30), (-32, 30), (32, 30),
-            (-64, 0), (64, 0))]
+            (-32, -30), (32, -30), (-32, 30), (32, 30))]
 
     def _coluna_span(self):
         return COL_BUMPERS * BUMPER_H + (COL_BUMPERS - 1) * COL_GAP
@@ -253,8 +269,8 @@ class Phase:
     def round_reset(self):
         self.shrink = [0, 0]
         self.shots = []
-        self.ghost_reset()
-        self.ship_sleep()
+        self.nave_reset()
+        self.bonus_sleep()
         if self.rebuild_round:
             self.alive = list(self.start)
 
@@ -344,18 +360,25 @@ class Phase:
             novo, eixo_x = self._bounce(sx, sy, sx + sw - 1, sy + sh - 1, ball)
             if self.cur in (PHASE_PINBALL, PHASE_COLUNA):
                 bx2, by2, vx2, vy2 = novo
-                s = 1 if random.getrandbits(1) else -1
-                vx2, vy2 = (vx2 - s * (vy2 >> BUMPER_SPIN_SHIFT),
-                            vy2 + s * (vx2 >> BUMPER_SPIN_SHIFT))
+                giro = 1 if random.getrandbits(1) else -1
+                saida_x, saida_y = vx2, vy2
+                vx2, vy2 = (vx2 - giro * (vy2 >> BUMPER_SPIN_SHIFT),
+                            vy2 + giro * (vx2 >> BUMPER_SPIN_SHIFT))
+                # o eixo que acabou de rebater nao pode trocar de sinal
+                if eixo_x:
+                    if (vx2 < 0) != (saida_x < 0):
+                        vx2 = -vx2
+                elif (vy2 < 0) != (saida_y < 0):
+                    vy2 = -vy2
                 if -BALL_VX_MIN_Q < vx2 < BALL_VX_MIN_Q:
                     vx2 = -BALL_VX_MIN_Q if vx2 < 0 else BALL_VX_MIN_Q
                 novo = (bx2, by2, vx2, vy2)
             return True, novo
 
-        if self.cur == PHASE_FANTASMA:
-            gx1, gy1 = GHOST_X + 15, self.ghost_y + 15
-            if not (x1 < GHOST_X or x0 > gx1 or y1 < self.ghost_y or y0 > gy1):
-                novo, _ = self._bounce(GHOST_X, self.ghost_y, gx1, gy1, ball)
+        if self.cur == PHASE_NAVE:
+            gx1, gy1 = NAVE_X + NAVE_W - 1, self.nave_y + NAVE_H - 1
+            if not (x1 < NAVE_X or x0 > gx1 or y1 < self.nave_y or y0 > gy1):
+                novo, _ = self._bounce(NAVE_X, self.nave_y, gx1, gy1, ball)
                 return True, novo
         return False, ball
 
@@ -366,40 +389,40 @@ class Phase:
         bx, by, bw, bh = b
         return not (ax >= bx + bw or ax + aw <= bx or ay >= by + bh or ay + ah <= by)
 
-    def _ship_spawn(self):
+    def _bonus_spawn(self):
         de_cima = random.getrandbits(1)
-        self.ship_x_q = random.randint(SHIP_X_MIN, SHIP_X_MAX) << 8
-        self.ship_y_q = (-SHIP_H << 8) if de_cima else (FB_H << 8)
-        self.ship_vy_q = SHIP_VY_Q if de_cima else -SHIP_VY_Q
-        vx = random.randint(SHIP_VX_MIN_Q, SHIP_VX_MAX_Q)
-        self.ship_vx_q = -vx if random.getrandbits(1) else vx
-        self.ship_on = True
+        self.bonus_x_q = random.randint(BONUS_X_MIN, BONUS_X_MAX) << 8
+        self.bonus_y_q = (-BONUS_H << 8) if de_cima else (FB_H << 8)
+        self.bonus_vy_q = BONUS_VY_Q if de_cima else -BONUS_VY_Q
+        vx = random.randint(BONUS_VX_MIN_Q, BONUS_VX_MAX_Q)
+        self.bonus_vx_q = -vx if random.getrandbits(1) else vx
+        self.bonus_on = True
 
-    def _update_nave(self, ball_x, ball_y, last_hitter, bonus):
-        if not self.ship_on:
-            if self.ship_left <= 0:
+    def _update_bonus(self, ball_x, ball_y, last_hitter, bonus):
+        if not self.bonus_on:
+            if self.bonus_left <= 0:
                 return
-            self.ship_wait -= 1
-            if self.ship_wait <= 0:
-                self.ship_left -= 1
-                self._ship_spawn()
+            self.bonus_wait -= 1
+            if self.bonus_wait <= 0:
+                self.bonus_left -= 1
+                self._bonus_spawn()
             return
-        self.ship_x_q += self.ship_vx_q
-        self.ship_y_q += self.ship_vy_q
-        sx, sy = self.ship_x_q >> 8, self.ship_y_q >> 8
-        if sx < SHIP_X_MIN:
-            self.ship_x_q = SHIP_X_MIN << 8; self.ship_vx_q = -self.ship_vx_q
-        if sx > SHIP_X_MAX:
-            self.ship_x_q = SHIP_X_MAX << 8; self.ship_vx_q = -self.ship_vx_q
-        if sy > FB_H or sy < -SHIP_H:
-            self.ship_sleep()
+        self.bonus_x_q += self.bonus_vx_q
+        self.bonus_y_q += self.bonus_vy_q
+        sx, sy = self.bonus_x_q >> 8, self.bonus_y_q >> 8
+        if sx < BONUS_X_MIN:
+            self.bonus_x_q = BONUS_X_MIN << 8; self.bonus_vx_q = -self.bonus_vx_q
+        if sx > BONUS_X_MAX:
+            self.bonus_x_q = BONUS_X_MAX << 8; self.bonus_vx_q = -self.bonus_vx_q
+        if sy > FB_H or sy < -BONUS_H:
+            self.bonus_sleep()
             return
-        sx = self.ship_x_q >> 8
+        sx = self.bonus_x_q >> 8
         if self._overlap((ball_x >> 8, ball_y >> 8, BALL_SIZE, BALL_SIZE),
-                         (sx, sy, SHIP_W, SHIP_H)):
+                         (sx, sy, BONUS_W, BONUS_H)):
             if last_hitter in (0, 1):
-                bonus[last_hitter] += SHIP_BONUS
-            self.ship_sleep()
+                bonus[last_hitter] += BONUS_POINTS
+            self.bonus_sleep()
 
     def update(self, ball_x, ball_y, paddle_pos, last_hitter):
         bonus = [0, 0]
@@ -408,8 +431,8 @@ class Phase:
             if self.shrink[p] > 0:
                 self.shrink[p] -= 1
 
-        if self.flags & PF_TEM_NAVE:
-            self._update_nave(ball_x, ball_y, last_hitter, bonus)
+        if self.flags & PF_TEM_BONUS:
+            self._update_bonus(ball_x, ball_y, last_hitter, bonus)
 
         if self.cur == PHASE_COLUNA:
             mx = FB_H - self._coluna_span()
@@ -420,20 +443,20 @@ class Phase:
                 self.col_y, self.col_dir = 0, 1
             self._coluna_place()
 
-        if self.cur == PHASE_FANTASMA:
-            self.ghost_y += self.ghost_dir * GHOST_SPEED
-            if self.ghost_y > FB_H - 16:
-                self.ghost_y, self.ghost_dir = FB_H - 16, -1
-            if self.ghost_y < 0:
-                self.ghost_y, self.ghost_dir = 0, 1
-            self.ghost_cool -= 1
-            if self.ghost_cool <= 0:
-                self.ghost_cool = GHOST_SHOT_PERIOD
-                if len(self.shots) < GHOST_SHOT_MAX:
+        if self.cur == PHASE_NAVE:
+            self.nave_y += self.nave_dir * NAVE_SPEED
+            if self.nave_y > FB_H - NAVE_H:
+                self.nave_y, self.nave_dir = FB_H - NAVE_H, -1
+            if self.nave_y < 0:
+                self.nave_y, self.nave_dir = 0, 1
+            self.nave_cool -= 1
+            if self.nave_cool <= 0:
+                self.nave_cool = NAVE_SHOT_PERIOD
+                if len(self.shots) < NAVE_SHOT_MAX:
                     esq = random.getrandbits(1)
                     self.shots.append({
-                        "x": GHOST_X - SHOT_W if esq else GHOST_X + 16,
-                        "y": self.ghost_y + 8,
+                        "x": NAVE_X - SHOT_W if esq else NAVE_X + NAVE_W,
+                        "y": self.nave_y + NAVE_H // 2 - SHOT_H // 2,
                         "vx": -SHOT_SPEED if esq else SHOT_SPEED,
                     })
             vivos = []
@@ -462,22 +485,24 @@ class Phase:
         for (sx, sy, sw, sh) in self.solids:
             fb.fill_rect(sx, sy, sw, sh, 1)
 
-        if self.cur == PHASE_FANTASMA:
-            if mascote:
-                fb.blit_1bit(mascote, 16, 16, GHOST_X, self.ghost_y, 1)
-            for s in self.shots:
-                fb.fill_rect(s["x"], s["y"], SHOT_W, SHOT_H, 1)
-
-        if (self.flags & PF_TEM_NAVE) and self.ship_on:
-            x, y = self.ship_x_q >> 8, self.ship_y_q >> 8
+        if self.cur == PHASE_NAVE:
+            s = NAVE_SCALE
             for (dx, dy, w, h) in ((5, 0, 3, 1), (4, 1, 5, 1), (3, 2, 7, 1),
                                    (2, 3, 9, 1), (0, 4, 13, 2), (1, 6, 2, 2),
                                    (5, 6, 3, 2), (10, 6, 2, 2)):
-                fb.fill_rect(x + dx, y + dy, w, h, 1)
+                fb.fill_rect(NAVE_X + dx * s, self.nave_y + dy * s,
+                             w * s, h * s, 1)
+            for sh in self.shots:
+                fb.fill_rect(sh["x"], sh["y"], SHOT_W, SHOT_H, 1)
+
+        if (self.flags & PF_TEM_BONUS) and self.bonus_on:
+            x, y = self.bonus_x_q >> 8, self.bonus_y_q >> 8
+            if mascote:
+                fb.blit_1bit(mascote, 16, 16, x, y, 1)
             if glyphs and not ((self.frame_ctr >> 4) & 1):
                 tw = text_width("BONUS", 1)
-                tx = min(max(2, x + SHIP_W // 2 - tw // 2), FB_W - tw - 2)
-                ty = (y - FONT_CELL_H - 1) if y > FB_H // 2 else (y + SHIP_H + 2)
+                tx = min(max(2, x + BONUS_W // 2 - tw // 2), FB_W - tw - 2)
+                ty = (y - FONT_CELL_H - 1) if y > FB_H // 2 else (y + BONUS_H + 2)
                 ty = min(max(0, ty), FB_H - FONT_CELL_H)
                 fb.fill_rect(tx - 2, ty - 1, tw + 4, 9, 0)
                 gfx_text(fb, glyphs, tx, ty, "BONUS", 1, 1)
@@ -738,7 +763,13 @@ class Game:
     def fim_de_jogo(self):
         if self.mode == MODE_ARCADE and self.phase_score[1] >= PHASE_WIN_SCORE:
             return True
-        return self.phase_idx + 1 >= PHASE_COUNT
+        if self.phase_idx + 1 >= PHASE_COUNT:
+            return True
+        if self.mode == MODE_VERSUS:
+            dif = abs(self.total_score[0] - self.total_score[1])
+            if dif > pontos_em_disputa(self.phase_idx):
+                return True
+        return False
 
     def hiscore_player(self):
         if self.mode == MODE_ARCADE:
@@ -892,6 +923,12 @@ class Game:
                 self.add_point(0)
 
     # ---------- highscores ----------
+    def grava_iniciais(self):
+        pts = self.total_score[self.initials_player - 1]
+        self.hi_consider(pts, self.initials_player,
+                         "".join(self.initials_buf), self.mode)
+        self.set_state(GS_HIGH_SCORES)
+
     def hi_qualifies(self, score):
         return any(score > s for s, _, _, _ in self.hiscores)
 
@@ -1027,6 +1064,9 @@ class Game:
         self.fb.vline(bx, by, bh, 1)
         self.fb.vline(bx + bw - 1, by, bh, 1)
         center_text(self.fb, self.glyphs, by + 6, "PAUSA", 3)
+        seg = max(0, (PAUSE_TIMEOUT_S * 60 - self.state_timer + 59) // 60)
+        center_text_boxed(self.fb, self.glyphs, by + bh + 4,
+                          f"{'VOLTA' if self.pause_sel == 0 else 'SAI'} EM {seg}S", 1)
         for i in range(2):
             label = "CONTINUAR" if i == 0 else "SAIR DO JOGO"
             w = text_width(label, 2)
@@ -1052,9 +1092,11 @@ class Game:
         if ((self.state_timer >> 4) & 1) == 0:
             if self.mode == MODE_ARCADE and self.phase_score[1] >= PHASE_WIN_SCORE:
                 center_text(self.fb, self.glyphs, 148, "A CPU FECHOU A FASE", 1)
-            elif self.phase_idx + 1 < PHASE_COUNT:
+            elif not self.fim_de_jogo():
                 center_text(self.fb, self.glyphs, 148,
                             f"PROXIMA: {PHASE_NAMES[self.phase_idx + 1]}", 1)
+            elif self.phase_idx + 1 < PHASE_COUNT:
+                center_text(self.fb, self.glyphs, 148, "VANTAGEM DECISIVA", 1)
             else:
                 center_text(self.fb, self.glyphs, 148, "FIM DE JOGO", 1)
 
@@ -1078,7 +1120,7 @@ class Game:
                         f"CHEGOU ATE A FASE {self.phase_idx + 1} DE {PHASE_COUNT}", 1)
         else:
             center_text(self.fb, self.glyphs, 132,
-                        f"SOMA DAS {PHASE_COUNT} FASES", 1)
+                        f"SOMA DE {self.phase_idx + 1} FASES", 1)
 
     def draw_highscores(self):
         self.fb.clear(0)
@@ -1119,7 +1161,9 @@ class Game:
         center_text(self.fb, self.glyphs, FB_H - 30, "POT = LETRA", 1)
         if ((self.state_timer >> 5) & 1) == 0:
             center_text(self.fb, self.glyphs, FB_H - 18, "SELETOR PARA CONFIRMAR", 1)
-        center_text(self.fb, self.glyphs, FB_H - 8, f"P{self.initials_player}", 1)
+        seg = max(0, (INITIALS_TIMEOUT_S * 60 - self.state_timer + 59) // 60)
+        center_text(self.fb, self.glyphs, FB_H - 8,
+                    f"P{self.initials_player} - GRAVA EM {seg}S", 1)
 
     # ============== frame por estado ===============
     def enter_attract(self):
@@ -1235,9 +1279,9 @@ class Game:
             elif d > PAUSE_POT_STEP:
                 self.pause_sel = 1
                 self.pause_pot_ref[p] = self.input_pot[p]
-            if self.input_seletor:
+            if self.input_seletor or self.state_timer >= PAUSE_TIMEOUT_S * 60:
                 if self.pause_sel == 0:
-                    self.paddle_travado = [True, True]
+                    self.paddle_travado = [True, self.mode == MODE_VERSUS]
                     self.phase_first_round = False
                     self.set_state(GS_COUNTDOWN)
                 else:
@@ -1296,10 +1340,11 @@ class Game:
                 if self.input_seletor:
                     self.initials_slot += 1
             else:
-                pts = self.total_score[self.initials_player - 1]
-                self.hi_consider(pts, self.initials_player,
-                                 "".join(self.initials_buf), self.mode)
-                self.set_state(GS_HIGH_SCORES)
+                self.grava_iniciais()
+                self.state_timer += 1
+                return
+            if self.state_timer >= INITIALS_TIMEOUT_S * 60:
+                self.grava_iniciais()
                 self.state_timer += 1
                 return
             self.draw_enter_initials()
@@ -1324,13 +1369,13 @@ class Game:
 # Captura das telas (headless): usado para as imagens do README
 # ============================================================
 SHOTS = ["attract", "menu", "phase_intro", "countdown", "play", "pause",
-         "play_triplo", "play_fantasma", "play_barreira1", "play_pinball",
+         "play_triplo", "play_nave", "play_barreira1", "play_pinball",
          "play_barreira2", "play_coluna", "play_muralha", "play_rebound",
          "play_barreira3", "phase_end", "game_over", "enter_initials",
          "highscores"]
 
 FASE_DO_SHOT = {
-    "play_fantasma": PHASE_FANTASMA, "play_triplo": PHASE_TRIPLO,
+    "play_nave": PHASE_NAVE, "play_triplo": PHASE_TRIPLO,
     "play_barreira1": PHASE_BARREIRA1, "play_pinball": PHASE_PINBALL,
     "play_barreira2": PHASE_BARREIRA2, "play_coluna": PHASE_COLUNA,
     "play_muralha": PHASE_MURALHA, "play_rebound": PHASE_REBOUND,
@@ -1365,8 +1410,8 @@ def save_shots(outdir, assets, glyphs):
                     for r in (12, 13):
                         g.phase.alive[c] &= ~(1 << r)
                 g.ball_x = 90 << 8
-            elif idx == PHASE_FANTASMA:
-                g.phase.ghost_y = 70
+            elif idx == PHASE_NAVE:
+                g.phase.nave_y = 70
                 g.phase.shots = [{"x": 90, "y": 78, "vx": -SHOT_SPEED},
                                  {"x": 170, "y": 78, "vx": SHOT_SPEED}]
                 g.phase.shrink[0] = 60
@@ -1374,10 +1419,10 @@ def save_shots(outdir, assets, glyphs):
                 r = g.phase.paddle_range()
                 g.paddle_pos = [r // 3, r // 2]
                 g.ball_x, g.ball_y = 80 << 8, 60 << 8
-            if g.phase.flags & PF_TEM_NAVE:      # mostra a nave-bonus na foto
-                g.phase.ship_on = True
-                g.phase.ship_x_q, g.phase.ship_y_q = 70 << 8, 120 << 8
-                g.phase.ship_vx_q, g.phase.ship_vy_q = SHIP_VX_MIN_Q, -SHIP_VY_Q
+            if g.phase.flags & PF_TEM_BONUS:      # mostra a nave-bonus na foto
+                g.phase.bonus_on = True
+                g.phase.bonus_x_q, g.phase.bonus_y_q = 70 << 8, 120 << 8
+                g.phase.bonus_vx_q, g.phase.bonus_vy_q = BONUS_VX_MIN_Q, -BONUS_VY_Q
             g.draw_play()
         elif name == "attract":
             g.update_paddles_demo(); g.draw_attract()
@@ -1394,8 +1439,8 @@ def save_shots(outdir, assets, glyphs):
             g.phase.begin(PHASE_BARREIRA3)
             g.phase_first_round = True; g.state_timer = 30; g.draw_countdown()
         elif name == "play":
-            g.phase.ship_on = True
-            g.phase.ship_x_q, g.phase.ship_y_q = 60 << 8, 110 << 8
+            g.phase.bonus_on = True
+            g.phase.bonus_x_q, g.phase.bonus_y_q = 60 << 8, 110 << 8
             g.draw_play()
         elif name == "pause":
             g.pause_sel = 0

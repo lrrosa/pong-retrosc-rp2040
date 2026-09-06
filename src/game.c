@@ -134,12 +134,33 @@ static void begin_game(game_mode_t m) {
     begin_phase(0, (get_rand_32() & 1) ? 1 : 2);
 }
 
+// Maior numero de pontos que ainda esta em disputa nas fases apos 'idx': os
+// PHASE_WIN_SCORE do placar de cada uma, mais as passagens do bonus so nas
+// fases que o tem.
+static int pontos_em_disputa(int idx) {
+    int total = 0;
+    for (int i = idx + 1; i < PHASE_COUNT; i++) {
+        total += PHASE_WIN_SCORE;
+        if (phase_tem_bonus(i)) total += BONUS_PASSES_MAX * BONUS_POINTS;
+    }
+    return total;
+}
+
 // No arcade a partida acaba na primeira fase que o jogador perder -- e ate
-// onde ele chegou que vira o recorde. No versus as duas duplas jogam sempre
-// as PHASE_COUNT fases e ganha quem somar mais.
+// onde ele chegou que vira o recorde. No versus jogam-se as PHASE_COUNT fases
+// e ganha quem somar mais, mas nao faz sentido arrastar o resto quando um dos
+// dois ja nao alcanca o outro nem ganhando tudo o que falta.
 static bool fim_de_jogo(void) {
     if (mode == MODE_ARCADE && phase_score[1] >= PHASE_WIN_SCORE) return true;
-    return phase_idx + 1 >= PHASE_COUNT;
+    if (phase_idx + 1 >= PHASE_COUNT) return true;
+
+    if (mode == MODE_VERSUS) {
+        int dif = abs_i(total_score[0] - total_score[1]);
+        // ">" e nao ">=": com a diferenca igual ao que resta o outro ainda
+        // pode empatar, e ai a partida vale a pena.
+        if (dif > pontos_em_disputa(phase_idx)) return true;
+    }
+    return false;
 }
 
 // Qual lado a tabela de recordes considera: no arcade so o humano (P1) entra
@@ -553,6 +574,16 @@ static void draw_pause(void) {
     gfx_vline(bx + bw - 1, by, bh, 1);
 
     center_text(by + 6, "PAUSA", 3);
+
+    // A tela nao pode ficar parada para sempre: mostra quanto falta para a
+    // opcao destacada valer sozinha.
+    char buf[24];
+    int seg = (PAUSE_TIMEOUT_S * 60 - state_timer + 59) / 60;
+    if (seg < 0) seg = 0;
+    snprintf(buf, sizeof(buf), "%s EM %dS",
+             (pause_sel == 0) ? "VOLTA" : "SAI", seg);
+    center_text_boxed(by + bh + 4, buf, 1);   // fica fora da caixa, sobre a quadra
+
     for (int i = 0; i < 2; i++) {
         const char *label = (i == 0) ? "CONTINUAR" : "SAIR DO JOGO";
         int w  = gfx_text_width(label, 2);
@@ -586,9 +617,11 @@ static void draw_phase_end(void) {
     if (((state_timer >> 4) & 1) == 0) {
         if (mode == MODE_ARCADE && phase_score[1] >= PHASE_WIN_SCORE) {
             center_text(148, "A CPU FECHOU A FASE", 1);
-        } else if (phase_idx + 1 < PHASE_COUNT) {
+        } else if (!fim_de_jogo()) {
             snprintf(buf, sizeof(buf), "PROXIMA: %s", phase_name(phase_idx + 1));
             center_text(148, buf, 1);
+        } else if (phase_idx + 1 < PHASE_COUNT) {
+            center_text(148, "VANTAGEM DECISIVA", 1);
         } else {
             center_text(148, "FIM DE JOGO", 1);
         }
@@ -617,7 +650,8 @@ static void draw_game_over(void) {
         snprintf(buf, sizeof(buf), "CHEGOU ATE A FASE %d DE %d",
                  phase_idx + 1, PHASE_COUNT);
     } else {
-        snprintf(buf, sizeof(buf), "SOMA DAS %d FASES", PHASE_COUNT);
+        // No versus a partida pode ter fechado antes da ultima fase.
+        snprintf(buf, sizeof(buf), "SOMA DE %d FASES", phase_idx + 1);
     }
     center_text(132, buf, 1);
 }
@@ -698,8 +732,10 @@ static void draw_enter_initials(void) {
     if (((state_timer >> 5) & 1) == 0) {
         center_text(FB_HEIGHT - 18, "SELETOR PARA CONFIRMAR", 1);
     }
-    char hint[16];
-    snprintf(hint, sizeof(hint), "P%d", initials_player);
+    char hint[32];
+    int seg = (INITIALS_TIMEOUT_S * 60 - state_timer + 59) / 60;
+    if (seg < 0) seg = 0;
+    snprintf(hint, sizeof(hint), "P%d - GRAVA EM %dS", initials_player, seg);
     center_text(FB_HEIGHT - 8, hint, 1);
 }
 
@@ -815,6 +851,23 @@ static void frame_countdown(void) {
     }
 }
 
+// Aplica o item destacado da pausa (pelo SELETOR ou pelo fim da contagem).
+static void confirma_pausa(void) {
+    if (pause_sel == 0) {
+        // Volta com um "GO" curto, para ninguem ser pego de surpresa. As
+        // raquetes ficam travadas ate cada pot voltar ao lugar em que
+        // estava, senao a pausa viraria uma forma de salvar a bola.
+        // So a raquete de quem joga com o pot: no arcade a da direita e da
+        // CPU e nada limparia a trava -- ela ficaria piscando a toa.
+        paddle_travado[0] = true;
+        paddle_travado[1] = (mode == MODE_VERSUS);
+        phase_first_round = false;
+        set_state(GS_COUNTDOWN);
+    } else {
+        enter_attract();
+    }
+}
+
 static void frame_pause(void) {
     // Troca de item por movimento relativo: girar o pot para cima marca
     // CONTINUAR, para baixo marca SAIR. Vale qualquer um dos dois pots.
@@ -834,16 +887,11 @@ static void frame_pause(void) {
 
     if (input_seletor_pressed()) {
         audio_confirm();
-        if (pause_sel == 0) {
-            // Volta com um "GO" curto, para ninguem ser pego de surpresa. As
-            // raquetes ficam travadas ate cada pot voltar ao lugar em que
-            // estava, senao a pausa viraria uma forma de salvar a bola.
-            paddle_travado[0] = paddle_travado[1] = true;
-            phase_first_round = false;
-            set_state(GS_COUNTDOWN);
-        } else {
-            enter_attract();
-        }
+        confirma_pausa();
+        return;
+    }
+    if (state_timer >= PAUSE_TIMEOUT_S * 60) {
+        confirma_pausa();
         return;
     }
     draw_pause();
@@ -913,6 +961,13 @@ static void frame_game_over(void) {
     }
 }
 
+static void grava_iniciais(void) {
+    uint16_t pts = (uint16_t)total_score[initials_player - 1];
+    hi_consider(pts, (uint8_t)initials_player, (uint8_t)mode, initials_buf);
+    hi_save();
+    set_state(GS_HIGH_SCORES);
+}
+
 static void frame_enter_initials(void) {
     if (!initials_armed) {
         initials_buf[0] = 0;
@@ -933,11 +988,13 @@ static void frame_enter_initials(void) {
             initials_slot++;
         }
     } else {
-        // todas confirmadas
-        uint16_t pts = (uint16_t)total_score[initials_player - 1];
-        hi_consider(pts, (uint8_t)initials_player, (uint8_t)mode, initials_buf);
-        hi_save();
-        set_state(GS_HIGH_SCORES);
+        grava_iniciais();
+        return;
+    }
+    // A tela tem hora para acabar: no fim da contagem vale o que ja foi
+    // digitado (as letras nao escolhidas viram espaco em hi_consider).
+    if (state_timer >= INITIALS_TIMEOUT_S * 60) {
+        grava_iniciais();
         return;
     }
     draw_enter_initials();

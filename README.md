@@ -17,11 +17,10 @@ máquina arcade do evento [**RetroSC**](https://retrosc.org/).
   9 pontos, e cada ponto soma no **total geral**:
   1. **PONG CLASSICO** — o pong de sempre;
   2. **TRIPLO** — a raquete vira 3 pedaços de 8 px com vãos entre eles;
-  3. **FANTASMA** — o mascote da RetroSC sobe e desce no meio da quadra
-     atirando: **a bola rebate nele** e o tiro que pega uma raquete deixa ela
-     pela metade por 5 s;
+  3. **NAVE** — uma nave sobe e desce no meio da quadra atirando: **a bola
+     rebate nela** e o tiro que pega uma raquete deixa ela pela metade por 5 s;
   4. **BARREIRA I** — 2 muros de tijolos quebráveis no meio da tela;
-  5. **PINBALL** — nove obstáculos fixos no meio da quadra: um losango com um
+  5. **PINBALL** — sete obstáculos fixos no meio da quadra: um losango com um
      poste solto acima e outro abaixo;
   6. **BARREIRA II** — 3 muros, agora espaçados entre si;
   7. **COLUNA** — cinco dos mesmos obstáculos, empilhados no meio e subindo e
@@ -31,20 +30,23 @@ máquina arcade do evento [**RetroSC**](https://retrosc.org/).
   9. **REBOUND** — vôlei: as raquetes deitam no chão e andam na horizontal
      dentro da própria meia-quadra, a bola tem gravidade e o ponto sai quando
      ela toca o chão do lado adversário;
-  10. **BARREIRA III** — 4 muros (2 por jogador), com um corredor vazio a cada
-      5 fileiras de tijolos: a mais dura, por isso fecha o jogo.
+  10. **BARREIRA III** — 4 muros (2 por jogador), já divididos em blocos de
+      5-4-2-4-5 fileiras com um corredor vazio entre eles: a mais dura, por
+      isso fecha o jogo.
 
   Nas três barreiras o estrago fica até o fim da fase: quando abre um vão de
   ponta a ponta, aquela fase volta a ser um pong normal.
-- **Nave-bônus**: em algumas fases (as que têm a quadra mais limpa) uma nave
-  cruza a tela na diagonal — às vezes de cima para baixo, às vezes de baixo
-  para cima — com a palavra **BONUS** piscando ao lado. Ela passa **no máximo
-  duas vezes por fase**, e acertá-la com a bola vale **3 pontos no total
-  geral** de quem rebateu por último; o placar da fase não muda, e o total
-  fica piscando um instante para o jogador perceber.
+- **Mascote-bônus**: em algumas fases (as que têm a quadra mais limpa) o
+  mascote da RetroSC cruza a tela na diagonal — às vezes de cima para baixo,
+  às vezes de baixo para cima — com a palavra **BONUS** piscando ao lado. Ele
+  passa **no máximo duas vezes por fase**, e acertá-lo com a bola vale
+  **3 pontos no total geral** de quem rebateu por último; o placar da fase não
+  muda, e o total fica piscando um instante para o jogador perceber.
 - **Pausa**: apertar o SELETOR durante a partida abre *CONTINUAR* / *SAIR DO
   JOGO*. A escolha anda pelo **movimento** do pot (não pela posição dele), então
   o menu sempre abre em *CONTINUAR*; o SELETOR confirma e sair volta ao attract.
+  Passados **30 s**, a opção destacada vale sozinha — a tela não fica parada
+  para sempre numa máquina de evento.
   Ao voltar ao jogo, a raquete de quem mexeu no pot durante a pausa fica
   **piscando e parada** até o pot voltar ao lugar em que estava — pausar não
   serve para reposicionar a raquete e salvar uma bola perdida.
@@ -207,9 +209,9 @@ scanlines, glow de fósforo, vignette e curvatura):
 
 As dez fases:
 
-| 1 · pong clássico (com a nave-bônus) | 2 · triplo | 3 · fantasma |
+| 1 · pong clássico (com o mascote-bônus) | 2 · triplo | 3 · nave |
 | :---: | :---: | :---: |
-| ![](docs/images/crt_play.png) | ![](docs/images/crt_play_triplo.png) | ![](docs/images/crt_play_fantasma.png) |
+| ![](docs/images/crt_play.png) | ![](docs/images/crt_play_triplo.png) | ![](docs/images/crt_play_nave.png) |
 
 | 4 · barreira I | 5 · pinball | 6 · barreira II |
 | :---: | :---: | :---: |
@@ -314,14 +316,19 @@ Controles no Wokwi: gire os **potenciômetros** (mouse) para mover as raquetes;
   - No **modo arcade** ela termina assim que a CPU fecha uma fase — enquanto
     o jogador vencer, ele avança para a próxima. O placar dele é o total do
     que fez até ali, e a tela final mostra até que fase chegou.
-  - No **modo versus** as 10 fases são sempre jogadas até o fim e ganha quem
-    tiver o maior total.
+  - No **modo versus** jogam-se as 10 fases e ganha quem tiver o maior total —
+    mas a partida encerra antes se um dos dois **não alcançar mais o outro nem
+    ganhando tudo o que falta**. A conta usa os pontos ainda em disputa (9 por
+    fase restante, mais 6 nas fases que têm o bônus); se a diferença for
+    exatamente igual a isso a partida continua, porque ainda dá empate. A tela
+    de fim de fase avisa com *VANTAGEM DECISIVA*.
 - **Ritmo**: a contagem 3-2-1 aparece só no primeiro ponto de cada fase; entre
   os pontos seguintes é só um "GO" rápido. Apertar o SELETOR pula as telas de
   início e de fim de fase — e, **durante a partida**, abre a pausa.
 - **Iniciais**: se o total entrar no top 5, o jogador insere 3 letras estilo
   arcade — girar o pot rola pelo alfabeto A–Z, apertar o SELETOR confirma a
-  letra atual e passa para a próxima. No modo arcade quem entra no ranking é
+  letra atual e passa para a próxima. A tela tem **30 s**: no fim da contagem
+  vale o que já estiver digitado. No modo arcade quem entra no ranking é
   sempre o humano (P1), tenha vencido ou não.
 - **High scores**: depois das iniciais (ou direto, se não entrou no top),
   a tabela aparece por 10 s antes de voltar ao attract.
@@ -333,18 +340,22 @@ Tudo importante está em [`src/config.h`](src/config.h):
 - `PHASE_WIN_SCORE` — pontos para vencer **uma fase** (padrão 9). É o botão
   de volume da duração da partida. Medido no simulador: um jogador que vence
   as 10 fases leva ~18 min no arcade (quem perde na terceira sai em ~5 min), e
-  uma partida versus completa passa de 30 min. Para uma fila de evento,
-  **5 pontos por fase** corta isso quase pela metade sem mudar mais nada.
+  uma partida versus equilibrada, que vai até a décima fase, passa de 30 min —
+  quando um dos dois abre vantagem decisiva ela acaba antes. Para uma fila de
+  evento, **5 pontos por fase** corta isso quase pela metade sem mudar mais
+  nada.
 - `AI_PADDLE_SPEED`, `AI_ERROR_PX` — dificuldade da CPU no modo arcade
   (velocidade em px/frame e erro de mira sorteado a cada rebatida).
 - `BALL_SPEED_*` — física da bola
 - `PADDLE_W`, `PADDLE_H`, `BALL_SIZE` — visual
 - `BRICK_W`, `BRICK_H`, `TRIPLE_SEG_H`, `TRIPLE_GAP` — geometria das fases
-- `SHIP_*` — a nave-bônus: velocidade, inclinação, faixa horizontal, o
-  intervalo sorteado entre passagens (`SHIP_WAIT_MIN/RANGE`), quantas vezes ela
-  passa por fase (`SHIP_PASSES_MAX`) e quanto vale (`SHIP_BONUS`)
-- `GHOST_*`, `SHOT_*`, `SHRINK_FRAMES` — o fantasma, seus tiros e quanto tempo
-  a raquete atingida fica pela metade
+- `BONUS_*` — o mascote-bônus: velocidade, inclinação, faixa horizontal, o
+  intervalo sorteado entre passagens (`BONUS_WAIT_MIN/RANGE`), quantas vezes
+  ele passa por fase (`BONUS_PASSES_MAX`) e quanto vale (`BONUS_POINTS`)
+- `NAVE_*`, `SHOT_*`, `SHRINK_FRAMES` — a nave da fase 3, seus tiros e quanto
+  tempo a raquete atingida fica pela metade
+- `INITIALS_TIMEOUT_S`, `PAUSE_TIMEOUT_S` — os 30 s que cada tela de espera
+  aguarda antes de decidir sozinha
 - `BUMPER_*`, `COL_*`, `BUMPER_SPIN_SHIFT` — os obstáculos do pinball e da
   coluna móvel, e o quanto cada rebote neles gira a bola (o que impede que ela
   entre em vaivém eterno entre dois postes)
@@ -358,9 +369,9 @@ As fases em si estão em [`src/phases.c`](src/phases.c): o enum `phase_id_t`,
 as tabelas de nome/dica e as funções `build_*()`. Uma fase pode mexer em
 quatro coisas — o formato/orientação da raquete, os tijolos e sólidos da
 quadra, o ponto de saque e as *flags* (`PF_GRAVITY`, `PF_FLOOR_SCORES`,
-`PF_SIDE_WALLS`, `PF_PADDLE_HORIZ`, `PF_NO_CENTER_LINE`, `PF_TEM_NAVE`) que
-dizem ao `game.c` como tratar as bordas e a física e se a nave-bônus aparece
-ali. Para acrescentar uma fase basta um
+`PF_SIDE_WALLS`, `PF_PADDLE_HORIZ`, `PF_NO_CENTER_LINE`, `PF_TEM_BONUS`) que
+dizem ao `game.c` como tratar as bordas e a física e se o mascote-bônus
+aparece ali. Para acrescentar uma fase basta um
 item no enum, um nome/dica nas tabelas e o que ela tem de especial — o resto
 do jogo (pontuação, menu, telas) não muda.
 

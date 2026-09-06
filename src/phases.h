@@ -15,7 +15,7 @@
 typedef enum {
     PHASE_CLASSICO = 0,   // pong normal
     PHASE_TRIPLO,         // 3 raquetes pequenas por jogador
-    PHASE_FANTASMA,       // mascote atira e encolhe a raquete atingida
+    PHASE_NAVE,           // a nave atira e encolhe a raquete atingida
     PHASE_BARREIRA1,      // 2 muros de tijolos no meio
     PHASE_PINBALL,        // obstaculos fixos no meio da quadra
     PHASE_BARREIRA2,      // 3 muros espacados
@@ -37,7 +37,7 @@ typedef struct { int x, y, w, h; } rect_t;
 #define PF_FLOOR_SCORES    (1u << 2)  // encostar no chao da ponto ao outro lado
 #define PF_SIDE_WALLS      (1u << 3)  // laterais rebatem em vez de valer gol
 #define PF_PADDLE_HORIZ    (1u << 4)  // raquetes deitadas, pot anda no eixo X
-#define PF_TEM_NAVE        (1u << 5)  // a nave-bonus pode aparecer nesta fase
+#define PF_TEM_BONUS       (1u << 5)  // o mascote-bonus pode cruzar esta fase
 
 uint32_t phase_flags(void);
 
@@ -53,6 +53,10 @@ void phase_begin(int idx);
 void phase_round_reset(void);
 
 int  phase_current(void);
+
+// True se o mascote-bonus pode cruzar essa fase. Serve tambem para o jogo
+// calcular quantos pontos ainda estao em disputa nas fases que faltam.
+bool phase_tem_bonus(int idx);
 
 // Curso do pot nesta fase: 0..phase_paddle_range(). Em fase normal e a folga
 // vertical (FB_HEIGHT - altura da raquete); no Rebound e o curso horizontal
@@ -75,14 +79,14 @@ bool phase_ball_collide(int32_t prev_x, int32_t prev_y,
                         int32_t *bx, int32_t *by,
                         int32_t *vx, int32_t *vy);
 
-// Um frame das partes moveis da fase (nave-bonus, fantasma, tiros, coluna).
+// Um frame das partes moveis da fase (mascote-bonus, nave, tiros, coluna).
 // Recebe a bola e as raquetes ja atualizadas; devolve em bonus[] os pontos
 // extras ganhos neste frame por cada jogador. 'last_hitter' e 0/1 (ou -1 se a
-// bola ainda nao foi rebatida) e diz quem leva o bonus da nave.
+// bola ainda nao foi rebatida) e diz quem leva o bonus do mascote.
 void phase_update(int32_t ball_x, int32_t ball_y, const int paddle_pos[2],
                   int last_hitter, int bonus[2]);
 
-// Desenha o que e da fase (tijolos, obstaculos, nave, fantasma, tiros).
+// Desenha o que e da fase (tijolos, obstaculos, nave, mascote, tiros).
 void phase_draw(void);
 
 #endif // PONG_PHASES_H

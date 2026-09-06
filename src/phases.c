@@ -15,8 +15,9 @@
 //     bits -- barato de testar e de copiar quando a fase rearma os tijolos.
 //   - solidos: retangulos que so rebatem. Ficam parados (bumpers do pinball,
 //     rede do Rebound) ou andam (a coluna da fase COLUNA).
-//   - bichos: o fantasma (fase propria) e a nave-bonus, que nao e fase nenhuma:
-//     ela aparece de tempos em tempos nas fases marcadas com PF_TEM_NAVE.
+//   - bichos: a nave da fase PHASE_NAVE (obstaculo que atira) e o mascote,
+//     que nao e fase nenhuma: ele cruza a quadra de tempos em tempos nas fases
+//     marcadas com PF_TEM_BONUS e vale pontos para quem acerta-lo.
 //
 // Para acrescentar uma fase: um item no enum phase_id_t, o nome/dica nas
 // tabelas abaixo e o que ela tem de especial. O resto do jogo -- pontuacao,
@@ -38,7 +39,7 @@
 // Estado
 // =============================================================
 #define BRICK_COLS_MAX 4
-#define SOLID_MAX      9
+#define SOLID_MAX      7
 
 static int      cur_phase;
 static uint32_t cur_flags;
@@ -56,15 +57,15 @@ static rect_t   solids[SOLID_MAX];
 static int      solid_count;
 static int      col_y, col_dir;                 // deslocamento da coluna movel
 
-// nave-bonus (qualquer fase com PF_TEM_NAVE)
-static bool     ship_on;
-static int32_t  ship_x_q, ship_y_q, ship_vx_q, ship_vy_q;
-static int      ship_wait;
-static int      ship_left;                      // passagens que ainda restam
+// mascote-bonus (qualquer fase com PF_TEM_BONUS)
+static bool     bonus_on;
+static int32_t  bonus_x_q, bonus_y_q, bonus_vx_q, bonus_vy_q;
+static int      bonus_wait;
+static int      bonus_left;                      // passagens que ainda restam
 
-// fantasma + tiros (PHASE_FANTASMA)
-static int      ghost_y, ghost_dir, ghost_cool;
-static struct { int x, y, vx; bool on; } shots[GHOST_SHOT_MAX];
+// nave + tiros (PHASE_NAVE)
+static int      nave_y, nave_dir, nave_cool;
+static struct { int x, y, vx; bool on; } shots[NAVE_SHOT_MAX];
 static int      shrink[2];                      // frames de raquete encolhida
 
 // =============================================================
@@ -72,7 +73,7 @@ static int      shrink[2];                      // frames de raquete encolhida
 // =============================================================
 static const char *const names[PHASE_COUNT] = {
     [PHASE_CLASSICO]  = "PONG CLASSICO",
-    [PHASE_FANTASMA]  = "FANTASMA",
+    [PHASE_NAVE]      = "NAVE",
     [PHASE_TRIPLO]    = "TRIPLO",
     [PHASE_BARREIRA1] = "BARREIRA I",
     [PHASE_PINBALL]   = "PINBALL",
@@ -85,7 +86,7 @@ static const char *const names[PHASE_COUNT] = {
 
 static const char *const hints[PHASE_COUNT] = {
     [PHASE_CLASSICO]  = "O PONG DE SEMPRE",
-    [PHASE_FANTASMA]  = "OS TIROS ENCOLHEM A RAQUETE",
+    [PHASE_NAVE]  = "OS TIROS ENCOLHEM A RAQUETE",
     [PHASE_TRIPLO]    = "TRES RAQUETES COM VAOS",
     [PHASE_BARREIRA1] = "DOIS MUROS NO MEIO",
     [PHASE_PINBALL]   = "OBSTACULOS NO MEIO",
@@ -104,6 +105,20 @@ const char *phase_name(int idx) {
 const char *phase_hint(int idx) {
     if ((unsigned)idx >= PHASE_COUNT) return "";
     return hints[idx];
+}
+
+// Fases de quadra limpa, onde o bonus tem espaco para cruzar sem se confundir
+// com o cenario. E a unica lista: phase_begin() liga a flag a partir dela.
+bool phase_tem_bonus(int idx) {
+    switch (idx) {
+        case PHASE_CLASSICO:
+        case PHASE_TRIPLO:
+        case PHASE_BARREIRA1:
+        case PHASE_MURALHA:
+            return true;
+        default:
+            return false;
+    }
 }
 
 int      phase_current(void) { return cur_phase; }
@@ -166,7 +181,6 @@ static void build_muralha(void) {
     }
     brick_start[0] = brick_start[1] = mask;
     brick_rebuild_round = true;
-    cur_flags |= PF_TEM_NAVE;
 }
 
 // PINBALL: obstaculos fixos espalhados pelo meio da quadra em losango. As
@@ -175,18 +189,18 @@ static void build_muralha(void) {
 static void build_pinball(void) {
     #define BX(dx) (FB_WIDTH  / 2 + (dx) - BUMPER_W / 2)
     #define BY(dy) (FB_HEIGHT / 2 + (dy) - BUMPER_H / 2)
-    // Sem postes no eixo central entre o centro e as pontas: eles fechavam
-    // fileiras de tres e tampavam a passagem pelo meio.
-    static const int pos[9][2] = {
+    // Sem postes no eixo central entre o centro e as pontas (fechavam fileiras
+    // de tres e tampavam a passagem pelo meio) e sem os laterais, que ficavam
+    // na cara das raquetes.
+    static const int pos[7][2] = {
         { BX(  0), BY(  0) },                       // centro
         { BX(  0), BY(-72) }, { BX(  0), BY(+72) }, // pontas do eixo vertical
         { BX(-32), BY(-30) }, { BX(+32), BY(-30) }, // diagonais
         { BX(-32), BY(+30) }, { BX(+32), BY(+30) },
-        { BX(-64), BY(  0) }, { BX(+64), BY(  0) }, // laterais
     };
     #undef BX
     #undef BY
-    solid_count = 9;
+    solid_count = 7;
     for (int i = 0; i < solid_count; i++) {
         solids[i].x = pos[i][0];
         solids[i].y = pos[i][1];
@@ -234,17 +248,17 @@ static void build_rebound(void) {
                  PF_SIDE_WALLS | PF_PADDLE_HORIZ;
 }
 
-static void ship_sleep(void) {
-    ship_on   = false;
-    ship_wait = SHIP_WAIT_MIN + (int)(get_rand_32() % SHIP_WAIT_RANGE);
+static void bonus_sleep(void) {
+    bonus_on   = false;
+    bonus_wait = BONUS_WAIT_MIN + (int)(get_rand_32() % BONUS_WAIT_RANGE);
 }
 
-static void ghost_reset(void) {
-    // Pode nascer no meio da quadra: a contagem regressiva agora e desenhada
-    // com um fundo preto e nao some mais atras dele.
-    ghost_y    = (FB_HEIGHT - RETROSC_MASCOTE_H) / 2;
-    ghost_dir  = +1;
-    ghost_cool = GHOST_SHOT_PERIOD;
+static void nave_reset(void) {
+    // Pode nascer no meio da quadra: a contagem regressiva e desenhada com um
+    // fundo preto e nao some mais atras dela.
+    nave_y    = (FB_HEIGHT - NAVE_H) / 2;
+    nave_dir  = +1;
+    nave_cool = NAVE_SHOT_PERIOD;
 }
 
 void phase_begin(int idx) {
@@ -255,18 +269,16 @@ void phase_begin(int idx) {
     brick_cols  = 0;
     solid_count = 0;
     brick_rebuild_round = false;
-    ghost_reset();
+    nave_reset();
     shrink[0] = shrink[1] = 0;
-    for (int i = 0; i < GHOST_SHOT_MAX; i++) shots[i].on = false;
-    ship_left = SHIP_PASSES_MAX;
-    ship_sleep();
+    for (int i = 0; i < NAVE_SHOT_MAX; i++) shots[i].on = false;
+    bonus_left = BONUS_PASSES_MAX;
+    bonus_sleep();
+
+    if (phase_tem_bonus(idx)) cur_flags |= PF_TEM_BONUS;
 
     switch (idx) {
-        case PHASE_CLASSICO:  cur_flags |= PF_TEM_NAVE;    break;
-        case PHASE_TRIPLO:    cur_flags |= PF_TEM_NAVE;    break;
-        case PHASE_FANTASMA:                               break;
-        case PHASE_BARREIRA1: build_barreira(2, 1, NULL, 0);
-                              cur_flags |= PF_TEM_NAVE;    break;
+        case PHASE_BARREIRA1: build_barreira(2, 1, NULL, 0); break;
         case PHASE_BARREIRA2: build_barreira(3, 16, NULL, 0); break;
         // Sem os corredores, a barreira cheia de 4 muros vira uma partida do
         // jogador contra a propria parede.
@@ -284,9 +296,9 @@ void phase_begin(int idx) {
 
 void phase_round_reset(void) {
     shrink[0] = shrink[1] = 0;
-    for (int i = 0; i < GHOST_SHOT_MAX; i++) shots[i].on = false;
-    ghost_reset();
-    ship_sleep();
+    for (int i = 0; i < NAVE_SHOT_MAX; i++) shots[i].on = false;
+    nave_reset();
+    bonus_sleep();
     if (!brick_rebuild_round) return;
     for (int c = 0; c < brick_cols; c++) brick_alive[c] = brick_start[c];
 }
@@ -336,7 +348,7 @@ int phase_paddle_segments(int player, int pos, rect_t *out) {
     out[0].y = pos;
     out[0].w = PADDLE_W;
     out[0].h = PADDLE_H;
-    // Tiro do fantasma: a raquete fica pela metade, centrada na mesma posicao,
+    // Tiro da nave: a raquete fica pela metade, centrada na mesma posicao,
     // para o curso do pot nao mudar debaixo da mao do jogador.
     if (shrink[player & 1] > 0) {
         out[0].y = pos + PADDLE_H / 4;
@@ -381,7 +393,7 @@ int phase_serve_y(void) {
 // penetracao: escolher pela penetracao devolvia a bola pela lateral quando ela
 // tinha entrado por cima perto do canto e, como a velocidade ja apontava para
 // fora naquele eixo, nada era invertido -- a bola seguia reto, "atravessando"
-// o obstaculo. Vale para tijolo, bumper, coluna movel, rede e fantasma.
+// o obstaculo. Vale para tijolo, bumper, coluna movel, rede e nave.
 // Devolve true se quem inverteu foi o eixo X.
 static bool bounce_off(int rx0, int ry0, int rx1, int ry1,
                        int32_t *bx, int32_t *by,
@@ -441,28 +453,33 @@ bool phase_ball_collide(int32_t prev_x, int32_t prev_y,
         if (y1 < s->y || y0 > s->y + s->h - 1) continue;
         bool eixo_x = bounce_off(s->x, s->y, s->x + s->w - 1, s->y + s->h - 1,
                                  bx, by, vx, vy);
-        (void)eixo_x;
         if (cur_phase == PHASE_PINBALL || cur_phase == PHASE_COLUNA) {
             // Gira o vetor alguns graus para um lado ou para o outro: duas
             // faces paralelas devolvendo a bola sempre no mesmo angulo a
             // deixavam presa entre dois postes.
-            int32_t s   = (get_rand_32() & 1) ? +1 : -1;
-            int32_t nvx = *vx - s * (*vy >> BUMPER_SPIN_SHIFT);
-            int32_t nvy = *vy + s * (*vx >> BUMPER_SPIN_SHIFT);
+            int32_t giro = (get_rand_32() & 1) ? +1 : -1;
+            int32_t saida_x = *vx, saida_y = *vy;
+            int32_t nvx = *vx - giro * (*vy >> BUMPER_SPIN_SHIFT);
+            int32_t nvy = *vy + giro * (*vx >> BUMPER_SPIN_SHIFT);
             *vx = nvx;
             *vy = nvy;
+            // Com a bola quase vertical o giro chega a virar o sinal do eixo
+            // que acabou de rebater -- e ai ela volta para dentro do poste de
+            // onde saiu. O eixo da saida mantem o sentido, custe o que custar.
+            if (eixo_x) { if ((*vx ^ saida_x) < 0) *vx = -*vx; }
+            else        { if ((*vy ^ saida_y) < 0) *vy = -*vy; }
             if (*vx > -BALL_VX_MIN_Q && *vx < BALL_VX_MIN_Q)
                 *vx = (*vx < 0) ? -BALL_VX_MIN_Q : BALL_VX_MIN_Q;
         }
         return true;
     }
 
-    // --- o proprio fantasma rebate a bola ---
-    if (cur_phase == PHASE_FANTASMA) {
-        int gx1 = GHOST_X + RETROSC_MASCOTE_W - 1;
-        int gy1 = ghost_y + RETROSC_MASCOTE_H - 1;
-        if (!(x1 < GHOST_X || x0 > gx1 || y1 < ghost_y || y0 > gy1)) {
-            bounce_off(GHOST_X, ghost_y, gx1, gy1, bx, by, vx, vy);
+    // --- a propria nave rebate a bola ---
+    if (cur_phase == PHASE_NAVE) {
+        int gx1 = NAVE_X + NAVE_W - 1;
+        int gy1 = nave_y + NAVE_H - 1;
+        if (!(x1 < NAVE_X || x0 > gx1 || y1 < nave_y || y0 > gy1)) {
+            bounce_off(NAVE_X, nave_y, gx1, gy1, bx, by, vx, vy);
             return true;
         }
     }
@@ -477,46 +494,46 @@ static bool overlap(int ax, int ay, int aw, int ah,
     return !(ax >= bx + bw || ax + aw <= bx || ay >= by + bh || ay + ah <= by);
 }
 
-// A nave entra por cima ou por baixo e atravessa na diagonal. Fica presa a
-// faixa SHIP_X_MIN..SHIP_X_MAX para nao passear em cima das raquetes.
-static void ship_spawn(void) {
+// O mascote entra por cima ou por baixo e atravessa na diagonal. Fica presa a
+// faixa BONUS_X_MIN..BONUS_X_MAX para nao passear em cima das raquetes.
+static void bonus_spawn(void) {
     uint32_t r = get_rand_32();
     bool de_cima = (r & 1) != 0;
-    int  faixa   = SHIP_X_MAX - SHIP_X_MIN + 1;
-    int32_t vx   = SHIP_VX_MIN_Q +
-                   (int32_t)((r >> 8) % (SHIP_VX_MAX_Q - SHIP_VX_MIN_Q + 1));
+    int  faixa   = BONUS_X_MAX - BONUS_X_MIN + 1;
+    int32_t vx   = BONUS_VX_MIN_Q +
+                   (int32_t)((r >> 8) % (BONUS_VX_MAX_Q - BONUS_VX_MIN_Q + 1));
 
-    ship_x_q  = (int32_t)(SHIP_X_MIN + (int)((r >> 1) % faixa)) << 8;
-    ship_y_q  = de_cima ? -((int32_t)SHIP_H << 8)
+    bonus_x_q  = (int32_t)(BONUS_X_MIN + (int)((r >> 1) % faixa)) << 8;
+    bonus_y_q  = de_cima ? -((int32_t)BONUS_H << 8)
                         :  ((int32_t)FB_HEIGHT << 8);
-    ship_vy_q = de_cima ? +SHIP_VY_Q : -SHIP_VY_Q;
-    ship_vx_q = ((r >> 20) & 1) ? -vx : +vx;
-    ship_on   = true;
+    bonus_vy_q = de_cima ? +BONUS_VY_Q : -BONUS_VY_Q;
+    bonus_vx_q = ((r >> 20) & 1) ? -vx : +vx;
+    bonus_on   = true;
 }
 
-static void update_nave(int32_t ball_x, int32_t ball_y,
+static void update_bonus(int32_t ball_x, int32_t ball_y,
                         int last_hitter, int bonus[2]) {
-    if (!ship_on) {
-        if (ship_left <= 0) return;             // ja passou o limite da fase
-        if (--ship_wait <= 0) { ship_left--; ship_spawn(); }
+    if (!bonus_on) {
+        if (bonus_left <= 0) return;             // ja passou o limite da fase
+        if (--bonus_wait <= 0) { bonus_left--; bonus_spawn(); }
         return;
     }
-    ship_x_q += ship_vx_q;
-    ship_y_q += ship_vy_q;
+    bonus_x_q += bonus_vx_q;
+    bonus_y_q += bonus_vy_q;
 
-    int sx = ship_x_q >> 8;
-    int sy = ship_y_q >> 8;
-    if (sx < SHIP_X_MIN) { ship_x_q = (int32_t)SHIP_X_MIN << 8; ship_vx_q = -ship_vx_q; }
-    if (sx > SHIP_X_MAX) { ship_x_q = (int32_t)SHIP_X_MAX << 8; ship_vx_q = -ship_vx_q; }
-    if (sy > FB_HEIGHT || sy < -SHIP_H) { ship_sleep(); return; }
+    int sx = bonus_x_q >> 8;
+    int sy = bonus_y_q >> 8;
+    if (sx < BONUS_X_MIN) { bonus_x_q = (int32_t)BONUS_X_MIN << 8; bonus_vx_q = -bonus_vx_q; }
+    if (sx > BONUS_X_MAX) { bonus_x_q = (int32_t)BONUS_X_MAX << 8; bonus_vx_q = -bonus_vx_q; }
+    if (sy > FB_HEIGHT || sy < -BONUS_H) { bonus_sleep(); return; }
 
-    sx = ship_x_q >> 8;
+    sx = bonus_x_q >> 8;
     if (overlap(ball_x >> 8, ball_y >> 8, BALL_SIZE, BALL_SIZE,
-                sx, sy, SHIP_W, SHIP_H)) {
-        // A bola atravessa a nave (nao desvia a jogada); quem rebateu por
+                sx, sy, BONUS_W, BONUS_H)) {
+        // A bola atravessa o mascote (nao desvia a jogada); quem rebateu por
         // ultimo leva o bonus.
-        if (last_hitter == 0 || last_hitter == 1) bonus[last_hitter] += SHIP_BONUS;
-        ship_sleep();
+        if (last_hitter == 0 || last_hitter == 1) bonus[last_hitter] += BONUS_POINTS;
+        bonus_sleep();
     }
 }
 
@@ -528,29 +545,29 @@ static void update_coluna(void) {
     coluna_place();
 }
 
-static void update_fantasma(const int paddle_pos[2]) {
-    ghost_y += ghost_dir * GHOST_SPEED;
-    if (ghost_y > FB_HEIGHT - RETROSC_MASCOTE_H) {
-        ghost_y = FB_HEIGHT - RETROSC_MASCOTE_H; ghost_dir = -1;
+static void update_nave(const int paddle_pos[2]) {
+    nave_y += nave_dir * NAVE_SPEED;
+    if (nave_y > FB_HEIGHT - NAVE_H) {
+        nave_y = FB_HEIGHT - NAVE_H; nave_dir = -1;
     }
-    if (ghost_y < 0) { ghost_y = 0; ghost_dir = +1; }
+    if (nave_y < 0) { nave_y = 0; nave_dir = +1; }
 
-    if (--ghost_cool <= 0) {
-        ghost_cool = GHOST_SHOT_PERIOD;
-        for (int i = 0; i < GHOST_SHOT_MAX; i++) {
+    if (--nave_cool <= 0) {
+        nave_cool = NAVE_SHOT_PERIOD;
+        for (int i = 0; i < NAVE_SHOT_MAX; i++) {
             if (shots[i].on) continue;
             bool para_esquerda = (get_rand_32() & 1) != 0;
             shots[i].on = true;
-            shots[i].y  = ghost_y + RETROSC_MASCOTE_H / 2;
-            shots[i].x  = para_esquerda ? (GHOST_X - SHOT_W)
-                                        : (GHOST_X + RETROSC_MASCOTE_W);
+            shots[i].y  = nave_y + NAVE_H / 2 - SHOT_H / 2;
+            shots[i].x  = para_esquerda ? (NAVE_X - SHOT_W)
+                                        : (NAVE_X + NAVE_W);
             shots[i].vx = para_esquerda ? -SHOT_SPEED : +SHOT_SPEED;
             break;
         }
     }
 
     rect_t seg[PADDLE_SEG_MAX];
-    for (int i = 0; i < GHOST_SHOT_MAX; i++) {
+    for (int i = 0; i < NAVE_SHOT_MAX; i++) {
         if (!shots[i].on) continue;
         shots[i].x += shots[i].vx;
         if (shots[i].x < -SHOT_W || shots[i].x > FB_WIDTH) {
@@ -576,34 +593,40 @@ void phase_update(int32_t ball_x, int32_t ball_y, const int paddle_pos[2],
     frame_ctr++;
     for (int p = 0; p < 2; p++) if (shrink[p] > 0) shrink[p]--;
 
-    if (cur_flags & PF_TEM_NAVE) update_nave(ball_x, ball_y, last_hitter, bonus);
+    if (cur_flags & PF_TEM_BONUS) update_bonus(ball_x, ball_y, last_hitter, bonus);
     if (cur_phase == PHASE_COLUNA)   update_coluna();
-    if (cur_phase == PHASE_FANTASMA) update_fantasma(paddle_pos);
+    if (cur_phase == PHASE_NAVE) update_nave(paddle_pos);
 }
 
 // =============================================================
 // Desenho
 // =============================================================
-static void draw_nave(void) {
-    if (!ship_on) return;
-    int x = ship_x_q >> 8, y = ship_y_q >> 8;
-    gfx_fill_rect(x + 5, y + 0, 3, 1, 1);
-    gfx_fill_rect(x + 4, y + 1, 5, 1, 1);
-    gfx_fill_rect(x + 3, y + 2, 7, 1, 1);
-    gfx_fill_rect(x + 2, y + 3, 9, 1, 1);
-    gfx_fill_rect(x + 0, y + 4, 13, 2, 1);
-    gfx_fill_rect(x + 1, y + 6, 2, 2, 1);
-    gfx_fill_rect(x + 5, y + 6, 3, 2, 1);
-    gfx_fill_rect(x + 10, y + 6, 2, 2, 1);
+// Sprite da nave (13x8 na escala 1), desenhado por retangulos.
+static void draw_sprite_nave(int x, int y, int s) {
+    gfx_fill_rect(x +  5 * s, y + 0 * s,  3 * s, 1 * s, 1);
+    gfx_fill_rect(x +  4 * s, y + 1 * s,  5 * s, 1 * s, 1);
+    gfx_fill_rect(x +  3 * s, y + 2 * s,  7 * s, 1 * s, 1);
+    gfx_fill_rect(x +  2 * s, y + 3 * s,  9 * s, 1 * s, 1);
+    gfx_fill_rect(x +  0 * s, y + 4 * s, 13 * s, 2 * s, 1);
+    gfx_fill_rect(x +  1 * s, y + 6 * s,  2 * s, 2 * s, 1);
+    gfx_fill_rect(x +  5 * s, y + 6 * s,  3 * s, 2 * s, 1);
+    gfx_fill_rect(x + 10 * s, y + 6 * s,  2 * s, 2 * s, 1);
+}
 
-    // "BONUS" piscando junto da nave (acima ou abaixo, o que couber na tela).
+static void draw_bonus(void) {
+    if (!bonus_on) return;
+    int x = bonus_x_q >> 8, y = bonus_y_q >> 8;
+    gfx_blit(retrosc_mascote_data, RETROSC_MASCOTE_W, RETROSC_MASCOTE_H,
+             x, y, 1);
+
+    // "BONUS" piscando junto do mascote (acima ou abaixo, o que couber).
     if ((frame_ctr >> 4) & 1) return;
     const char *msg = "BONUS";
     int tw = gfx_text_width(msg, 1);
-    int tx = x + SHIP_W / 2 - tw / 2;
+    int tx = x + BONUS_W / 2 - tw / 2;
     if (tx < 2) tx = 2;
     if (tx > FB_WIDTH - tw - 2) tx = FB_WIDTH - tw - 2;
-    int ty = (y > FB_HEIGHT / 2) ? (y - FONT_CELL_H - 1) : (y + SHIP_H + 2);
+    int ty = (y > FB_HEIGHT / 2) ? (y - FONT_CELL_H - 1) : (y + BONUS_H + 2);
     if (ty < 0) ty = 0;
     if (ty > FB_HEIGHT - FONT_CELL_H) ty = FB_HEIGHT - FONT_CELL_H;
     gfx_fill_rect(tx - 2, ty - 1, tw + 4, FONT_H + 2, 0);   // fundo preto
@@ -622,13 +645,12 @@ void phase_draw(void) {
     for (int i = 0; i < solid_count; i++)
         gfx_fill_rect(solids[i].x, solids[i].y, solids[i].w, solids[i].h, 1);
 
-    if (cur_phase == PHASE_FANTASMA) {
-        gfx_blit(retrosc_mascote_data, RETROSC_MASCOTE_W, RETROSC_MASCOTE_H,
-                 GHOST_X, ghost_y, 1);
-        for (int i = 0; i < GHOST_SHOT_MAX; i++)
+    if (cur_phase == PHASE_NAVE) {
+        draw_sprite_nave(NAVE_X, nave_y, NAVE_SCALE);
+        for (int i = 0; i < NAVE_SHOT_MAX; i++)
             if (shots[i].on)
                 gfx_fill_rect(shots[i].x, shots[i].y, SHOT_W, SHOT_H, 1);
     }
 
-    if (cur_flags & PF_TEM_NAVE) draw_nave();
+    if (cur_flags & PF_TEM_BONUS) draw_bonus();
 }

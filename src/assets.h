@@ -16,7 +16,7 @@ extern const int RETROSC_LOGO_H;
 extern const int RETROSC_LOGO_STRIDE;
 extern const uint8_t retrosc_logo_data[];
 
-// Mascote da RetroSC em 16x16 -- o "fantasminha" da fase PHASE_FANTASMA.
+// Mascote da RetroSC em 16x16 -- o bonus que cruza a quadra (PF_TEM_BONUS).
 extern const int RETROSC_MASCOTE_W;
 extern const int RETROSC_MASCOTE_H;
 extern const int RETROSC_MASCOTE_STRIDE;

@@ -74,8 +74,8 @@ step `frame()`); that is how the phase pacing numbers below were measured.
 `bit = 31 - (x & 31)`. All drawing is in `gfx.{c,h}`; text via the 5×7 font in
 `font.{c,h}` (glyphs indexed `['X' - 0x20]`). In 1-bit there is no contrast to fall
 back on: white text over bricks or bumpers is unreadable, so anything drawn on top of
-the court (the countdown digits, the ship's "BONUS") clears a black rectangle first —
-`center_text_boxed()` in `game.c`.
+the court (the countdown digits, the bonus mascot's "BONUS") clears a black rectangle
+first — `center_text_boxed()` in `game.c`.
 
 **Game** (`game.{c,h}`) is a state machine: `GS_ATTRACT → GS_MENU → GS_PHASE_INTRO →
 GS_COUNTDOWN → GS_PLAY → GS_ROUND_END → (GS_PHASE_END → next phase | GS_GAME_OVER) →
@@ -88,21 +88,29 @@ is called once per vsync.
   - The item is picked by pot **movement** (`PAUSE_POT_STEP` from a reference taken
     when the pause opened), not by absolute position. With absolute mapping, a pot
     resting in the lower half opened the pause with SAIR DO JOGO highlighted.
+  - Both screens that wait for a person (`GS_PAUSE`, `GS_ENTER_INITIALS`) time out
+    after 30 s — `PAUSE_TIMEOUT_S` applies the highlighted item, `INITIALS_TIMEOUT_S`
+    saves whatever was typed. An arcade cabinet cannot be left parked on a menu.
   - Coming back, both paddles are **locked** (`paddle_travado`) until each pot returns
     within `PADDLE_TAKEOVER_TOL` of where the paddle stopped, and a locked paddle
     blinks. Pots are absolute, so without this the paddle teleports to wherever the pot
     ended up — pausing became a way to reposition and save a lost ball. A player who
-    did not touch the pot notices nothing: the first read already matches.
+    did not touch the pot notices nothing: the first read already matches. Only lock a
+    paddle a *pot* drives: locking the CPU's in arcade left it blinking until the next
+    point, since `update_paddle_ai()` never clears the flag.
 - `GS_MENU` is reachable **only** by pressing SELETOR in attract (deliberate: the
   menu must not be visible in the attract loop). Pots pick the item with a ±300-count
   dead zone around mid-scale; SELETOR confirms; 15 s idle returns to attract.
 - Scoring: `phase_score[]` runs to `PHASE_WIN_SCORE` (9) per phase, and every point
   also adds to `total_score[]`. `fim_de_jogo()` decides when the match ends: in
   **arcade** the first phase the player *loses* ends it (the run's total is the score,
-  and the game-over screen says how far they got); in **versus** all `PHASE_COUNT`
-  phases are always played and the highest total wins. That total goes to the
-  high-score table (in arcade always the human's). Initials: pot cycles A–Z,
-  SELETOR confirms.
+  and the game-over screen says how far they got); in **versus** the match also stops
+  early once one side cannot catch up even by winning everything left —
+  `pontos_em_disputa()` sums `PHASE_WIN_SCORE` per remaining phase plus the bonus on
+  the phases that have it (`phase_tem_bonus()`, the single source of truth for that
+  list). The test is `>`, not `>=`: a difference exactly equal to what is left still
+  allows a draw, so the match goes on. That total goes to the high-score table (in
+  arcade always the human's). Initials: pot cycles A–Z, SELETOR confirms.
 - The attract loop alternates with the high-score table every `ATTRACT_TIMEOUT_S`
   (20 s); SELETOR opens the menu from either screen.
 - The CPU paddle (`update_paddle_ai`) only chases the ball while it is incoming,
@@ -121,13 +129,13 @@ is called once per vsync.
   the previous phase's winner, so each phase opens with the ball heading to whoever
   lost the last one (random for phase 1). **Whoever scores, the ball always leaves
   toward the other side** — no exceptions per phase (see the barrier gotcha).
-- **live things** — `phase_update()` runs once per play frame and owns the bonus ship,
-  the ghost, its shots, the moving column and the shrink timers; it returns per-player
-  `bonus[]` points (the ship pays the last hitter). `frame_play()` adds those to
+- **live things** — `phase_update()` runs once per play frame and owns the bonus
+  mascot, the ship, its shots, the moving column and the shrink timers; it returns
+  per-player `bonus[]` points (the mascot pays the last hitter). `frame_play()` adds those to
   `total_score[]` **only** — a bonus never touches the phase score, so it cannot close
   a phase; it just flashes the total (`total_flash[]`).
 - **flags** — `phase_flags()` returns `PF_GRAVITY` / `PF_FLOOR_SCORES` /
-  `PF_SIDE_WALLS` / `PF_PADDLE_HORIZ` / `PF_NO_CENTER_LINE` / `PF_TEM_NAVE`;
+  `PF_SIDE_WALLS` / `PF_PADDLE_HORIZ` / `PF_NO_CENTER_LINE` / `PF_TEM_BONUS`;
   `physics()` branches on these instead of special-casing phase ids.
 
 Phase order **is** the difficulty curve (see `phase_id_t`) and ends on
@@ -136,9 +144,14 @@ Phase order **is** the difficulty curve (see `phase_id_t`) and ends on
 spends most of the time hitting their own wall; BARREIRA III is also pre-cut into
 blocks (`barreira3_blocos` = 5-4-2-4-5 rows plus the four corridors, which is exactly
 the 24 rows a column has). `PHASE_MURALHA` rebuilds every point
-(`brick_rebuild_round`). The **bonus ship is not a phase**: any phase with
-`PF_TEM_NAVE` gets it on a random timer (at most `SHIP_PASSES_MAX` passes per phase),
-entering from the top or the bottom on a diagonal with "BONUS" blinking beside it.
+(`brick_rebuild_round`). The **bonus mascot is not a phase**: any phase with
+`PF_TEM_BONUS` gets it on a random timer (at most `BONUS_PASSES_MAX` passes per phase),
+crossing on a diagonal from the top or the bottom with "BONUS" blinking beside it.
+The ship (`PHASE_NAVE`) is the opposite: it stays in the middle of the court, shoots,
+and the ball bounces off it. The two swapped roles late — the mascot is the RetroSC
+emblem, so it belongs to the reward, not to an obstacle — which is why the sprite of
+one is a blit (`retrosc_mascote_data`) and the other is drawn from rectangles at
+`NAVE_SCALE`.
 
 **Input** (`input.{c,h}`): ADC poll with an IIR filter. `input_paddle_y(player, range)`
 maps ADC→paddle position over a phase-dependent range; `input_pot_raw(player)` is used
@@ -151,7 +164,7 @@ for initials and menu; `input_last_moved()` tells the menu which pot to read;
 and wrap `save_and_disable_interrupts()`.
 
 **Assets** (`assets.{c,h}`): const 1-bit bitmaps (the RetroSC logo 220×69 and the
-mascot at 16×16, used as the ghost in `PHASE_FANTASMA`), generated from PNG by
+mascot at 16×16, used as the bonus that crosses the court), generated from PNG by
 `tools/png_to_c.py` and pasted in. The mascot PNG in `docs/images/` is already
 cropped and **inverted** — the source art is dark-on-light — and the emblem's ring,
 which is baked into that art, is masked off when generating the sprite: at 16×16 the
@@ -178,7 +191,8 @@ live in `src/config.h`.
   (a real bug fixed here: `ball_x < ((PADDLE_MARGIN + PADDLE_W) << 8)`).
 - **A CPU aim error smaller than half a paddle is no error at all.** With
   `AI_ERROR_PX = 12` and `PADDLE_H = 24` the CPU still returned every ball on the
-  paddle's edge and a 10-point phase took over 10 minutes; `AI_ERROR_PX = 26` (>
+  paddle's edge and a phase took over 10 minutes (measured back when
+  `PHASE_WIN_SCORE` was 10); `AI_ERROR_PX = 26` (>
   `PADDLE_H/2`) brought it to ~40–120 s. Same trap for any "make it miss sometimes"
   tuning.
 - **Brick gaps have to be much bigger than the ball.** The ball is 3 px and only
@@ -226,8 +240,11 @@ live in `src/config.h`.
   a bumper from above near a corner gets pushed sideways, and since its horizontal
   velocity already points that way nothing is inverted — it sails through the obstacle
   keeping its trajectory. This also removed the need for a separate routine for moving
-  obstacles (the ghost, the COLUNA stack): direction-based resolution never leaves the
-  ball inside.
+  obstacles (the ship, the COLUNA stack): direction-based resolution never leaves the
+  ball inside. The spin applied after it must not flip the axis that just bounced,
+  though — with the ball nearly vertical the rotation can, and then the clamp to
+  `BALL_VX_MIN_Q` freezes that wrong sign and the ball heads back into the bumper it
+  just left.
 - **Two parallel faces put the ball into orbit.** Bumpers return it at the same angle
   forever, so PINBALL/COLUNA rotate the velocity a few degrees on every bumper hit
   (`BUMPER_SPIN_SHIFT`). It must be a *rotation*: the first attempt added a random
