@@ -34,7 +34,7 @@
     <text x="190" y="124">SYNC  →  DAC de vídeo</text>
     <text x="190" y="166">VIDEO →  DAC de vídeo</text>
     <text x="190" y="208">AUDIO →  filtro + amp</text>
-    <text x="190" y="250">START ←  botão</text>
+    <text x="190" y="250">SELETOR ← botão</text>
     <text x="190" y="292">P1 ←  pot esquerdo</text>
     <text x="190" y="334">P2 ←  pot direito</text>
   </g>

@@ -4,11 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A 2-player **Pong for the Raspberry Pi Pico (RP2040)**, built for an arcade
-cabinet at the RetroSC event. The firmware generates **NTSC composite video**
-(1-bit, 256×192) entirely in PIO + DMA, reads two 10 kΩ potentiometers via ADC,
-and plays PWM audio. C / Pico SDK. No RTOS — a single `while` loop in `main.c`
-synced to vsync.
+A 1- or 2-player **Pong for the Raspberry Pi Pico (RP2040)**, built for an
+arcade cabinet at the RetroSC event. The firmware generates **NTSC composite
+video** (1-bit, 256×192) entirely in PIO + DMA, reads two 10 kΩ potentiometers
+via ADC, and plays PWM audio. C / Pico SDK. No RTOS — a single `while` loop in
+`main.c` synced to vsync.
+
+Two modes (**arcade** = 1 player vs CPU, **versus** = 2 players) picked from a
+menu on the attract screen, and **10 phases** ("fases") played in sequence.
+User-facing text is Portuguese, uppercase, **no accents** (the 5×7 font only
+covers ASCII 0x20–0x5F).
 
 ## Build, flash, run
 
@@ -30,13 +35,19 @@ so `PICO_SDK_PATH` and the toolchain are set). Output is `build/pong-rp2040.uf2`
 Flash: hold BOOTSEL, plug USB, copy `build/pong-rp2040.uf2` to the `RPI-RP2` drive.
 
 There are **no unit tests**. Validation = the build must succeed (the PIO assembler
-catches timing/instruction errors) plus running a simulator.
+catches timing/instruction errors) plus running a simulator. For gameplay changes,
+the fastest check is driving `tools/sim.py` headless from a scratch script (import
+it as a module, stub the `draw_*` methods, feed `input_pot`/`input_seletor` and
+step `frame()`); that is how the phase pacing numbers below were measured.
 
 ## Simulators
 
 - **Python** (`python tools/sim.py`, needs `pygame`): re-implements the game logic
-  and **parses `src/assets.c` and `src/font.c` at runtime via regex**, so bitmap/font
-  changes show up without porting. Mouse-Y halves = the two pots, Space = START.
+  of `game.c` **and** `phases.c` and **parses `src/assets.c` and `src/font.c` at
+  runtime via regex**, so bitmap/font changes show up without porting. Mouse-Y
+  halves = the two pots, Space = SELETOR, N = skip phase. It must be kept in sync
+  by hand when game logic changes. `--shots DIR` renders every screen to PNG
+  headless (used to regenerate `docs/images/sim_*.png`, then `crt_preview.py --all`).
 - **Wokwi** (`diagram.json` + `wokwi.toml`, "Wokwi for VS Code" extension): runs the
   real compiled `.elf` on an emulated RP2040 and shows the composite output on a
   `wokwi-tv` part. Open the `pong-rp2040` folder as the workspace root. `*.vcd`
@@ -61,23 +72,90 @@ catches timing/instruction errors) plus running a simulator.
 
 **Framebuffer** `fb` is 256×192, 1-bit, MSB-first: `word = y*8 + (x>>5)`,
 `bit = 31 - (x & 31)`. All drawing is in `gfx.{c,h}`; text via the 5×7 font in
-`font.{c,h}` (glyphs indexed `['X' - 0x20]`).
+`font.{c,h}` (glyphs indexed `['X' - 0x20]`). In 1-bit there is no contrast to fall
+back on: white text over bricks or bumpers is unreadable, so anything drawn on top of
+the court (the countdown digits, the ship's "BONUS") clears a black rectangle first —
+`center_text_boxed()` in `game.c`.
 
-**Game** (`game.{c,h}`) is a state machine: `GS_ATTRACT → GS_COUNTDOWN → GS_PLAY →
-GS_ROUND_END → GS_GAME_OVER → GS_ENTER_INITIALS → GS_HIGH_SCORES`. Ball physics is
-fixed-point Q8. `game_frame()` is called once per vsync. Winners entering the top 5
-pick 3 arcade-style initials (pot cycles A–Z, START confirms).
+**Game** (`game.{c,h}`) is a state machine: `GS_ATTRACT → GS_MENU → GS_PHASE_INTRO →
+GS_COUNTDOWN → GS_PLAY → GS_ROUND_END → (GS_PHASE_END → next phase | GS_GAME_OVER) →
+GS_ENTER_INITIALS → GS_HIGH_SCORES`. Ball physics is fixed-point Q8. `game_frame()`
+is called once per vsync.
+- `GS_PAUSE` hangs off `GS_PLAY`/`GS_COUNTDOWN` (`pediu_pausa()`): CONTINUAR returns
+  through a short countdown — never straight into play, and never from `GS_ROUND_END`,
+  which would resume with the ball already off court and score a phantom point. Two
+  details there are not cosmetic:
+  - The item is picked by pot **movement** (`PAUSE_POT_STEP` from a reference taken
+    when the pause opened), not by absolute position. With absolute mapping, a pot
+    resting in the lower half opened the pause with SAIR DO JOGO highlighted.
+  - Coming back, both paddles are **locked** (`paddle_travado`) until each pot returns
+    within `PADDLE_TAKEOVER_TOL` of where the paddle stopped, and a locked paddle
+    blinks. Pots are absolute, so without this the paddle teleports to wherever the pot
+    ended up — pausing became a way to reposition and save a lost ball. A player who
+    did not touch the pot notices nothing: the first read already matches.
+- `GS_MENU` is reachable **only** by pressing SELETOR in attract (deliberate: the
+  menu must not be visible in the attract loop). Pots pick the item with a ±300-count
+  dead zone around mid-scale; SELETOR confirms; 15 s idle returns to attract.
+- Scoring: `phase_score[]` runs to `PHASE_WIN_SCORE` (9) per phase, and every point
+  also adds to `total_score[]`. `fim_de_jogo()` decides when the match ends: in
+  **arcade** the first phase the player *loses* ends it (the run's total is the score,
+  and the game-over screen says how far they got); in **versus** all `PHASE_COUNT`
+  phases are always played and the highest total wins. That total goes to the
+  high-score table (in arcade always the human's). Initials: pot cycles A–Z,
+  SELETOR confirms.
+- The attract loop alternates with the high-score table every `ATTRACT_TIMEOUT_S`
+  (20 s); SELETOR opens the menu from either screen.
+- The CPU paddle (`update_paddle_ai`) only chases the ball while it is incoming,
+  drifts to center otherwise, and re-rolls `ai_bias` (aim error) on every hit.
 
-**Input** (`input.{c,h}`): ADC poll with an IIR filter. `input_paddle_y(player)` maps
-ADC→paddle position; `input_pot_raw(player)` is used for initials entry. Also forces
-the Pico SMPS into PWM mode (GPIO23 high) for a cleaner ADC supply.
+**Phases** (`phases.{c,h}`): each phase is just a *scenario*; the rules live in
+`game.c` and are identical for both modes. A phase controls five things:
+- **paddles** — `phase_paddle_segments()` (up to `PADDLE_SEG_MAX` rectangles) and
+  `phase_paddle_range()`, which is the pot's travel (vertical normally, *horizontal*
+  in REBOUND). `game.c` never assumes a paddle shape or orientation.
+- **obstacles** — *bricks* (columns of `BRICK_W`×`BRICK_H` that disappear when hit;
+  each column's live rows are a **32-bit mask**, so "rebuild the wall" is a mask copy)
+  and *solids* (rectangles that only bounce: pinball bumpers, the moving COLUNA stack,
+  the volley net). Both go through `phase_ball_collide()` → `bounce_off()`.
+- **serve** — `phase_serve_x()` / `phase_serve_y()`. `begin_phase(idx, scorer)` takes
+  the previous phase's winner, so each phase opens with the ball heading to whoever
+  lost the last one (random for phase 1). **Whoever scores, the ball always leaves
+  toward the other side** — no exceptions per phase (see the barrier gotcha).
+- **live things** — `phase_update()` runs once per play frame and owns the bonus ship,
+  the ghost, its shots, the moving column and the shrink timers; it returns per-player
+  `bonus[]` points (the ship pays the last hitter). `frame_play()` adds those to
+  `total_score[]` **only** — a bonus never touches the phase score, so it cannot close
+  a phase; it just flashes the total (`total_flash[]`).
+- **flags** — `phase_flags()` returns `PF_GRAVITY` / `PF_FLOOR_SCORES` /
+  `PF_SIDE_WALLS` / `PF_PADDLE_HORIZ` / `PF_NO_CENTER_LINE` / `PF_TEM_NAVE`;
+  `physics()` branches on these instead of special-casing phase ids.
+
+Phase order **is** the difficulty curve (see `phase_id_t`) and ends on
+`PHASE_BARREIRA3`. The three barriers keep their damage for the whole phase — the
+2→3→4 column progression exists because a full barrier from the start means the player
+spends most of the time hitting their own wall; BARREIRA III is also pre-cut into
+blocks (`barreira3_blocos` = 5-4-2-4-5 rows plus the four corridors, which is exactly
+the 24 rows a column has). `PHASE_MURALHA` rebuilds every point
+(`brick_rebuild_round`). The **bonus ship is not a phase**: any phase with
+`PF_TEM_NAVE` gets it on a random timer (at most `SHIP_PASSES_MAX` passes per phase),
+entering from the top or the bottom on a diagonal with "BONUS" blinking beside it.
+
+**Input** (`input.{c,h}`): ADC poll with an IIR filter. `input_paddle_y(player, range)`
+maps ADC→paddle position over a phase-dependent range; `input_pot_raw(player)` is used
+for initials and menu; `input_last_moved()` tells the menu which pot to read;
+`input_seletor_pressed()` is the SELETOR edge. Also forces the Pico SMPS into PWM mode
+(GPIO23 high) for a cleaner ADC supply.
 
 **High scores** (`highscores.{c,h}`): persisted in the **last flash sector**
-(magic + version + checksum). Flash-touching functions are `__not_in_flash_func`
+(magic + version + checksum; **v3** stores the mode, so upgrading wipes the table). Flash-touching functions are `__not_in_flash_func`
 and wrap `save_and_disable_interrupts()`.
 
-**Assets** (`assets.{c,h}`): const 1-bit bitmaps (currently just the RetroSC logo),
-generated from PNG by `tools/png_to_c.py` and pasted in. Pin/dimension constants all
+**Assets** (`assets.{c,h}`): const 1-bit bitmaps (the RetroSC logo 220×69 and the
+mascot at 16×16, used as the ghost in `PHASE_FANTASMA`), generated from PNG by
+`tools/png_to_c.py` and pasted in. The mascot PNG in `docs/images/` is already
+cropped and **inverted** — the source art is dark-on-light — and the emblem's ring,
+which is baked into that art, is masked off when generating the sprite: at 16×16 the
+ring merges with the creature into a blob. Pin/dimension constants all
 live in `src/config.h`.
 
 ## Project-specific gotchas
@@ -98,5 +176,66 @@ live in `src/config.h`.
   deliberately non-`const` for this reason.
 - **`<<` binds tighter than `<`/`>`** — parenthesize shift expressions in comparisons
   (a real bug fixed here: `ball_x < ((PADDLE_MARGIN + PADDLE_W) << 8)`).
+- **A CPU aim error smaller than half a paddle is no error at all.** With
+  `AI_ERROR_PX = 12` and `PADDLE_H = 24` the CPU still returned every ball on the
+  paddle's edge and a 10-point phase took over 10 minutes; `AI_ERROR_PX = 26` (>
+  `PADDLE_H/2`) brought it to ~40–120 s. Same trap for any "make it miss sometimes"
+  tuning.
+- **Brick gaps have to be much bigger than the ball.** The ball is 3 px and only
+  scores if it fits entirely inside a gap: an 8 px gap in MURALHA measured 34 s per
+  point, a 24 px gap 16 s. Measure pacing in the sim before shipping a phase.
+- **In a barrier phase the ball cannot be served from the center** (that is inside the
+  wall), so it is served on the *receiver's* own side, hugging the barrier — that keeps
+  the full half-court between the ball and their goal. Two wrong turns here: serving it
+  30 px from the goal made BARREIRA II close a 9-point phase in 10 s, and "fixing" that
+  by launching the ball *away* from the receiver read as the ball going to whoever just
+  scored. `tools/sim.py` + a loop over `reset_round(scorer)` checks all ten phases at
+  once; keep that invariant.
+- **Anything drawn in the middle column can collide with a phase's bricks** —
+  BARREIRA III fills x≈117–139 for the full height, so the HUD keeps the phase score
+  and totals outside the central band and the phase name only appears on the intro /
+  phase-end screens. `phase_serve_x()` exists for the same reason: serving from the
+  center would drop the ball inside the barrier. The HUD is a **single line**: the big
+  phase score at cx±30 with the running total beside it, further out — it used to sit
+  on a second line at y=34 and that ate a stripe of the court. The pinball diamond
+  starts at y=44 for the same reason.
+- **REBOUND is the phase that stresses the engine's assumptions** — it is the only one
+  with horizontal paddles, gravity, scoring floor and bouncing side walls. When adding
+  anything to `physics()` or the AI, check it against that phase: the AI, for instance,
+  has to chase `ball_x` instead of `ball_y` there. Three things were wrong on the first
+  cut and are worth remembering:
+  - **A thin horizontal paddle needs a swept test.** The volley paddle is 4 px tall and
+    the ball falls up to `BALL_VY_MAX_Q` px per frame, so an overlap test at the instant
+    lets the ball jump straight through it. `physics()` checks whether the ball *crossed*
+    the paddle's top between `prev_y` and now.
+  - **A hit angle derived purely from the offset is unplayable.** With `vx` coming only
+    from where the ball hit the paddle, a centered touch sent it straight back up onto
+    the player. The touch now always carries `VOLLEY_VX_BASE_Q` toward the opponent and
+    the offset only lengthens or shortens it.
+  - **Flight time sets the range**: with gravity too low the ball flew the whole screen
+    and slammed the far wall. Gravity and the up-impulse are tuned together (`GRAVITY_Q`
+    / `VOLLEY_VY_Q`) so the arc clears `NET_TOP` with ~25 px to spare — measured in the
+    sim, it crosses the net at y≈80 against a net top of 112. Changing either needs a
+    re-measure of both the clearance and where the ball lands.
+- **Ball tunneling is bounded by paddle width + ball size** (3 + 3 = 6 px) vs the
+  max step `BALL_SPEED_MAX_Q` = 5 px/frame. Raising the max speed past 6 px/frame
+  needs swept collision, not just a bigger constant.
+- **Pick the bounce face from the ball's direction, never from the smallest
+  penetration.** `bounce_off()` resolves on the axis whose *opposing* face the ball
+  crossed. The obvious "push out the nearest side" version has a hole: a ball entering
+  a bumper from above near a corner gets pushed sideways, and since its horizontal
+  velocity already points that way nothing is inverted — it sails through the obstacle
+  keeping its trajectory. This also removed the need for a separate routine for moving
+  obstacles (the ghost, the COLUNA stack): direction-based resolution never leaves the
+  ball inside.
+- **Two parallel faces put the ball into orbit.** Bumpers return it at the same angle
+  forever, so PINBALL/COLUNA rotate the velocity a few degrees on every bumper hit
+  (`BUMPER_SPIN_SHIFT`). It must be a *rotation*: the first attempt added a random
+  offset to one axis, which random-walks the speed — the ball got slower and more
+  vertical over a rally. Measured in the sim, the longest chain of scenery hits without
+  touching a paddle dropped from 13 to 5 in COLUNA.
+- **The button is the SELETOR** in firmware, docs and diagrams; the v1 PCB silkscreen
+  and the KiCad net are still `START` (same GP22). Renaming those means regenerating
+  the board and the gerbers — do not do it silently.
 - Git: files are authored LF; the LF→CRLF warnings on Windows are expected. Commit/push
   only when asked.

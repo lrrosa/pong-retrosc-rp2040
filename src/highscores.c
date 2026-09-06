@@ -74,7 +74,8 @@ bool hi_qualifies(uint16_t score) {
     return false;
 }
 
-bool hi_consider(uint16_t score, uint8_t player, const char initials[INITIALS_LEN]) {
+bool hi_consider(uint16_t score, uint8_t player, uint8_t mode,
+                 const char initials[INITIALS_LEN]) {
     int pos = -1;
     for (int i = 0; i < HISCORE_COUNT; i++) {
         if (score > table_ram.entries[i].score) { pos = i; break; }
@@ -86,7 +87,7 @@ bool hi_consider(uint16_t score, uint8_t player, const char initials[INITIALS_LE
     }
     table_ram.entries[pos].score  = score;
     table_ram.entries[pos].player = player;
-    table_ram.entries[pos].pad    = 0;
+    table_ram.entries[pos].mode   = mode;
     for (int k = 0; k < INITIALS_LEN; k++) {
         char c = initials[k];
         if (c < 'A' || c > 'Z') c = ' ';

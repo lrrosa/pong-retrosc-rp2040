@@ -18,6 +18,7 @@ add_executable(pong-rp2040
     src/input.c
     src/audio.c
     src/game.c
+    src/phases.c
     src/highscores.c
     src/assets.c
 )

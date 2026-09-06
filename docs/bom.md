@@ -29,7 +29,7 @@ Tudo aqui vai **soldado na PCB** ([kicad/README.md](../kicad/README.md)).
 | J8, J9 | 2 | Jack RCA fêmea | de painel, ângulo reto, THT | áudio L e R |
 | J4 | 1 | Barra de pinos 1×6 | passo 2,54 mm | chave de áudio A/B |
 | J5, J6 | 2 | Barra de pinos 1×3 | passo 2,54 mm | potenciômetros P1 e P2 |
-| J7 | 1 | Barra de pinos 1×2 | passo 2,54 mm | botão START |
+| J7 | 1 | Barra de pinos 1×2 | passo 2,54 mm | botão SELETOR |
 
 > Somando por valor, para a compra: **4 × 1 kΩ** (R3, R5, R6, R7),
 > **3 × 100 nF** (C1, C3, C4), 1 × 470 Ω, 1 × 270 Ω, 1 × 10 kΩ e 1 × 1 µF.

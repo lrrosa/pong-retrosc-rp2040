@@ -293,9 +293,9 @@ cada **coluna é um polo** e a **fileira do meio (5–8) são os comuns**):
 - Furação do painel: **10,5 mm** (ambos os bushings — M9 do CR22E e M10 do
   FCP22E — pedem furo de Φ10,32 mm).
 
-## Botão START
+## Botão SELETOR
 
-![Botão START ligado ao GP22](images/sch_button.svg)
+![Botão SELETOR ligado ao GP22](images/sch_button.svg)
 
 Push-button momentâneo. **Só precisa de 2 fios: GP22 e GND** — o botão **não**
 recebe 3,3 V. Quando aberto, GP22 fica em 3,3 V via **pull-up interno** ao
@@ -324,7 +324,7 @@ precisa de fio próprio. Na PCB a questão nem se coloca: o GND é um plano.
   - filtro e divisor (**C1** e **R5**) → junto do bloco de áudio, **p38**;
   - retorno do áudio de linha (shield dos RCAs no modo A) → junto do
     bloco de áudio, **p38**;
-  - botão START → **qualquer GND, inclusive o mesmo fio do vídeo**. É a
+  - botão SELETOR → **qualquer GND, inclusive o mesmo fio do vídeo**. É a
     exceção: com o pull-up interno (~60 kΩ) ele drena só **~55 µA** e apenas
     enquanto pressionado — mais de 200× menos que o retorno do vídeo
     (~13 mA) e uns 5000× menos que os picos do amp, ou seja, não move o

@@ -11,6 +11,7 @@
 #include "audio.h"
 #include "highscores.h"
 #include "assets.h"
+#include "phases.h"
 
 #include "pico/stdlib.h"
 #include "pico/rand.h"
@@ -21,25 +22,43 @@
 static game_state_t state;
 static int          state_timer;  // contador de frames dentro do estado
 
-static int score[2];              // pontos P1, P2
-static int paddle_y[2];           // y atual de cada raquete
-static int last_winner;           // 0 = ninguem, 1 ou 2 ao terminar partida
+static game_mode_t  mode;         // arcade (1 jogador) ou versus (2 jogadores)
+static int          menu_sel;     // item destacado no menu do attract
+static int          menu_idle;    // frames sem tocar em nada dentro do menu
+static int          pause_sel;      // 0 = continuar, 1 = sair do jogo
+static int          pause_pot_ref[2];  // pots no instante em que a pausa abriu
+static uint32_t     frames_globais;  // contador continuo, para textos piscando
+
+static int phase_idx;             // fase atual (0..PHASE_COUNT-1)
+static int phase_score[2];        // pontos na fase corrente (vai ate PHASE_WIN_SCORE)
+static int total_score[2];        // soma dos pontos de todas as fases
+static bool phase_first_round;    // primeiro ponto da fase (contagem longa)
+
+// Posicao lida do pot, 0..phase_paddle_range(). Em quase toda fase e o Y do
+// topo da raquete; no REBOUND e o X dela dentro da meia-quadra.
+static int paddle_pos[2];
+static bool paddle_travado[2];    // esperando o pot voltar (saida da pausa)
+static int last_scorer;           // 1 ou 2: quem fez o ultimo ponto
+static int last_hitter;           // 0, 1 ou -1: quem rebateu a bola por ultimo
+static int last_winner;           // 0 = empate, 1 ou 2 ao terminar a partida
+static bool arcade_perdeu;        // no arcade, a CPU fechou uma fase: acabou
+static int ai_bias;               // erro de mira da CPU, sorteado a cada rebatida
+static int total_flash[2];        // frames restantes do total piscando (bonus)
 
 // Estado da entrada de iniciais
 static char initials_buf[INITIALS_LEN + 1];
 static int  initials_slot;
 static bool initials_armed;       // se ja iniciou o processo
+static int  initials_player;      // quem digita (1 ou 2)
 
 // Bola em ponto fixo Q8 (1 unidade = 1/256 pixel)
 static int32_t ball_x, ball_y;
 static int32_t ball_vx, ball_vy;
-static int32_t ball_speed_q;    // |v| atual
+static int32_t ball_speed_q;    // |v| atual (fases sem gravidade)
 
 // =============================================================
 // Helpers
 // =============================================================
-static int sign(int v) { return v < 0 ? -1 : (v > 0 ? 1 : 0); }
-
 static int abs_i(int v) { return v < 0 ? -v : v; }
 
 static void set_state(game_state_t s) {
@@ -47,45 +66,137 @@ static void set_state(game_state_t s) {
     state_timer = 0;
 }
 
-static void serve_ball(int direction /* -1 ou +1 */) {
-    ball_x = (FB_WIDTH / 2) << 8;
-    ball_y = (FB_HEIGHT / 2) << 8;
-    ball_speed_q = BALL_SPEED_INIT_Q;
-    // angulo aleatorio: vy entre -0.6 e +0.6 da velocidade
-    int32_t r = (int32_t)(get_rand_32() & 0xFF) - 128;     // -128..127
-    int32_t vy_frac = (r * ball_speed_q) / 256;            // ~ +/- 0.5 * speed
-    int32_t vx_frac;
-    // vx tal que |v|^2 = vx^2 + vy^2 ~ speed^2
-    int32_t s2 = ball_speed_q * ball_speed_q;
-    int32_t vy2 = vy_frac * vy_frac;
-    int32_t vx2 = s2 - vy2;
-    int32_t vx_abs = 0;
-    // sqrt inteira
-    for (int32_t g = (ball_speed_q >> 1); g <= ball_speed_q; g++) {
-        if (g * g >= vx2) { vx_abs = g; break; }
+static void roll_ai_bias(void) {
+    ai_bias = (int)(get_rand_32() % (2 * AI_ERROR_PX + 1)) - AI_ERROR_PX;
+}
+
+// Raiz quadrada inteira por busca crescente: so roda com valores pequenos
+// (velocidade da bola em Q8) e evita puxar a libm para dentro do binario.
+static int32_t vx_from_vy(int32_t vy_frac) {
+    int32_t s2  = ball_speed_q * ball_speed_q;
+    int32_t vx2 = s2 - vy_frac * vy_frac;
+    if (vx2 < 0) vx2 = 0;
+    for (int32_t g = (ball_speed_q >> 2); g <= ball_speed_q; g++) {
+        if (g * g >= vx2) return g;
     }
-    if (vx_abs == 0) vx_abs = ball_speed_q;
-    vx_frac = direction * vx_abs;
-    ball_vx = vx_frac;
+    return ball_speed_q >> 1;
+}
+
+static void serve_ball(int direction /* -1 ou +1 */) {
+    ball_x = phase_serve_x(direction) << 8;
+    ball_y = phase_serve_y() << 8;
+    ball_speed_q = BALL_SPEED_INIT_Q;
+    last_hitter = -1;
+    roll_ai_bias();
+
+    if (phase_flags() & PF_GRAVITY) {
+        // Volei: a bola so e solta; a gravidade faz o resto.
+        ball_vx = direction * 0x60;
+        ball_vy = 0;
+        return;
+    }
+    // angulo aleatorio: vy entre -0.5 e +0.5 da velocidade
+    int32_t r = (int32_t)(get_rand_32() & 0xFF) - 128;     // -128..127
+    int32_t vy_frac = (r * ball_speed_q) / 256;
+    ball_vx = direction * vx_from_vy(vy_frac);
     ball_vy = vy_frac;
 }
 
-static void reset_round(int last_scorer) {
-    paddle_y[0] = (FB_HEIGHT - PADDLE_H) / 2;
-    paddle_y[1] = (FB_HEIGHT - PADDLE_H) / 2;
+static void reset_round(int scorer) {
+    int mid = phase_paddle_range() / 2;
+    paddle_pos[0] = mid;
+    paddle_pos[1] = mid;
+    paddle_travado[0] = paddle_travado[1] = false;
+    phase_round_reset();
     // bola sai em direcao a quem perdeu o ponto
-    int dir = (last_scorer == 1) ? -1 : +1;
+    int dir = (scorer == 1) ? +1 : -1;
     serve_ball(dir);
 }
 
+// 'scorer' = quem ganhou a fase anterior (1 ou 2). Como reset_round() saca em
+// direcao a quem perdeu o ponto, a fase nova comeca com a bola indo para o
+// lado de quem perdeu a fase passada. Na primeira fase nao ha anterior: sorteia.
+static void begin_phase(int idx, int scorer) {
+    phase_idx = idx;
+    phase_score[0] = phase_score[1] = 0;
+    phase_begin(idx);
+    phase_first_round = true;
+    last_scorer = scorer;
+    reset_round(last_scorer);
+}
+
+static void begin_game(game_mode_t m) {
+    mode = m;
+    total_score[0] = total_score[1] = 0;
+    total_flash[0] = total_flash[1] = 0;
+    last_winner = 0;
+    arcade_perdeu = false;
+    begin_phase(0, (get_rand_32() & 1) ? 1 : 2);
+}
+
+// No arcade a partida acaba na primeira fase que o jogador perder -- e ate
+// onde ele chegou que vira o recorde. No versus as duas duplas jogam sempre
+// as PHASE_COUNT fases e ganha quem somar mais.
+static bool fim_de_jogo(void) {
+    if (mode == MODE_ARCADE && phase_score[1] >= PHASE_WIN_SCORE) return true;
+    return phase_idx + 1 >= PHASE_COUNT;
+}
+
+// Qual lado a tabela de recordes considera: no arcade so o humano (P1) entra
+// no ranking; no versus, quem venceu.
+static int hiscore_player(void) {
+    if (mode == MODE_ARCADE) return 1;
+    return (total_score[0] >= total_score[1]) ? 1 : 2;
+}
+
 // =============================================================
-// Fisica e colisoes (chamado em GS_PLAY)
+// Raquetes
 // =============================================================
-static void update_paddles_human(void) {
-    int p0 = input_paddle_y(0);
-    int p1 = input_paddle_y(1);
-    paddle_y[0] = p0;
-    paddle_y[1] = p1;
+static void update_paddle_ai(int player) {
+    int range = phase_paddle_range();
+    rect_t seg[PADDLE_SEG_MAX];
+    phase_paddle_segments(player, 0, seg);     // pos 0 => canto de partida
+
+    int target;
+    bool coming;
+    if (phase_flags() & PF_PADDLE_HORIZ) {
+        // Volei: persegue o X da bola enquanto ela estiver na meia-quadra dela.
+        int bxc = (ball_x >> 8) + BALL_SIZE / 2;
+        coming = (player == 1) ? (bxc >= FB_WIDTH / 2) : (bxc < FB_WIDTH / 2);
+        target = bxc - seg[0].w / 2 - seg[0].x + ai_bias;
+    } else {
+        int span = FB_HEIGHT - range;          // altura ocupada pela raquete
+        coming = (player == 1) ? (ball_vx > 0) : (ball_vx < 0);
+        target = (ball_y >> 8) + BALL_SIZE / 2 - span / 2 + ai_bias;
+    }
+    if (!coming) target = range / 2;           // sem bola vindo, volta ao centro
+
+    int diff  = target - paddle_pos[player];
+    int speed = AI_PADDLE_SPEED + phase_idx / 3;   // fases seguintes: CPU melhor
+    if (abs_i(diff) > speed) diff = (diff > 0) ? speed : -speed;
+    paddle_pos[player] += diff;
+    if (paddle_pos[player] < 0)     paddle_pos[player] = 0;
+    if (paddle_pos[player] > range) paddle_pos[player] = range;
+}
+
+// Le o pot de um jogador respeitando a trava de retomada: enquanto o pot
+// estiver longe de onde a raquete parou, a raquete nao se mexe.
+static void update_paddle_humano(int player, int range) {
+    int lido = input_paddle_y(player, range);
+    if (paddle_travado[player]) {
+        if (abs_i(lido - paddle_pos[player]) <= PADDLE_TAKEOVER_TOL)
+            paddle_travado[player] = false;
+        else
+            return;                    // fica onde estava
+    }
+    paddle_pos[player] = lido;
+}
+
+static void update_paddles(void) {
+    int range = phase_paddle_range();
+    update_paddle_humano(0, range);
+    if (mode == MODE_VERSUS) update_paddle_humano(1, range);
+    else                     update_paddle_ai(1);
 }
 
 // Limite superior da zona de demo (abaixo do texto "RETRO PONG")
@@ -96,124 +207,230 @@ static void update_paddles_demo(void) {
     // Raquetes ficam restritas a metade inferior pra nao colidir com texto.
     for (int i = 0; i < 2; i++) {
         int target = (ball_y >> 8) - PADDLE_H / 2;
-        int diff = target - paddle_y[i];
+        int diff = target - paddle_pos[i];
         int speed = 2;
         if (abs_i(diff) > speed) diff = (diff > 0) ? speed : -speed;
-        paddle_y[i] += diff;
-        if (paddle_y[i] < DEMO_PADDLE_Y_MIN) paddle_y[i] = DEMO_PADDLE_Y_MIN;
-        if (paddle_y[i] > FB_HEIGHT - PADDLE_H)
-            paddle_y[i] = FB_HEIGHT - PADDLE_H;
+        paddle_pos[i] += diff;
+        if (paddle_pos[i] < DEMO_PADDLE_Y_MIN) paddle_pos[i] = DEMO_PADDLE_Y_MIN;
+        if (paddle_pos[i] > FB_HEIGHT - PADDLE_H)
+            paddle_pos[i] = FB_HEIGHT - PADDLE_H;
     }
 }
 
-static void on_paddle_hit(int paddle_idx) {
-    // Inverte vx, ajusta vy de acordo com a posicao do contato.
-    int pad_top = paddle_y[paddle_idx];
-    int pad_center = pad_top + PADDLE_H / 2;
-    int by = ball_y >> 8;
-    int offset = by - pad_center;          // -PADDLE_H/2..+PADDLE_H/2
+// =============================================================
+// Fisica e colisoes (chamado em GS_PLAY)
+// =============================================================
+static void on_paddle_hit(int player, const rect_t *seg) {
+    // Inverte vx e ajusta vy conforme onde bateu NO PEDACO atingido: no
+    // TRIPLO cada pedaco tem o mesmo leque de angulos da raquete inteira.
+    int seg_center = seg->y + seg->h / 2;
+    int by = (ball_y >> 8) + BALL_SIZE / 2;
+    int offset = by - seg_center;
 
-    // aumenta velocidade
     if (ball_speed_q < BALL_SPEED_MAX_Q) ball_speed_q += BALL_SPEED_STEP_Q;
 
-    // novo vetor: angulo a partir do offset
-    int32_t vy_frac = (offset * ball_speed_q) / (PADDLE_H);
-    int32_t s2 = ball_speed_q * ball_speed_q;
-    int32_t vx2 = s2 - vy_frac * vy_frac;
-    if (vx2 < 0) vx2 = 0;
-    int32_t vx_abs = 0;
-    for (int32_t g = (ball_speed_q >> 2); g <= ball_speed_q; g++) {
-        if (g * g >= vx2) { vx_abs = g; break; }
-    }
-    if (vx_abs == 0) vx_abs = ball_speed_q >> 1;
-    ball_vx = (paddle_idx == 0) ? +vx_abs : -vx_abs;
+    int32_t vy_frac = (offset * ball_speed_q) / (seg->h ? seg->h : 1);
+    int32_t vx_abs  = vx_from_vy(vy_frac);
+    ball_vx = (player == 0) ? +vx_abs : -vx_abs;
     ball_vy = vy_frac;
+    roll_ai_bias();
     audio_paddle_hit();
 }
 
+// Toque de volei: a bola sobe sempre e vai para o campo do adversario; a borda
+// em que ela bateu decide se o toque e curto ou longo.
+static void on_volley_hit(int player, const rect_t *seg) {
+    int bxc = (ball_x >> 8) + BALL_SIZE / 2;
+    int offset = bxc - (seg->x + seg->w / 2);      // -w/2..+w/2
+    int half = (seg->w / 2) ? (seg->w / 2) : 1;
+    int frente = (player == 0) ? +1 : -1;          // para onde fica o adversario
+
+    ball_vy = -VOLLEY_VY_Q;
+    ball_vx = frente * VOLLEY_VX_BASE_Q +
+              (frente * offset * VOLLEY_VX_SPREAD_Q) / half;
+    roll_ai_bias();
+    audio_paddle_hit();
+}
+
+static void add_point(int player) {
+    phase_score[player]++;
+    total_score[player]++;
+    last_scorer = player + 1;
+    audio_score();
+    set_state(GS_ROUND_END);
+}
+
 static void physics(void) {
+    uint32_t f = phase_flags();
+    int32_t prev_x = ball_x, prev_y = ball_y;
+
+    if (f & PF_GRAVITY) {
+        ball_vy += GRAVITY_Q;
+        if (ball_vy > BALL_VY_MAX_Q) ball_vy = BALL_VY_MAX_Q;
+    }
     ball_x += ball_vx;
     ball_y += ball_vy;
 
-    // Topo / fundo
+    // Topo
     if (ball_y < 0) { ball_y = 0; ball_vy = -ball_vy; audio_wall_hit(); }
-    int max_y = (FB_HEIGHT - BALL_SIZE) << 8;
-    if (ball_y > max_y) { ball_y = max_y; ball_vy = -ball_vy; audio_wall_hit(); }
 
-    // Raquetes
+    // Fundo: no volei o chao vale ponto para o lado oposto ao da queda
+    int32_t max_y = (int32_t)(FB_HEIGHT - BALL_SIZE) << 8;
+    if (ball_y > max_y) {
+        if (f & PF_FLOOR_SCORES) {
+            int cx = (ball_x >> 8) + BALL_SIZE / 2;
+            add_point((cx < FB_WIDTH / 2) ? 1 : 0);
+            return;
+        }
+        ball_y = max_y; ball_vy = -ball_vy; audio_wall_hit();
+    }
+
+    // Cenario da fase: tijolos, bumpers, rede
+    if (phase_ball_collide(prev_x, prev_y, &ball_x, &ball_y, &ball_vx, &ball_vy)) {
+        audio_brick_hit();
+    }
+
+    // Raquetes (uma ou tres por lado; deitadas no volei)
+    bool horiz = (f & PF_PADDLE_HORIZ) != 0;
     int bx = ball_x >> 8;
     int by = ball_y >> 8;
-
-    // Paddle 0 (esquerda) em x = PADDLE_MARGIN
-    int p0_x = PADDLE_MARGIN;
-    if (ball_vx < 0 && bx <= p0_x + PADDLE_W && bx + BALL_SIZE > p0_x) {
-        if (by + BALL_SIZE > paddle_y[0] && by < paddle_y[0] + PADDLE_H) {
-            ball_x = (p0_x + PADDLE_W) << 8;
-            on_paddle_hit(0);
+    int prev_by = prev_y >> 8;
+    rect_t seg[PADDLE_SEG_MAX];
+    for (int p = 0; p < 2; p++) {
+        if (horiz) {
+            if (ball_vy <= 0) continue;             // so pega a bola caindo
+        } else {
+            if (p == 0 && ball_vx >= 0) continue;
+            if (p == 1 && ball_vx <= 0) continue;
+        }
+        int n = phase_paddle_segments(p, paddle_pos[p], seg);
+        for (int i = 0; i < n; i++) {
+            const rect_t *s = &seg[i];
+            if (bx >= s->x + s->w || bx + BALL_SIZE <= s->x) continue;
+            if (horiz) {
+                // Raquete deitada e fina (4 px): em queda rapida a bola pularia
+                // por cima dela num frame so. Testa a TRAVESSIA do topo entre o
+                // frame anterior e este, em vez da sobreposicao no instante.
+                if (!(prev_by + BALL_SIZE <= s->y && by + BALL_SIZE >= s->y))
+                    continue;
+            } else if (by >= s->y + s->h || by + BALL_SIZE <= s->y) {
+                continue;
+            }
+            if (horiz) {
+                ball_y = (int32_t)(s->y - BALL_SIZE) << 8;
+                on_volley_hit(p, s);
+            } else {
+                ball_x = (p == 0) ? ((int32_t)(s->x + s->w) << 8)
+                                  : ((int32_t)(s->x - BALL_SIZE) << 8);
+                on_paddle_hit(p, s);
+            }
+            last_hitter = p;
+            break;
         }
     }
-    // Paddle 1 (direita)
-    int p1_x = FB_WIDTH - PADDLE_MARGIN - PADDLE_W;
-    if (ball_vx > 0 && bx + BALL_SIZE >= p1_x && bx < p1_x + PADDLE_W) {
-        if (by + BALL_SIZE > paddle_y[1] && by < paddle_y[1] + PADDLE_H) {
-            ball_x = (p1_x - BALL_SIZE) << 8;
-            on_paddle_hit(1);
-        }
-    }
 
-    // Score: saida pelas laterais
-    if (bx + BALL_SIZE < 0) {
-        score[1]++;
-        last_winner = (score[1] >= WIN_SCORE) ? 2 : 0;
-        audio_score();
-        set_state(GS_ROUND_END);
-    } else if (bx > FB_WIDTH) {
-        score[0]++;
-        last_winner = (score[0] >= WIN_SCORE) ? 1 : 0;
-        audio_score();
-        set_state(GS_ROUND_END);
+    // Laterais: gol, ou parede quando a fase e fechada (volei)
+    if (f & PF_SIDE_WALLS) {
+        int32_t max_x = (int32_t)(FB_WIDTH - BALL_SIZE) << 8;
+        if (ball_x < 0)      { ball_x = 0;     ball_vx = -ball_vx; audio_wall_hit(); }
+        if (ball_x > max_x)  { ball_x = max_x; ball_vx = -ball_vx; audio_wall_hit(); }
+    } else {
+        bx = ball_x >> 8;
+        if (bx + BALL_SIZE < 0)   add_point(1);
+        else if (bx > FB_WIDTH)   add_point(0);
     }
 }
 
 // =============================================================
 // Desenho
 // =============================================================
-static void draw_field(void) {
-    // separador central pontilhado
-    gfx_dotted_vline(FB_WIDTH / 2, 0, FB_HEIGHT, 4, 4);
-}
-
-static void draw_paddles(void) {
-    gfx_fill_rect(PADDLE_MARGIN, paddle_y[0], PADDLE_W, PADDLE_H, 1);
-    gfx_fill_rect(FB_WIDTH - PADDLE_MARGIN - PADDLE_W, paddle_y[1], PADDLE_W, PADDLE_H, 1);
-}
-
-static void draw_ball(void) {
-    int bx = ball_x >> 8;
-    int by = ball_y >> 8;
-    gfx_fill_rect(bx, by, BALL_SIZE, BALL_SIZE, 1);
-}
-
-static void draw_scores(void) {
-    char buf[4];
-    buf[0] = '0' + score[0]; buf[1] = 0;
-    gfx_text(FB_WIDTH/2 - 30 - gfx_text_width(buf, 3), 8, buf, 3, 1);
-    buf[0] = '0' + score[1]; buf[1] = 0;
-    gfx_text(FB_WIDTH/2 + 30, 8, buf, 3, 1);
-}
-
 static void center_text(int y, const char *s, int scale) {
     int w = gfx_text_width(s, scale);
     gfx_text((FB_WIDTH - w) / 2, y, s, scale, 1);
 }
 
+static void right_text(int x_right, int y, const char *s, int scale) {
+    gfx_text(x_right - gfx_text_width(s, scale), y, s, scale, 1);
+}
+
+// Texto centralizado com um retangulo preto por tras: sobre os tijolos das
+// barreiras ou os obstaculos do pinball, texto branco sozinho some.
+static void center_text_boxed(int y, const char *s, int scale) {
+    const int margem = 4;
+    int w = gfx_text_width(s, scale);
+    int h = FONT_H * scale;
+    int x = (FB_WIDTH - w) / 2;
+    gfx_fill_rect(x - margem, y - margem, w + 2 * margem, h + 2 * margem, 0);
+    gfx_text(x, y, s, scale, 1);
+}
+
+static const char *p2_label(void) {
+    return (mode == MODE_ARCADE) ? "CPU" : "P2";
+}
+
+static void draw_field(void) {
+    if (!(phase_flags() & PF_NO_CENTER_LINE))
+        gfx_dotted_vline(FB_WIDTH / 2, 0, FB_HEIGHT, 4, 4);
+    phase_draw();
+}
+
+static void draw_paddles(void) {
+    rect_t seg[PADDLE_SEG_MAX];
+    for (int p = 0; p < 2; p++) {
+        // Raquete travada pisca: e o aviso de "gire o pot de volta".
+        if (paddle_travado[p] && ((frames_globais >> 3) & 1)) continue;
+        int n = phase_paddle_segments(p, paddle_pos[p], seg);
+        for (int i = 0; i < n; i++)
+            gfx_fill_rect(seg[i].x, seg[i].y, seg[i].w, seg[i].h, 1);
+    }
+}
+
+static void draw_ball(void) {
+    gfx_fill_rect(ball_x >> 8, ball_y >> 8, BALL_SIZE, BALL_SIZE, 1);
+}
+
+// Bloco "TOTAL" com o numero centralizado embaixo. 'x' e o canto esquerdo.
+#define TOTAL_LABEL "TOTAL"
+
+static void draw_total_box(int x, int total, bool piscando) {
+    char buf[8];
+    int w_label = gfx_text_width(TOTAL_LABEL, 1);
+    gfx_text(x, 10, TOTAL_LABEL, 1, 1);
+    // Depois de um bonus da nave o numero pisca um pouco, para o jogador ver
+    // que ganhou pontos sem que nada tenha mudado no placar da fase.
+    if (piscando && ((frames_globais >> 2) & 1)) return;
+    snprintf(buf, sizeof(buf), "%d", total);
+    gfx_text(x + (w_label - gfx_text_width(buf, 1)) / 2, 19, buf, 1, 1);
+}
+
+// Placar da fase em corpo grande e, do lado de fora dele, o total acumulado
+// das fases -- na mesma faixa de altura, para nao ocupar mais uma linha da
+// quadra. Tudo fica fora da faixa central, que pode estar tomada por tijolos
+// ou obstaculos.
+static void draw_scores(void) {
+    char fase[8];
+    int cx = FB_WIDTH / 2;
+    const int y_grande = 8;
+    int w_label = gfx_text_width(TOTAL_LABEL, 1);
+
+    snprintf(fase, sizeof(fase), "%d", phase_score[0]);
+    right_text(cx - 30, y_grande, fase, 3);
+    draw_total_box(cx - 30 - gfx_text_width(fase, 3) - 8 - w_label,
+                   total_score[0], total_flash[0] > 0);
+
+    snprintf(fase, sizeof(fase), "%d", phase_score[1]);
+    gfx_text(cx + 30, y_grande, fase, 3, 1);
+    draw_total_box(cx + 30 + gfx_text_width(fase, 3) + 8,
+                   total_score[1], total_flash[1] > 0);
+}
+
 // =============================================================
 // Telas
 // =============================================================
-static void draw_attract(void) {
+static void draw_attract_background(void) {
     gfx_clear(0);
 
-    // Logo RetroSC (alto-res mono, 220x68) centralizado no topo
+    // Logo RetroSC (alto-res mono, 220x69) centralizado no topo
     int lx = (FB_WIDTH - RETROSC_LOGO_W) / 2;
     gfx_blit(retrosc_logo_data, RETROSC_LOGO_W, RETROSC_LOGO_H, lx, 4, 1);
 
@@ -222,13 +439,72 @@ static void draw_attract(void) {
 
     // Demo do jogo no fundo
     gfx_dotted_vline(FB_WIDTH / 2, FB_HEIGHT - 60, FB_HEIGHT - 12, 4, 4);
-    gfx_fill_rect(PADDLE_MARGIN, paddle_y[0], PADDLE_W, PADDLE_H, 1);
-    gfx_fill_rect(FB_WIDTH - PADDLE_MARGIN - PADDLE_W, paddle_y[1], PADDLE_W, PADDLE_H, 1);
+    gfx_fill_rect(PADDLE_MARGIN, paddle_pos[0], PADDLE_W, PADDLE_H, 1);
+    gfx_fill_rect(FB_WIDTH - PADDLE_MARGIN - PADDLE_W, paddle_pos[1], PADDLE_W, PADDLE_H, 1);
     draw_ball();
+}
+
+static void draw_attract(void) {
+    draw_attract_background();
 
     // Chamada piscante a cada ~32 frames
     if (((state_timer >> 5) & 1) == 0) {
-        center_text(FB_HEIGHT - 9, "MOVA UM POTENCIOMETRO", 1);
+        center_text(FB_HEIGHT - 9, "APERTE O SELETOR", 1);
+    }
+}
+
+// O menu so existe depois que o jogador aperta o SELETOR no attract.
+static void draw_menu(void) {
+    draw_attract_background();
+
+    const int bx = 24, by = 108;
+    const int bw = FB_WIDTH - 2 * bx, bh = 60;
+
+    gfx_fill_rect(bx, by, bw, bh, 0);            // tampa a demo atras do menu
+    gfx_hline(bx, by, bw, 1);
+    gfx_hline(bx, by + bh - 1, bw, 1);
+    gfx_vline(bx, by, bh, 1);
+    gfx_vline(bx + bw - 1, by, bh, 1);
+
+    for (int i = 0; i < MODE_COUNT; i++) {
+        const char *label = (i == MODE_ARCADE) ? "MODO ARCADE" : "MODO VERSUS";
+        int w  = gfx_text_width(label, 2);
+        int tx = (FB_WIDTH - w) / 2;
+        int ty = by + 7 + i * 24;
+        if (i == menu_sel) {
+            // item selecionado em video reverso (jeito arcade de destacar)
+            gfx_fill_rect(tx - 6, ty - 3, w + 12, FONT_CELL_H * 2 + 5, 1);
+            gfx_text(tx, ty, label, 2, 0);
+        } else {
+            gfx_text(tx, ty, label, 2, 1);
+        }
+    }
+
+    center_text(by + bh + 5,
+                (menu_sel == MODE_ARCADE) ? "1 JOGADOR CONTRA A CPU"
+                                          : "2 JOGADORES",
+                1);
+    if (((state_timer >> 4) & 1) == 0) {
+        center_text(FB_HEIGHT - 9, "SELETOR CONFIRMA", 1);
+    }
+}
+
+static void draw_phase_intro(void) {
+    char buf[32];
+    gfx_clear(0);
+
+    snprintf(buf, sizeof(buf), "FASE %d", phase_idx + 1);
+    center_text(28, buf, 3);
+    center_text(64, phase_name(phase_idx), 2);
+    center_text(92, phase_hint(phase_idx), 1);
+
+    snprintf(buf, sizeof(buf), "TOTAL  P1 %d   %s %d",
+             total_score[0], p2_label(), total_score[1]);
+    center_text(124, buf, 1);
+
+    if (((state_timer >> 4) & 1) == 0) {
+        center_text(FB_HEIGHT - 16,
+                    (mode == MODE_ARCADE) ? "MODO ARCADE" : "MODO VERSUS", 1);
     }
 }
 
@@ -238,12 +514,16 @@ static void draw_countdown(void) {
     draw_scores();
     draw_paddles();
 
+    if (!phase_first_round) {
+        center_text_boxed(FB_HEIGHT / 2 - 10, "GO", 3);
+        return;
+    }
     int sec_left = 3 - state_timer / 60;
     if (sec_left > 0) {
         char buf[2] = { (char)('0' + sec_left), 0 };
-        center_text(FB_HEIGHT / 2 - 10, buf, 3);
+        center_text_boxed(FB_HEIGHT / 2 - 10, buf, 3);
     } else {
-        center_text(FB_HEIGHT / 2 - 10, "GO", 3);
+        center_text_boxed(FB_HEIGHT / 2 - 10, "GO", 3);
     }
 }
 
@@ -259,19 +539,87 @@ static void draw_round_end(void) {
     draw_play();   // congelado
 }
 
-static void draw_game_over(void) {
+// Pausa: o jogo fica congelado atras de uma caixa com as duas saidas.
+static void draw_pause(void) {
+    draw_play();
+
+    const int bx = 40, by = 56;
+    const int bw = FB_WIDTH - 2 * bx, bh = 84;
+
+    gfx_fill_rect(bx, by, bw, bh, 0);
+    gfx_hline(bx, by, bw, 1);
+    gfx_hline(bx, by + bh - 1, bw, 1);
+    gfx_vline(bx, by, bh, 1);
+    gfx_vline(bx + bw - 1, by, bh, 1);
+
+    center_text(by + 6, "PAUSA", 3);
+    for (int i = 0; i < 2; i++) {
+        const char *label = (i == 0) ? "CONTINUAR" : "SAIR DO JOGO";
+        int w  = gfx_text_width(label, 2);
+        int tx = (FB_WIDTH - w) / 2;
+        int ty = by + 36 + i * 24;
+        if (i == pause_sel) {
+            gfx_fill_rect(tx - 6, ty - 3, w + 12, FONT_CELL_H * 2 + 5, 1);
+            gfx_text(tx, ty, label, 2, 0);
+        } else {
+            gfx_text(tx, ty, label, 2, 1);
+        }
+    }
+}
+
+static void draw_phase_end(void) {
+    char buf[32];
     gfx_clear(0);
-    draw_scores();
-    char buf[24];
-    if (last_winner == 1) {
-        snprintf(buf, sizeof(buf), "JOGADOR 1 VENCE");
+
+    snprintf(buf, sizeof(buf), "FASE %d COMPLETA", phase_idx + 1);
+    center_text(24, buf, 2);
+    center_text(48, phase_name(phase_idx), 1);
+
+    snprintf(buf, sizeof(buf), "P1 %d   X   %d %s",
+             phase_score[0], phase_score[1], p2_label());
+    center_text(80, buf, 2);
+
+    snprintf(buf, sizeof(buf), "TOTAL  P1 %d   %s %d",
+             total_score[0], p2_label(), total_score[1]);
+    center_text(116, buf, 1);
+
+    if (((state_timer >> 4) & 1) == 0) {
+        if (mode == MODE_ARCADE && phase_score[1] >= PHASE_WIN_SCORE) {
+            center_text(148, "A CPU FECHOU A FASE", 1);
+        } else if (phase_idx + 1 < PHASE_COUNT) {
+            snprintf(buf, sizeof(buf), "PROXIMA: %s", phase_name(phase_idx + 1));
+            center_text(148, buf, 1);
+        } else {
+            center_text(148, "FIM DE JOGO", 1);
+        }
+    }
+}
+
+static void draw_game_over(void) {
+    char buf[32];
+    gfx_clear(0);
+
+    center_text(24, "FIM DE JOGO", 2);
+
+    if (last_winner == 0) {
+        center_text(64, "EMPATE", 3);
+    } else if (mode == MODE_ARCADE) {
+        center_text(64, (last_winner == 1) ? "VOCE VENCEU" : "A CPU VENCEU", 2);
     } else {
-        snprintf(buf, sizeof(buf), "JOGADOR 2 VENCE");
+        snprintf(buf, sizeof(buf), "JOGADOR %d VENCE", last_winner);
+        center_text(64, buf, 2);
     }
-    center_text(FB_HEIGHT/2 - 8, buf, 1);
-    if ((state_timer >> 4) & 1) {
-        center_text(FB_HEIGHT/2 + 8, "GAME OVER", 2);
+
+    snprintf(buf, sizeof(buf), "P1 %d   X   %d %s",
+             total_score[0], total_score[1], p2_label());
+    center_text(104, buf, 2);
+    if (mode == MODE_ARCADE) {
+        snprintf(buf, sizeof(buf), "CHEGOU ATE A FASE %d DE %d",
+                 phase_idx + 1, PHASE_COUNT);
+    } else {
+        snprintf(buf, sizeof(buf), "SOMA DAS %d FASES", PHASE_COUNT);
     }
+    center_text(132, buf, 1);
 }
 
 static void draw_highscores(void) {
@@ -282,20 +630,23 @@ static void draw_highscores(void) {
     for (int i = 0; i < HISCORE_COUNT; i++) {
         char buf[24];
         if (t->entries[i].score > 0) {
-            snprintf(buf, sizeof(buf), "%d. %c%c%c  %2d  P%d",
+            snprintf(buf, sizeof(buf), "%d. %c%c%c %3d %s",
                      i + 1,
                      t->entries[i].initials[0] ? t->entries[i].initials[0] : ' ',
                      t->entries[i].initials[1] ? t->entries[i].initials[1] : ' ',
                      t->entries[i].initials[2] ? t->entries[i].initials[2] : ' ',
                      t->entries[i].score,
-                     t->entries[i].player);
+                     (t->entries[i].mode == MODE_ARCADE) ? "ARCADE" : "VERSUS");
         } else {
-            snprintf(buf, sizeof(buf), "%d. ---   -    ", i + 1);
+            snprintf(buf, sizeof(buf), "%d. ---   -", i + 1);
         }
-        gfx_text(60, y, buf, 1, 1);
+        gfx_text(52, y, buf, 1, 1);
         y += 14;
     }
-    center_text(FB_HEIGHT - 12, "RETRO PONG", 1);
+    // Rodape alternando: a tabela faz parte do attract, entao vale lembrar
+    // que dali tambem se comeca um jogo.
+    center_text(FB_HEIGHT - 12,
+                ((state_timer >> 6) & 1) ? "APERTE O SELETOR" : "RETRO PONG", 1);
 }
 
 // =============================================================
@@ -313,10 +664,11 @@ static void draw_enter_initials(void) {
     gfx_clear(0);
     center_text(8, "NEW HIGH SCORE!", 2);
 
-    // info do vencedor
+    // info de quem esta digitando
     char info[24];
-    int win_score = (score[0] > score[1]) ? score[0] : score[1];
-    snprintf(info, sizeof(info), "JOGADOR %d - %d", last_winner, win_score);
+    snprintf(info, sizeof(info), "%s - %d PONTOS",
+             (initials_player == 1) ? "JOGADOR 1" : "JOGADOR 2",
+             total_score[initials_player - 1]);
     center_text(32, info, 1);
 
     // 3 slots de iniciais centralizados, escala 4
@@ -344,75 +696,215 @@ static void draw_enter_initials(void) {
 
     center_text(FB_HEIGHT - 30, "POT = LETRA", 1);
     if (((state_timer >> 5) & 1) == 0) {
-        center_text(FB_HEIGHT - 18, "START PARA CONFIRMAR", 1);
+        center_text(FB_HEIGHT - 18, "SELETOR PARA CONFIRMAR", 1);
     }
     char hint[16];
-    snprintf(hint, sizeof(hint), "P%d", last_winner);
+    snprintf(hint, sizeof(hint), "P%d", initials_player);
     center_text(FB_HEIGHT - 8, hint, 1);
 }
 
 // =============================================================
 // Frame de cada estado
 // =============================================================
-static void frame_attract(void) {
-    update_paddles_demo();
-    // bola animada no espaco da demo (parte inferior)
+static void enter_attract(void) {
+    input_reset_movement();
+    phase_begin(PHASE_CLASSICO);
+    set_state(GS_ATTRACT);
+    // posicao inicial da bola no espaco do demo
+    ball_x = (FB_WIDTH / 2) << 8;
+    ball_y = ((FB_HEIGHT - 40)) << 8;
+    ball_vx = BALL_SPEED_INIT_Q;
+    ball_vy = BALL_SPEED_INIT_Q / 2;
+}
+
+static void open_menu(void) {
+    menu_sel  = MODE_ARCADE;
+    menu_idle = 0;
+    input_reset_movement();
+    audio_attract_tick();
+    set_state(GS_MENU);
+}
+
+// SELETOR no meio da partida abre a pausa (continuar / sair do jogo).
+static bool pediu_pausa(void) {
+    if (!input_seletor_pressed()) return false;
+    pause_sel = 0;                       // sempre abre em CONTINUAR
+    pause_pot_ref[0] = input_pot_raw(0);
+    pause_pot_ref[1] = input_pot_raw(1);
+    input_reset_movement();
+    audio_attract_tick();
+    set_state(GS_PAUSE);
+    return true;
+}
+
+// Anima a bola do demo dentro da faixa de baixo do attract.
+static void demo_ball_step(void) {
     if (ball_x < ((PADDLE_MARGIN + PADDLE_W) << 8)) {
         ball_vx = abs_i(ball_vx);
     }
     if (ball_x > ((FB_WIDTH - PADDLE_MARGIN - PADDLE_W - BALL_SIZE) << 8)) {
         ball_vx = -abs_i(ball_vx);
     }
-    int min_y = (FB_HEIGHT - 70) << 8;
-    int max_y = (FB_HEIGHT - 6 - BALL_SIZE) << 8;
+    int32_t min_y = (int32_t)(FB_HEIGHT - 70) << 8;
+    int32_t max_y = (int32_t)(FB_HEIGHT - 6 - BALL_SIZE) << 8;
     if (ball_y < min_y) { ball_y = min_y; ball_vy = abs_i(ball_vy); }
     if (ball_y > max_y) { ball_y = max_y; ball_vy = -abs_i(ball_vy); }
     ball_x += ball_vx;
     ball_y += ball_vy;
+}
 
-    if (input_movement_detected() || input_start_pressed()) {
-        score[0] = score[1] = 0;
-        last_winner = 0;
-        reset_round(0);
-        set_state(GS_COUNTDOWN);
+static void frame_attract(void) {
+    update_paddles_demo();
+    demo_ball_step();
+
+    // O menu so aparece depois do SELETOR -- mexer no pot nao abre nada.
+    if (input_seletor_pressed()) {
+        open_menu();
+        return;
+    }
+    // Sem ninguem por perto, o attract reveza com a tabela de recordes.
+    if (state_timer >= ATTRACT_TIMEOUT_S * 60) {
+        set_state(GS_HIGH_SCORES);
         return;
     }
     draw_attract();
 }
 
+static void frame_menu(void) {
+    update_paddles_demo();
+    demo_ball_step();
+
+    // Selecao pelo pot de qualquer um dos dois jogadores (o ultimo que mexeu).
+    // A zona morta no meio evita o item ficar piscando entre um e outro.
+    int pot  = input_pot_raw(input_last_moved());
+    int prev = menu_sel;
+    if (pot < 2048 - 300)      menu_sel = MODE_ARCADE;
+    else if (pot > 2048 + 300) menu_sel = MODE_VERSUS;
+    if (menu_sel != prev) audio_attract_tick();
+
+    if (input_seletor_pressed()) {
+        audio_confirm();
+        begin_game((game_mode_t)menu_sel);
+        set_state(GS_PHASE_INTRO);
+        return;
+    }
+    // O menu so desiste depois de MENU_TIMEOUT_S sem ninguem encostar nos pots.
+    menu_idle = input_movement_detected() ? 0 : (menu_idle + 1);
+    if (menu_idle >= MENU_TIMEOUT_S * 60) {
+        enter_attract();
+        return;
+    }
+    draw_menu();
+}
+
+static void frame_phase_intro(void) {
+    draw_phase_intro();
+    if (state_timer >= 150 || input_seletor_pressed()) {
+        set_state(GS_COUNTDOWN);
+    }
+}
+
 static void frame_countdown(void) {
-    update_paddles_human();
+    if (pediu_pausa()) return;
+    update_paddles();
     draw_countdown();
-    if (state_timer >= 3 * 60 + 30) {       // 3s + meio segundo "GO"
+    int len = phase_first_round ? (3 * 60 + 30) : 45;
+    if (state_timer >= len) {
+        phase_first_round = false;
         set_state(GS_PLAY);
     }
 }
 
+static void frame_pause(void) {
+    // Troca de item por movimento relativo: girar o pot para cima marca
+    // CONTINUAR, para baixo marca SAIR. Vale qualquer um dos dois pots.
+    int d0 = input_pot_raw(0) - pause_pot_ref[0];
+    int d1 = input_pot_raw(1) - pause_pot_ref[1];
+    int p  = (abs_i(d0) >= abs_i(d1)) ? 0 : 1;
+    int d  = (p == 0) ? d0 : d1;
+    int prev = pause_sel;
+    if (d < -PAUSE_POT_STEP) {
+        pause_sel = 0;
+        pause_pot_ref[p] = input_pot_raw(p);
+    } else if (d > PAUSE_POT_STEP) {
+        pause_sel = 1;
+        pause_pot_ref[p] = input_pot_raw(p);
+    }
+    if (pause_sel != prev) audio_attract_tick();
+
+    if (input_seletor_pressed()) {
+        audio_confirm();
+        if (pause_sel == 0) {
+            // Volta com um "GO" curto, para ninguem ser pego de surpresa. As
+            // raquetes ficam travadas ate cada pot voltar ao lugar em que
+            // estava, senao a pausa viraria uma forma de salvar a bola.
+            paddle_travado[0] = paddle_travado[1] = true;
+            phase_first_round = false;
+            set_state(GS_COUNTDOWN);
+        } else {
+            enter_attract();
+        }
+        return;
+    }
+    draw_pause();
+}
+
 static void frame_play(void) {
-    update_paddles_human();
+    if (pediu_pausa()) return;
+    update_paddles();
     physics();
+
+    // Bichos da fase: a nave paga pontos extras a quem acertou -- so no total
+    // geral, sem mexer no placar da fase.
+    if (state == GS_PLAY) {
+        int bonus[2];
+        phase_update(ball_x, ball_y, paddle_pos, last_hitter, bonus);
+        for (int p = 0; p < 2; p++) {
+            if (bonus[p] <= 0) continue;
+            total_score[p] += bonus[p];
+            total_flash[p]  = TOTAL_FLASH_FRAMES;
+            audio_confirm();
+        }
+    }
     draw_play();
 }
 
 static void frame_round_end(void) {
-    update_paddles_human();
+    update_paddles();
     draw_round_end();
     if (state_timer >= 60) {
-        if (score[0] >= WIN_SCORE || score[1] >= WIN_SCORE) {
-            last_winner = (score[0] > score[1]) ? 1 : 2;
-            set_state(GS_GAME_OVER);
+        if (phase_score[0] >= PHASE_WIN_SCORE || phase_score[1] >= PHASE_WIN_SCORE) {
+            set_state(GS_PHASE_END);
         } else {
-            reset_round(score[0] > score[1] ? 1 : 2);
+            reset_round(last_scorer);
             set_state(GS_COUNTDOWN);
         }
     }
 }
 
+static void frame_phase_end(void) {
+    draw_phase_end();
+    if (state_timer >= 3 * 60 || input_seletor_pressed()) {
+        if (!fim_de_jogo()) {
+            int venceu_a_fase = (phase_score[0] > phase_score[1]) ? 1 : 2;
+            begin_phase(phase_idx + 1, venceu_a_fase);
+            set_state(GS_PHASE_INTRO);
+            return;
+        }
+        arcade_perdeu = (mode == MODE_ARCADE && phase_score[1] >= PHASE_WIN_SCORE);
+        if (arcade_perdeu)                        last_winner = 2;
+        else if (total_score[0] == total_score[1]) last_winner = 0;
+        else last_winner = (total_score[0] > total_score[1]) ? 1 : 2;
+        set_state(GS_GAME_OVER);
+    }
+}
+
 static void frame_game_over(void) {
     draw_game_over();
-    if (state_timer >= 3 * 60) {
-        uint16_t win = (uint16_t)((score[0] > score[1]) ? score[0] : score[1]);
-        if (hi_qualifies(win)) {
+    if (state_timer >= 4 * 60 || input_seletor_pressed()) {
+        initials_player = hiscore_player();
+        uint16_t pts = (uint16_t)total_score[initials_player - 1];
+        if (hi_qualifies(pts)) {
             initials_armed = false;
             set_state(GS_ENTER_INITIALS);
         } else {
@@ -432,18 +924,18 @@ static void frame_enter_initials(void) {
     }
 
     if (initials_slot < INITIALS_LEN) {
-        int pot = input_pot_raw(last_winner - 1);
+        int pot = input_pot_raw(initials_player - 1);
         char c = letter_for_pot(pot);
         initials_buf[initials_slot] = c;
 
-        if (input_start_pressed()) {
+        if (input_seletor_pressed()) {
             audio_attract_tick();
             initials_slot++;
         }
     } else {
         // todas confirmadas
-        uint16_t win = (uint16_t)((score[0] > score[1]) ? score[0] : score[1]);
-        hi_consider(win, (uint8_t)last_winner, initials_buf);
+        uint16_t pts = (uint16_t)total_score[initials_player - 1];
+        hi_consider(pts, (uint8_t)initials_player, (uint8_t)mode, initials_buf);
         hi_save();
         set_state(GS_HIGH_SCORES);
         return;
@@ -452,15 +944,14 @@ static void frame_enter_initials(void) {
 }
 
 static void frame_high_scores(void) {
+    update_paddles_demo();      // mantem a demo viva atras das transicoes
     draw_highscores();
-    if (state_timer >= 10 * 60 || input_start_pressed()) {
-        input_reset_movement();
-        set_state(GS_ATTRACT);
-        // posicao inicial da bola no espaco do demo
-        ball_x = (FB_WIDTH / 2) << 8;
-        ball_y = ((FB_HEIGHT - 40)) << 8;
-        ball_vx = BALL_SPEED_INIT_Q;
-        ball_vy = BALL_SPEED_INIT_Q / 2;
+    if (input_seletor_pressed()) {
+        open_menu();
+        return;
+    }
+    if (state_timer >= 10 * 60) {
+        enter_attract();
     }
 }
 
@@ -468,27 +959,39 @@ static void frame_high_scores(void) {
 // API
 // =============================================================
 void game_init(void) {
-    score[0] = score[1] = 0;
+    mode = MODE_ARCADE;
+    menu_sel = MODE_ARCADE;
+    phase_score[0] = phase_score[1] = 0;
+    total_score[0] = total_score[1] = 0;
     last_winner = 0;
-    paddle_y[0] = paddle_y[1] = DEMO_PADDLE_Y_MIN + 16;
-    ball_x = (FB_WIDTH / 2) << 8;
-    ball_y = ((FB_HEIGHT - 40)) << 8;
-    ball_vx = BALL_SPEED_INIT_Q;
-    ball_vy = BALL_SPEED_INIT_Q / 2;
-    set_state(GS_ATTRACT);
+    last_scorer = 2;
+    last_hitter = -1;
+    arcade_perdeu = false;
+    paddle_pos[0] = paddle_pos[1] = DEMO_PADDLE_Y_MIN + 16;
+    paddle_travado[0] = paddle_travado[1] = false;
+    ball_speed_q = BALL_SPEED_INIT_Q;
+    roll_ai_bias();
+    enter_attract();
 }
 
 void game_frame(void) {
     switch (state) {
         case GS_ATTRACT:        frame_attract();        break;
+        case GS_MENU:           frame_menu();           break;
+        case GS_PHASE_INTRO:    frame_phase_intro();    break;
         case GS_COUNTDOWN:      frame_countdown();      break;
         case GS_PLAY:           frame_play();           break;
+        case GS_PAUSE:          frame_pause();          break;
         case GS_ROUND_END:      frame_round_end();      break;
+        case GS_PHASE_END:      frame_phase_end();      break;
         case GS_GAME_OVER:      frame_game_over();      break;
         case GS_ENTER_INITIALS: frame_enter_initials(); break;
         case GS_HIGH_SCORES:    frame_high_scores();    break;
     }
     state_timer++;
+    frames_globais++;
+    for (int p = 0; p < 2; p++) if (total_flash[p] > 0) total_flash[p]--;
 }
 
 game_state_t game_get_state(void) { return state; }
+game_mode_t  game_get_mode(void)  { return mode; }

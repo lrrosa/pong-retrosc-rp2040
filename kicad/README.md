@@ -114,7 +114,7 @@ powershell -c "Compress-Archive -Path kicad\gerbers\* -DestinationPath kicad\ret
 **Variante YD-RP2040:** repita os passos com `--yd` nos scripts Python e o
 sufixo `-yd` nos nomes de arquivo (`retrosc-pong-yd.*`, `gerbers-yd/`). Entre
 os passos 3 e 4, afine a trilha de sinal para 0,25 mm (com 0,30 mm o net
-START não fecha nessa variante) e peça **0,17 mm de isolamento** ao roteador
+SELETOR não fecha nessa variante) e peça **0,17 mm de isolamento** ao roteador
 — pedindo os 0,15 do projeto ele entrega 0,1478 e o DRC reprova:
 
 ```sh
@@ -150,7 +150,7 @@ redundantes).
   eles: um único conector fêmea 1×7 (2,54 mm) serve os dois, deixando o
   contato do meio sem uso. Por isso o par é indivisível — e, como não cabia
   junto do J4 sem os rótulos se embaralharem, a ordem na borda de baixo é
-  **J4 · J7 · (J5 J6)**: o START, que é independente, ficou à esquerda e o
+  **J4 · J7 · (J5 J6)**: o SELETOR (serigrafado START na v1), que é independente, ficou à esquerda e o
   par dos pots à direita do furo de montagem.
 - **Encaixe na caixa** (desenho em escala abaixo): folga de **1,0 mm** nas
   laterais e **2,0 mm** em cima/embaixo; os 2 furos caem exatamente sobre os

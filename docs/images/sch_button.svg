@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 262" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
   <rect x="0.5" y="0.5" width="559" height="261" rx="10" fill="#ffffff" stroke="#d0d7de"/>
-  <text x="20" y="30" font-size="14" font-weight="bold" fill="#16202a">Botão START — push-button NA (só 2 fios: GP22 e GND)</text>
+  <text x="20" y="30" font-size="14" font-weight="bold" fill="#16202a">Botão SELETOR — push-button NA (só 2 fios: GP22 e GND)</text>
 
   <!-- ===== interno ao RP2040 (pull-up) ===== -->
   <rect x="162" y="60" width="96" height="64" rx="8" fill="#f6f8fa" stroke="#9aa7b3" stroke-dasharray="5 3"/>
@@ -16,7 +16,7 @@
 
   <!-- ===== fiação real (GP22 -> botão -> GND) ===== -->
   <rect x="16" y="125" width="120" height="30" rx="5" fill="#eef4ff" stroke="#16202a"/>
-  <text x="76" y="144" text-anchor="middle" fill="#16202a">GP22 · START</text>
+  <text x="76" y="144" text-anchor="middle" fill="#16202a">GP22 · SELETOR</text>
 
   <g stroke="#16202a" stroke-width="2" fill="none">
     <line x1="136" y1="140" x2="238" y2="140"/>

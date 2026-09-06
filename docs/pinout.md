@@ -24,7 +24,7 @@ repositório tem **duas placas** (ver [../kicad/README.md](../kicad/README.md)):
 | NTSC SYNC | GP16 | OUT | 21 | 21 | **19** | resistor 470 Ω → composto |
 | NTSC VIDEO | GP17 | OUT | 22 | 22 | **20** | resistor 270 Ω → composto |
 | AUDIO PWM | GP18 | OUT | 24 | 24 | **21** | filtro RC + amp |
-| START | GP22 | IN | 29 | 29 | **25** | pull-up interno, botão p/ GND |
+| SELETOR | GP22 | IN | 29 | 29 | **25** | pull-up interno, botão p/ GND |
 | POT P1 | GP26/ADC0 | AIN | 31 | 31 | **30** | wiper do pot esquerdo |
 | POT P2 | GP27/ADC1 | AIN | 32 | 32 | **31** | wiper do pot direito |
 | AGND | — | — | 33 | 33 | **29** | retorno dos pots |

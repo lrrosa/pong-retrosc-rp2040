@@ -24,7 +24,7 @@
       "id": "btn1",
       "top": 780,
       "left": 600,
-      "attrs": { "color": "green", "label": "START", "key": "Space" }
+      "attrs": { "color": "green", "label": "SELETOR", "key": "Space" }
     },
     {
       "type": "wokwi-potentiometer",

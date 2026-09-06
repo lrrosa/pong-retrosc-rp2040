@@ -68,4 +68,6 @@ void audio_tick_frame(void) {
 void audio_paddle_hit(void) { audio_beep(226, 50); }
 void audio_wall_hit(void)   { audio_beep(246, 40); }
 void audio_score(void)      { audio_beep(490, 250); }
+void audio_brick_hit(void)  { audio_beep(660, 30); }
+void audio_confirm(void)    { audio_beep(660, 90); }
 void audio_attract_tick(void){ audio_beep(880, 20); }

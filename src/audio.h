@@ -16,6 +16,8 @@ void audio_beep(int freq_hz, int ms);
 void audio_paddle_hit(void);   // grave curto
 void audio_wall_hit(void);     // medio curto
 void audio_score(void);        // agudo longo
+void audio_brick_hit(void);    // tijolo quebrado (fases com barreira)
+void audio_confirm(void);      // confirmacao no menu do attract
 void audio_attract_tick(void); // beep discreto para attract mode
 
 // Chamar uma vez por frame para gerenciar duracao.
